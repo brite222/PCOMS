@@ -1,0 +1,54 @@
+﻿@model PCOMS.Application.DTOs.DashboardDto
+
+<h2>Dashboard</h2>
+
+<div class="row">
+
+    <div class="col-md-3">
+        <div class="card text-bg-primary mb-3">
+            <div class="card-body">
+                <h5>Clients</h5>
+                <h3>@Model.TotalClients</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-success mb-3">
+            <div class="card-body">
+                <h5>Projects</h5>
+                <h3>@Model.TotalProjects</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-warning mb-3">
+            <div class="card-body">
+                <h5>Developers</h5>
+                <h3>@Model.TotalDevelopers</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-bg-dark mb-3">
+            <div class="card-body">
+                <h5>Total Hours</h5>
+                <h3>@Model.TotalHours</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card text-bg-info">
+            <div class="card-body">
+                <h5>Hours This Week</h5>
+                <h3>@Model.HoursThisWeek</h3>
+            </div>
+        </div>
+    </div>
+</div>

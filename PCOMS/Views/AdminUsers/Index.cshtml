@@ -1,0 +1,40 @@
+﻿@model List<PCOMS.Application.DTOs.UserListDto>
+
+<h2>Users</h2>
+
+<table class="table table-bordered align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th style="width:150px;">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.Role</td>
+                <td>
+                    @if (user.IsLocked)
+                    {
+                        <span class="badge bg-danger">Locked</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="ToggleLock"
+                       asp-route-id="@user.Id"
+                       class="btn btn-sm @(user.IsLocked ? "btn-success" : "btn-danger")">
+                        @(user.IsLocked ? "Unlock" : "Lock")
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

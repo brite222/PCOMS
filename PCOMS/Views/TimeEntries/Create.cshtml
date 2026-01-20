@@ -1,0 +1,24 @@
+﻿@model PCOMS.Application.DTOs.CreateTimeEntryDto
+
+<h2>Log Time</h2>
+
+<form method="post">
+    <input type="hidden" asp-for="ProjectId" />
+
+    <div class="mb-3">
+        <label asp-for="WorkDate"></label>
+        <input asp-for="WorkDate" type="date" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Hours"></label>
+        <input asp-for="Hours" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <button class="btn btn-success">Save</button>
+</form>

@@ -1,0 +1,63 @@
+﻿@model List<PCOMS.Application.DTOs.ClientDto>
+
+@{
+    ViewData["Title"] = "Clients";
+}
+
+<h2>Clients</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add Client</a>
+</p>
+@foreach (var c in Model)
+{
+    <tr>
+        <td>@c.Name</td>
+        <td>@c.Email</td>
+        <td>
+            <a asp-controller="Projects"
+               asp-action="Client"
+               asp-route-id="@c.Id"
+               class="btn btn-sm btn-secondary">
+                View Projects
+            </a>
+        </td>
+    </tr>
+}
+
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No clients found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var client in Model)
+            {
+                <tr>
+                    <td>@client.Name</td>
+                    <td>@client.Email</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@client.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@client.Id"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Are you sure?')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+}

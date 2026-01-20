@@ -1,0 +1,24 @@
+﻿@model PCOMS.Application.DTOs.CreateProjectDto
+
+<h2>Create Project</h2>
+
+<form asp-action="Create" method="post">
+    <input type="hidden" asp-for="ClientId" />
+
+    <div class="mb-3">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <button class="btn btn-success">Save</button>
+</form>
+@if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+{
+    <a asp-action="Create" asp-route-clientId="@ViewBag.ClientId"
+       class="btn btn-primary">Add Project</a>
+}

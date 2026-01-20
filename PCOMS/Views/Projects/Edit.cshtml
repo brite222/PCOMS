@@ -1,0 +1,70 @@
+﻿@model PCOMS.Application.DTOs.EditProjectDto
+
+<h2>Edit Project</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ClientId" />
+
+    <div class="mb-3">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Statuses))">
+        </select>
+    </div>
+
+    <button class="btn btn-success">Save</button>
+</form>
+@if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+{
+    <a asp-action="Create" asp-route-clientId="@ViewBag.ClientId"
+       class="btn btn-primary">Add Project</a>
+}
+<hr />
+<h4>Assigned Developers</h4>
+
+@if (ViewBag.Assignments.Count == 0)
+{
+    <p class="text-muted">No developers assigned.</p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Developer</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in ViewBag.Assignments)
+            {
+                <tr>
+                    <td>@a.Developer.Email</td>
+                    <td>
+                        <form asp-controller="ProjectAssignments"
+                              asp-action="Remove"
+                              method="post"
+                              class="d-inline">
+                            <input type="hidden" name="projectId" value="@Model.Id" />
+                            <input type="hidden" name="developerId" value="@a.DeveloperId" />
+                            <button class="btn btn-sm btn-danger">
+                                Remove
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

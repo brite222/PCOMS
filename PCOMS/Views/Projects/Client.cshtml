@@ -1,0 +1,67 @@
+﻿@model List<PCOMS.Models.Project>
+
+@{
+    ViewData["Title"] = "Projects";
+}
+
+<h2>Projects</h2>
+
+<div class="mb-3">
+    <a asp-action="Create"
+       asp-route-clientId="@ViewBag.ClientId"
+       class="btn btn-primary">
+        Add Project
+    </a>
+
+    <a asp-controller="Clients"
+       asp-action="Index"
+       class="btn btn-secondary ms-2">
+        Back to Clients
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No projects have been created for this client yet.
+    </div>
+}
+else
+{
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in Model)
+            {
+                <tr>
+                    <td>@project.Name</td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            @project.Status
+                        </span>
+                    </td>
+                    <td>
+                        <a asp-action="Edit"
+                           asp-route-id="@project.Id"
+                           class="btn btn-sm btn-warning">
+                            Edit
+                        </a>
+
+                        <a asp-controller="ProjectAssignments"
+                           asp-action="Assign"
+                           asp-route-projectId="@project.Id"
+                           class="btn btn-sm btn-outline-primary ms-1">
+                            Assign Dev
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

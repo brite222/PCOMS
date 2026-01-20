@@ -1,0 +1,16 @@
+﻿@model List<PCOMS.Application.DTOs.TimeEntryDto>
+
+<h2>All Time Entries</h2>
+
+<table class="table">
+    @foreach (var t in Model)
+    {
+        <tr>
+            <td>@t.WorkDate.ToShortDateString()</td>
+            <td>@t.ProjectName</td>
+            <td>@t.DeveloperEmail</td>
+            <td>@t.Hours</td>
+            <td>@t.Description</td>
+        </tr>
+    }
+</table>

@@ -1,0 +1,41 @@
+﻿@model PCOMS.Application.DTOs.AssignDevelopersDto
+
+@{
+    ViewData["Title"] = "Edit Project Assignment";
+}
+
+<h2>Edit Project Assignment</h2>
+
+<form asp-action="Edit" method="post">
+    <!-- Keep project context -->
+    <input type="hidden" asp-for="ProjectId" />
+
+    <div class="mb-3">
+        <label class="form-label">Developer</label>
+        <select asp-for="DeveloperId" class="form-select" required>
+            <option value="">-- Select Developer --</option>
+            @foreach (var dev in ViewBag.Developers)
+            {
+                <option value="@dev.Id">
+                    @dev.Email
+                </option>
+            }
+        </select>
+        <span asp-validation-for="DeveloperId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Save Changes
+    </button>
+
+    <a asp-controller="Projects"
+       asp-action="Edit"
+       asp-route-id="@Model.ProjectId"
+       class="btn btn-secondary ms-2">
+        Cancel
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

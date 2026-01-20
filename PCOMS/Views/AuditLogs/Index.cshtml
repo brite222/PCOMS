@@ -1,0 +1,27 @@
+﻿@model List<PCOMS.Application.DTOs.AuditLogDto>
+
+<h2>Audit Logs</h2>
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var log in Model)
+        {
+            <tr>
+                <td>@log.CreatedAt</td>
+                <td>@log.UserEmail</td>
+                <td>@log.Action</td>
+                <td>@log.Entity</td>
+                <td>@log.Details</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,38 @@
+﻿@model List<PCOMS.Models.Project>
+
+@{
+    ViewData["Title"] = "My Projects";
+}
+
+<h2>My Projects</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        You are not assigned to any projects yet.
+    </div>
+}
+else
+{
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in Model)
+            {
+                <tr>
+                    <td>@project.Name</td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            @project.Status
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

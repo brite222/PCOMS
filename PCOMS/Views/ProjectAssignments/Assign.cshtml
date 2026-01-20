@@ -1,0 +1,19 @@
+﻿@model PCOMS.Application.DTOs.AssignDevelopersDto
+
+<h2>Assign Developer</h2>
+
+<form asp-action="Assign" method="post">
+    <input type="hidden" asp-for="ProjectId" />
+
+    <div class="mb-3">
+        <label class="form-label">Developer</label>
+        <select asp-for="DeveloperId" class="form-select">
+            @foreach (var dev in ViewBag.Developers)
+            {
+                <option value="@dev.Id">@dev.Email</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-primary">Assign</button>
+</form>
