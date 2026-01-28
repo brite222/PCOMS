@@ -1,13 +1,17 @@
-﻿@model PCOMS.Application.DTOs.AssignDevelopersDto
+﻿@{
+    ViewData["Title"] = "Assign Developer";
+}
 
 <h2>Assign Developer</h2>
 
 <form asp-action="Assign" method="post">
-    <input type="hidden" asp-for="ProjectId" />
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
 
     <div class="mb-3">
         <label class="form-label">Developer</label>
-        <select asp-for="DeveloperId" class="form-select">
+        <select name="developerId" class="form-control" required>
             @foreach (var dev in ViewBag.Developers)
             {
                 <option value="@dev.Id">@dev.Email</option>
@@ -16,4 +20,10 @@
     </div>
 
     <button class="btn btn-primary">Assign</button>
+    <a asp-controller="Projects"
+       asp-action="Edit"
+       asp-route-id="@ViewBag.ProjectId"
+       class="btn btn-secondary ms-2">
+        Cancel
+    </a>
 </form>

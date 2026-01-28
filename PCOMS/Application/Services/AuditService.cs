@@ -15,33 +15,49 @@ namespace PCOMS.Application.Services
             _context = context;
         }
 
-        public void Log(string userId, string action, string entity, string? details = null)
+        public void Log(
+            string userId,
+            string action,
+            string entity,
+            int entityId,
+            string? oldValue = null,
+            string? newValue = null)
         {
-            _context.AuditLogs.Add(new AuditLog
+            var log = new AuditLog
             {
-                UserId = userId,
+                PerformedByUserId = userId,
                 Action = action,
                 Entity = entity,
-                Details = details
-            });
+                EntityId = entityId,
+                OldValue = oldValue,
+                NewValue = newValue,
+                PerformedAt = DateTime.UtcNow
+            };
 
+            _context.AuditLogs.Add(log);
             _context.SaveChanges();
         }
 
+        // ✅ RETURN DTOs — NOT ENTITIES
         public List<AuditLogDto> GetAll()
         {
             return _context.AuditLogs
-                .Include(a => a.User) // 🔴 REQUIRED
-                .OrderByDescending(a => a.CreatedAt)
-                .Select(a => new AuditLogDto
-                {
-                    CreatedAt = a.CreatedAt,
-                    UserEmail = a.User!.Email!,
-                    Action = a.Action,
-                    Entity = a.Entity,
-                    Details = a.Details
-                })
-                .ToList();
+     .Select(a => new AuditLogDto
+     {
+         Id = a.Id,
+         Action = a.Action,
+         Entity = a.Entity,
+         EntityId = a.EntityId,
+         PerformedAt = a.PerformedAt,
+
+         UserEmail = _context.Users
+             .Where(u => u.Id == a.PerformedByUserId)
+             .Select(u => u.Email!)
+             .FirstOrDefault() ?? "System"
+     })
+     .OrderByDescending(a => a.PerformedAt)
+     .ToList();
+
         }
     }
 }

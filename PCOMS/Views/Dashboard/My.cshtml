@@ -1,0 +1,47 @@
+﻿@model PCOMS.Application.DTOs.DeveloperDashboardDto
+
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<h2 class="fw-bold mb-4">My Work Summary</h2>
+
+<div class="row g-4">
+
+    <!-- TOTAL HOURS -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-start border-primary border-4">
+            <div class="card-body text-center">
+                <small class="text-muted">TOTAL HOURS</small>
+                <h2 class="fw-bold mt-2">
+                    @Model.TotalHours
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING HOURS -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-start border-warning border-4">
+            <div class="card-body text-center">
+                <small class="text-muted">PENDING HOURS</small>
+                <h2 class="fw-bold mt-2">
+                    @Model.PendingHours
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROVED HOURS -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-start border-success border-4">
+            <div class="card-body text-center">
+                <small class="text-muted">APPROVED HOURS</small>
+                <h2 class="fw-bold mt-2">
+                    @Model.ApprovedHours
+                </h2>
+            </div>
+        </div>
+    </div>
+
+</div>

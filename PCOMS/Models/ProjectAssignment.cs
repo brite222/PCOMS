@@ -6,10 +6,12 @@ namespace PCOMS.Models
     {
         public int Id { get; set; }
 
-        public int ProjectId { get; set; }
-        public Project Project { get; set; } = default!;
+        // Developer being assigned
+        public string DeveloperId { get; set; } = null!;
+        public IdentityUser Developer { get; set; } = null!;
 
-        public string DeveloperId { get; set; } = default!;
-        public IdentityUser Developer { get; set; } = default!;
+        // Project
+        public int ProjectId { get; set; }
+        public Project Project { get; set; } = null!;
     }
 }

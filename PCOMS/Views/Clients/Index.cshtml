@@ -4,60 +4,76 @@
     ViewData["Title"] = "Clients";
 }
 
-<h2>Clients</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Clients</h2>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Add Client</a>
-</p>
-@foreach (var c in Model)
-{
-    <tr>
-        <td>@c.Name</td>
-        <td>@c.Email</td>
-        <td>
-            <a asp-controller="Projects"
-               asp-action="Client"
-               asp-route-id="@c.Id"
-               class="btn btn-sm btn-secondary">
-                View Projects
-            </a>
-        </td>
-    </tr>
-}
-
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Add Client
+    </a>
+</div>
 
 @if (!Model.Any())
 {
-    <div class="alert alert-info">
-        No clients found.
+    <div class="card shadow-sm">
+        <div class="card-body text-center text-muted">
+            <p class="mb-0">No clients have been created yet.</p>
+        </div>
     </div>
 }
 else
 {
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var client in Model)
-            {
-                <tr>
-                    <td>@client.Name</td>
-                    <td>@client.Email</td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@client.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@client.Id"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('Are you sure?')">
-                            Delete
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th class="text-end" style="width: 280px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var client in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@client.Name</td>
+                            <td class="text-muted">@client.Email</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
 
-    </table>
+                                    <a asp-controller="Projects"
+                                       asp-action="Client"
+                                       asp-route-id="@client.Id"
+                                       class="btn btn-outline-secondary">
+                                        Projects
+                                    </a>
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@client.Id"
+                                       class="btn btn-outline-warning">
+                                        Edit
+                                    </a>
+
+                                    <a asp-controller="Billing"
+                                       asp-action="Index"
+                                       asp-route-clientId="@client.Id"
+                                       class="btn btn-outline-success">
+                                        Billing
+                                    </a>
+
+                                    <a asp-action="Delete"
+                                       asp-route-id="@client.Id"
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this client?');">
+                                        Delete
+                                    </a>
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
 
 namespace PCOMS.Models
 {
@@ -6,13 +6,18 @@ namespace PCOMS.Models
     {
         public int Id { get; set; }
 
-        public string UserId { get; set; } = default!;
-        public IdentityUser User { get; set; } = default!;
+        public string Action { get; set; } = null!;
 
-        public string Action { get; set; } = default!;
-        public string Entity { get; set; } = default!;
-        public string? Details { get; set; }
+        public string Entity { get; set; } = null!;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int EntityId { get; set; }
+
+        public string PerformedByUserId { get; set; } = null!;
+
+        public DateTime PerformedAt { get; set; } = DateTime.UtcNow;
+
+        public string? OldValue { get; set; }
+
+        public string? NewValue { get; set; }
     }
 }

@@ -1,0 +1,45 @@
+﻿@model PCOMS.Application.DTOs.ClientBillingDto
+
+<h2>Billing — @Model.ClientName</h2>
+
+<p>
+    Period:
+    <strong>@Model.StartDate.ToShortDateString()</strong>
+    -
+    <strong>@Model.EndDate.ToShortDateString()</strong>
+</p>
+<a class="btn btn-primary mb-3"
+   asp-action="DownloadInvoice"
+   asp-route-clientId="@Model.ClientId"
+   asp-route-start="@Model.StartDate"
+   asp-route-end="@Model.EndDate">
+    Download Invoice (PDF)
+</a>
+
+<table class="table table-bordered align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Project</th>
+            <th>Rate</th>
+            <th>Hours</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.LineItems)
+        {
+            <tr>
+                <td>@item.ProjectName</td>
+                <td>₦@item.HourlyRate</td>
+                <td>@item.TotalHours</td>
+                <td>₦@item.TotalAmount</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="text-end mt-3">
+    <h4>
+        Total: ₦@Model.TotalAmount
+    </h4>
+</div>

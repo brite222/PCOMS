@@ -6,17 +6,20 @@ namespace PCOMS.Models
     {
         public int Id { get; set; }
 
-        public int ProjectId { get; set; }
-        public Project Project { get; set; } = default!;
+        public string DeveloperId { get; set; } = null!;
+        public IdentityUser Developer { get; set; } = null!;
 
-        public string DeveloperId { get; set; } = default!;
-        public IdentityUser Developer { get; set; } = default!;
+        public int ProjectId { get; set; }
+        public Project Project { get; set; } = null!;
 
         public DateTime WorkDate { get; set; }
         public decimal Hours { get; set; }
-
         public string? Description { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public TimeEntryStatus Status { get; set; } = TimeEntryStatus.Pending;
+        public bool IsInvoiced { get; set; } = false;
+        public DateTime EntryDate { get; set; } = DateTime.UtcNow;
+
+
     }
 }

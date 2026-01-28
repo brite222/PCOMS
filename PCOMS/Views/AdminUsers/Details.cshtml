@@ -1,0 +1,72 @@
+﻿@model Microsoft.AspNetCore.Identity.IdentityUser
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<h2>User Details</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Email</th>
+        <td>@Model.Email</td>
+    </tr>
+    <tr>
+        <th>Role</th>
+        <td>@ViewBag.Role</td>
+    </tr>
+    <tr>
+        <th>Status</th>
+        <td>
+            @if ((bool)ViewBag.IsLocked)
+            {
+                <span class="badge bg-danger">Locked</span>
+            }
+            else
+            {
+                <span class="badge bg-success">Active</span>
+            }
+        </td>
+    </tr>
+</table>
+
+<div class="mb-3">
+    <a asp-action="ToggleLock"
+       asp-route-id="@Model.Id"
+       class="btn btn-warning">
+        Toggle Lock
+    </a>
+</div>
+
+@if (ViewBag.Role == "Developer")
+{
+    <h4 class="mt-4">Assigned Projects</h4>
+
+    var assigned = ViewBag.AssignedProjects as IEnumerable<PCOMS.Models.Project>;
+    var all = ViewBag.AllProjects as IEnumerable<PCOMS.Models.Project>;
+
+    <form asp-action="AssignProjects" method="post">
+        <input type="hidden" name="UserId" value="@Model.Id" />
+
+        <div class="mb-3">
+            @foreach (var project in all!)
+            {
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="ProjectIds"
+                           value="@project.Id"
+                           @(assigned!.Any(p => p.Id == project.Id) ? "checked" : "") />
+
+                    <label class="form-check-label">
+                        @project.Name
+                    </label>
+                </div>
+            }
+        </div>
+
+        <button class="btn btn-primary">
+            Save Assignments
+        </button>
+    </form>
+}

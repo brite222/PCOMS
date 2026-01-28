@@ -14,70 +14,135 @@ namespace PCOMS.Application.Services
         {
             _context = context;
         }
+
+        // =========================
+        // GET ALL PROJECTS
+        // =========================
         public List<Project> GetAll()
         {
             return _context.Projects
                 .Include(p => p.Client)
                 .ToList();
         }
+
+        // =========================
+        // GET PROJECTS BY IDS
+        // =========================
         public List<Project> GetByIds(List<int> ids)
         {
             return _context.Projects
                 .Where(p => ids.Contains(p.Id))
+                .Include(p => p.Client)
                 .ToList();
         }
 
+        // =========================
+        // GET PROJECTS BY CLIENT
+        // =========================
         public List<ProjectDto> GetByClient(int clientId)
         {
-            return _context.Projects
+            var projects = _context.Projects
                 .Where(p => p.ClientId == clientId)
-                .Select(p => new ProjectDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Status = p.Status.ToString()
-                })
                 .ToList();
+
+            return projects.Select(p => new ProjectDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Status = p.Status.ToString(),
+                ManagerName = GetManagerName(p.ManagerId)
+            }).ToList();
         }
 
+        // =========================
+        // GET PROJECT FOR EDIT
+        // =========================
         public EditProjectDto? GetById(int id)
         {
-            var p = _context.Projects.FirstOrDefault(x => x.Id == id);
-            if (p == null) return null;
+            var project = _context.Projects.Find(id);
+            if (project == null) return null;
 
             return new EditProjectDto
             {
-                Id = p.Id,
-                ClientId = p.ClientId,
-                Name = p.Name,
-                Description = p.Description,
-                Status = p.Status
+                Id = project.Id,
+                ClientId = project.ClientId,
+                Name = project.Name,
+                Description = project.Description,
+                HourlyRate = project.HourlyRate,
+                Status = project.Status,
+                ManagerId = project.ManagerId
             };
         }
 
+        // =========================
+        // UPDATE PROJECT (SINGLE SOURCE OF TRUTH)
+        // =========================
+        public void Update(EditProjectDto dto)
+        {
+            var project = _context.Projects.Find(dto.Id);
+            if (project == null) return;
+
+            var oldStatus = project.Status;
+
+            project.Name = dto.Name;
+            project.Description = dto.Description;
+            project.Status = dto.Status;
+            project.HourlyRate = dto.HourlyRate;
+
+            if (!string.IsNullOrEmpty(dto.ManagerId))
+            {
+                project.ManagerId = dto.ManagerId;
+            }
+
+            // 🔥 AUDIT LOG – STATUS CHANGE
+            if (oldStatus != dto.Status)
+            {
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    Action = "StatusChanged",
+                    Entity = "Project",
+                    EntityId = project.Id,
+                    OldValue = oldStatus.ToString(),
+                    NewValue = dto.Status.ToString(),
+                    PerformedByUserId = dto.ManagerId ?? "SYSTEM"
+                });
+            }
+
+            _context.SaveChanges();
+        }
+
+
+        // =========================
+        // CREATE PROJECT
+        // =========================
         public void Create(CreateProjectDto dto)
         {
-            _context.Projects.Add(new Project
+            var project = new Project
             {
                 Name = dto.Name,
                 Description = dto.Description,
                 ClientId = dto.ClientId,
-                Status = ProjectStatus.Planned
-            });
+                HourlyRate = dto.HourlyRate,
+                Status = ProjectStatus.Active,
+                ManagerId = dto.ManagerId
+            };
 
+            _context.Projects.Add(project);
             _context.SaveChanges();
         }
 
-        public void Update(EditProjectDto dto)
+        // =========================
+        // PRIVATE HELPERS
+        // =========================
+        private string? GetManagerName(string? managerId)
         {
-            var p = _context.Projects.FirstOrDefault(x => x.Id == dto.Id);
-            if (p == null) return;
+            if (string.IsNullOrEmpty(managerId))
+                return null;
 
-            p.Name = dto.Name;
-            p.Description = dto.Description;
-            p.Status = dto.Status;
-
-            _context.SaveChanges();
+            return _context.Users
+                .Where(u => u.Id == managerId)
+                .Select(u => u.UserName)
+                .FirstOrDefault();
         }
     }
 }

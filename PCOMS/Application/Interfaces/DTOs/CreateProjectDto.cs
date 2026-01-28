@@ -10,5 +10,8 @@ namespace PCOMS.Application.DTOs
         public string Name { get; set; } = default!;
 
         public string? Description { get; set; }
+        public decimal HourlyRate { get; set; }
+        public string? ManagerId { get; set; }
+
     }
 }

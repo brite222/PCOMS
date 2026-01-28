@@ -1,0 +1,137 @@
+﻿@model PCOMS.Application.DTOs.ClientDetailsDto
+
+@{
+    ViewData["Title"] = "Client Details";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Client Details</h2>
+
+    <div>
+        <a asp-action="Edit"
+           asp-route-id="@Model.Id"
+           class="btn btn-warning me-2">
+            Edit Client
+        </a>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Back to Clients
+        </a>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- CLIENT INFO -->
+<!-- ========================= -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Client Information</h5>
+
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9">
+                @(string.IsNullOrEmpty(Model.Phone) ? "-" : Model.Phone)
+            </dd>
+
+            <dt class="col-sm-3">Client Portal</dt>
+            <dd class="col-sm-9">
+                @if (Model.HasUserAccount)
+                {
+                    <span class="badge bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Not Created</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- PROJECTS -->
+<!-- ========================= -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Projects</h5>
+
+            <a asp-controller="Projects"
+               asp-action="Create"
+               asp-route-clientId="@Model.Id"
+               class="btn btn-sm btn-primary">
+                + Add Project
+            </a>
+        </div>
+
+        @if (!Model.Projects.Any())
+        {
+            <div class="alert alert-info mb-0">
+                No projects created for this client yet.
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var project in Model.Projects)
+                    {
+                        <tr>
+                            <td>@project.Name</td>
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    @project.Status
+                                </span>
+                            </td>
+                            <td>
+                                <a asp-controller="Projects"
+                                   asp-action="Edit"
+                                   asp-route-id="@project.Id"
+                                   class="btn btn-sm btn-warning">
+                                    Edit
+                                </a>
+
+                                <a asp-controller="TimeEntries"
+                                   asp-action="All"
+                                   asp-route-projectId="@project.Id"
+                                   class="btn btn-sm btn-secondary ms-1">
+                                    Time
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- BILLING -->
+<!-- ========================= -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Billing</h5>
+
+        <a asp-controller="Billing"
+           asp-action="Index"
+           asp-route-clientId="@Model.Id"
+           class="btn btn-success">
+            View Invoices
+        </a>
+    </div>
+</div>

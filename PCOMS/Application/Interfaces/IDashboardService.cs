@@ -4,6 +4,7 @@ namespace PCOMS.Application.Interfaces
 {
     public interface IDashboardService
     {
-        DashboardDto GetDashboard();
+        AdminDashboardDto GetAdminDashboard();
+        DeveloperDashboardDto GetDeveloperDashboard(string developerId);
     }
 }

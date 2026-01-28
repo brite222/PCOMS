@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PCOMS.Models
 {
@@ -17,9 +19,12 @@ namespace PCOMS.Models
         public int ClientId { get; set; }
         public Client Client { get; set; } = default!;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public ICollection<ProjectDeveloper> ProjectDevelopers { get; set; }
-    = new List<ProjectDeveloper>();
+        // Project Manager
+        public string? ManagerId { get; set; }
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public decimal HourlyRate { get; set; } = 0m;
+        public decimal Hours { get; set; } = 0m;
+        public ICollection<TimeEntry> TimeEntries { get; set; }
     }
 }

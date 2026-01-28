@@ -7,5 +7,6 @@
         public int TotalDevelopers { get; set; }
         public decimal TotalHours { get; set; }
         public decimal HoursThisWeek { get; set; }
+      
     }
 }

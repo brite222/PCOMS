@@ -1,32 +1,72 @@
 ﻿@model List<PCOMS.Models.Project>
 
-<h2>Projects</h2>
+@{
+    ViewData["Title"] = "Projects";
+}
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Client</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in Model)
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Projects</h2>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card empty-state">
+        <div class="card-body text-center">
+            <h5 class="text-muted">No projects yet</h5>
+            <p class="small">Create a client project to get started.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var project in Model)
         {
-            <tr>
-                <td>@p.Name</td>
-                <td>@p.Client?.Name</td>
-                <td>@p.Status</td>
-                <td>
-                    <a asp-controller="Projects"
-                       asp-action="Edit"
-                       asp-route-id="@p.Id"
-                       class="btn btn-sm btn-warning">
-                        Edit
-                    </a>
-                </td>
-            </tr>
+            <div class="col-md-6 col-lg-4">
+                <div class="card project-card h-100">
+                    <div class="card-body d-flex flex-column">
+
+                        <!-- HEADER -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-semibold mb-0">
+                                @project.Name
+                            </h5>
+
+                            <span class="badge project-status @project.Status.ToString().ToLower()">
+                                @project.Status
+                            </span>
+                        </div>
+
+                        <!-- CLIENT -->
+                        <p class="text-muted small mb-2">
+                            Client: <strong>@project.Client.Name</strong>
+                        </p>
+
+                        <!-- RATE -->
+                        <p class="mb-3">
+                            <span class="text-muted small">Hourly Rate:</span><br />
+                            <span class="fw-semibold">₦@project.HourlyRate</span>
+                        </p>
+
+                        <!-- ACTIONS -->
+                        <div class="mt-auto d-flex gap-2">
+                            <a asp-action="Edit"
+                               asp-route-id="@project.Id"
+                               class="btn btn-sm btn-outline-primary flex-fill">
+                                Edit
+                            </a>
+
+                            <a asp-controller="TimeEntries"
+                               asp-action="Project"
+                               asp-route-id="@project.Id"
+                               class="btn btn-sm btn-outline-secondary flex-fill">
+                                Time
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}

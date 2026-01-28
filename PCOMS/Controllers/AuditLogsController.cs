@@ -4,7 +4,7 @@ using PCOMS.Application.Interfaces;
 
 namespace PCOMS.Controllers
 {
-    [Authorize(Roles = "Admin,ProjectManager")]
+    [Authorize(Roles = "Admin")]
     public class AuditLogsController : Controller
     {
         private readonly IAuditService _auditService;
@@ -16,7 +16,8 @@ namespace PCOMS.Controllers
 
         public IActionResult Index()
         {
-            return View(_auditService.GetAll());
+            var logs = _auditService.GetAll(); // ✅ DTO list
+            return View(logs);
         }
     }
 }

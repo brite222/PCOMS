@@ -1,22 +1,652 @@
-html {
-  font-size: 14px;
+/* =========================
+   GLOBAL
+========================= */
+body {
+    background-color: #f4f6f9;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+h1, h2, h3, h4 {
+    font-weight: 600;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* =========================
+   NAVBAR
+========================= */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: .5px;
+}
+
+.navbar .nav-link {
+    color: rgba(255,255,255,.85) !important;
+}
+
+    .navbar .nav-link:hover {
+        color: #ffffff !important;
+    }
+
+/* =========================
+   PAGE CONTAINER
+========================= */
+.container {
+    max-width: 1200px;
+}
+
+/* =========================
+   CARDS
+========================= */
+.card {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,0,0,.12);
+    }
+
+    .card h6 {
+        text-transform: uppercase;
+        font-size: .75rem;
+        letter-spacing: .8px;
+        color: #6c757d;
+    }
+
+    .card h3 {
+        font-weight: 700;
+    }
+
+/* =========================
+   DASHBOARD COLORS
+========================= */
+.card-primary {
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+}
+
+.card-success {
+    background: linear-gradient(135deg, #1cc88a, #13855c);
+    color: #fff;
+}
+
+.card-warning {
+    background: linear-gradient(135deg, #f6c23e, #dda20a);
+    color: #fff;
+}
+
+.card-dark {
+    background: linear-gradient(135deg, #5a5c69, #2e2f37);
+    color: #fff;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2e59d9;
+    }
+
+/* =========================
+   TABLES
+========================= */
+.table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table thead {
+        background: #f1f3f6;
+    }
+
+    .table th {
+        font-weight: 600;
+    }
+
+/* =========================
+   FOOTER
+========================= */
+footer {
+    font-size: .85rem;
+}
+/* ===============================
+   APP THEME
+================================ */
+
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --dark: #0f172a;
+    --light-bg: #f1f5f9;
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: var(--light-bg);
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    color: #0f172a;
+}
+.table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table thead {
+        background-color: #e5e7eb;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+.alert {
+    animation: fadeIn 0.4s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* =========================
+   GLOBAL APP STYLES
+========================= */
+
+body {
+    background-color: #f8fafc;
+}
+
+/* NAVBAR */
+.navbar {
+    background: linear-gradient(90deg, #0f172a, #1e293b);
+}
+
+/* CARDS */
+.card {
+    border-radius: 14px;
+    padding: 1.5rem;
+    border: none;
+    background: #ffffff;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+
+/* CARD COLORS */
+.card-primary {
+    border-left: 6px solid #4f46e5;
+}
+
+.card-success {
+    border-left: 6px solid #16a34a;
+}
+
+.card-warning {
+    border-left: 6px solid #f59e0b;
+}
+
+.card-dark {
+    border-left: 6px solid #0f172a;
+}
+
+/* TABLES */
+.table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table th {
+        background-color: #f1f5f9;
+        font-weight: 600;
+    }
+
+/* BUTTONS */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* FOOTER */
+footer {
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.dashboard-card {
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+    }
+/* ===============================
+   LOGIN PAGE STYLES
+   =============================== */
+
+.login-wrapper {
+    min-height: calc(100vh - 140px);
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    padding: 2rem;
+}
+
+.login-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+    /* INPUTS */
+    .login-card .form-control {
+        border-radius: 10px;
+    }
+
+    /* BUTTON */
+    .login-card .btn-primary {
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+/* ===============================
+   ANIMATION
+   =============================== */
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeSlideUp 0.6s ease-out;
+}
+/* ===============================
+   GLOBAL UI ENHANCEMENTS
+   =============================== */
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.card-ui {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    padding: 1.5rem;
+}
+
+.table-ui {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table-ui thead {
+        background: #f1f5f9;
+        font-weight: 600;
+    }
+
+    .table-ui tbody tr:hover {
+        background: #f8fafc;
+    }
+
+.btn-soft {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* ===============================
+   BADGES
+   =============================== */
+.badge-soft-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-soft-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-soft-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* ===============================
+   FADE ANIMATION
+   =============================== */
+.fade-up {
+    animation: fadeUp 0.5s ease-out;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* =========================
+   AUDIT LOGS STYLING
+   ========================= */
+
+.audit-table th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+}
+
+.audit-row {
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+    .audit-row:hover {
+        background-color: #f8fafc;
+        transform: scale(1.005);
+    }
+
+/* Action badges */
+.audit-badge {
+    padding: 0.45em 0.7em;
+    font-size: 0.75rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+    .audit-badge.create {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .audit-badge.update {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .audit-badge.delete {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .audit-badge.login {
+        background-color: #ede9fe;
+        color: #5b21b6;
+    }
+
+    .audit-badge.logout {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+/* Empty state */
+.empty-state {
+    border: 2px dashed #e5e7eb;
+    background-color: #f9fafb;
+}
+/* =========================
+   PROJECT CARDS
+   ========================= */
+
+.project-card {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .project-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+    }
+
+/* Status badges */
+.project-status {
+    font-size: 0.7rem;
+    padding: 0.4em 0.65em;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+    .project-status.active {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .project-status.planned {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .project-status.completed {
+        background-color: #f1f5f9;
+        color: #334155;
+    }
+
+    .project-status.archived {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+/* =========================
+   USERS LIST
+   ========================= */
+
+.user-table tr {
+    transition: background-color 0.2s ease;
+}
+
+    .user-table tr:hover {
+        background-color: #f8fafc;
+    }
+
+/* Avatar */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Role badges */
+.role-badge {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    padding: 0.45em 0.7em;
+    border-radius: 999px;
+}
+
+    .role-badge.admin {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .role-badge.projectmanager {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .role-badge.developer {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+/* Status pill */
+.status-pill {
+    padding: 0.35em 0.7em;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+    .status-pill.active {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .status-pill.locked {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+/* =========================
+   CREATE USER FORM
+   ========================= */
+
+.card {
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 0.15rem rgba(99, 102, 241, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    border: none;
+}
+
+    .btn-primary:hover {
+        filter: brightness(1.05);
+    }
+
+.btn-outline-secondary:hover {
+    background-color: #f1f5f9;
+}
+
+/* =========================
+   TIME ENTRIES (ALL / MY)
+   ========================= */
+
+.table-time th {
+    background-color: #f8fafc;
+    font-weight: 600;
+}
+
+.table-time td {
+    vertical-align: middle;
+}
+
+.badge-status {
+    padding: 0.4em 0.65em;
+    font-size: 0.75rem;
+    border-radius: 999px;
+}
+
+.badge-pending {
+    background-color: #fde68a;
+    color: #92400e;
+}
+
+.badge-approved {
+    background-color: #bbf7d0;
+    color: #166534;
+}
+
+.badge-rejected {
+    background-color: #fecaca;
+    color: #7f1d1d;
+}
+
+.time-card {
+    animation: fadeInUp 0.35s ease;
+}
+
+.hours-pill {
+    background-color: #e0f2fe;
+    color: #075985;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+/* ---------- TIME ENTRIES POLISH ---------- */
+
+.animate-row {
+    transition: all 0.2s ease-in-out;
+}
+
+    .animate-row:hover {
+        background-color: #f8fafc;
+        transform: scale(1.002);
+    }
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.85rem;
+    border-radius: 0.5rem;
+}
+
+.card {
+    border-radius: 0.75rem;
 }

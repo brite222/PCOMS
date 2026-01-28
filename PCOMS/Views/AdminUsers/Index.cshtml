@@ -1,40 +1,94 @@
 ﻿@model List<PCOMS.Application.DTOs.UserListDto>
 
-<h2>Users</h2>
+@{
+    ViewData["Title"] = "Users";
+}
 
-<table class="table table-bordered align-middle">
-    <thead class="table-light">
-        <tr>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th style="width:150px;">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            <tr>
-                <td>@user.Email</td>
-                <td>@user.Role</td>
-                <td>
-                    @if (user.IsLocked)
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Users</h2>
+
+    <a asp-action="Create" class="btn btn-primary">
+        + Create User
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card empty-state">
+        <div class="card-body text-center">
+            <h5 class="text-muted">No users found</h5>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm rounded-4">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 user-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var user in Model)
                     {
-                        <span class="badge bg-danger">Locked</span>
+                        <tr>
+                            <!-- USER -->
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar">
+                                        @user.Email.Substring(0, 1).ToUpper()
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-semibold">@user.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- ROLE -->
+                            <td>
+                                <span class="badge role-badge @user.Role.ToLower()">
+                                    @user.Role
+                                </span>
+                            </td>
+
+                            <!-- STATUS -->
+                            <td>
+                                @if (user.IsLocked)
+                                {
+                                    <span class="status-pill locked">Locked</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill active">Active</span>
+                                }
+                            </td>
+
+                            <!-- ACTIONS -->
+                            <td class="text-end">
+                                <a asp-action="Details"
+                                   asp-route-id="@user.Id"
+                                   class="btn btn-sm btn-outline-secondary me-1">
+                                    Details
+                                </a>
+
+                                <a asp-action="ToggleLock"
+                                   asp-route-id="@user.Id"
+                                   class="btn btn-sm @(user.IsLocked ? "btn-outline-success" : "btn-outline-danger")">
+                                    @(user.IsLocked ? "Unlock" : "Lock")
+                                </a>
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                        <span class="badge bg-success">Active</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="ToggleLock"
-                       asp-route-id="@user.Id"
-                       class="btn btn-sm @(user.IsLocked ? "btn-success" : "btn-danger")">
-                        @(user.IsLocked ? "Unlock" : "Lock")
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+}

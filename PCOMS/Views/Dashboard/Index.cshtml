@@ -1,54 +1,83 @@
-﻿@model PCOMS.Application.DTOs.DashboardDto
+﻿@model PCOMS.Application.DTOs.AdminDashboardDto
 
-<h2>Dashboard</h2>
+@{
+    ViewData["Title"] = "Dashboard";
+}
 
-<div class="row">
+<h2 class="fw-bold mb-4">Dashboard Overview</h2>
 
+<div class="row g-4">
+
+    <!-- TOTAL CLIENTS -->
     <div class="col-md-3">
-        <div class="card text-bg-primary mb-3">
+        <div class="card dashboard-card border-start border-primary border-4 shadow-sm">
             <div class="card-body">
-                <h5>Clients</h5>
-                <h3>@Model.TotalClients</h3>
+                <small class="text-muted text-uppercase">Total Clients</small>
+                <h2 class="fw-bold text-dark mt-2">
+                    @Model.TotalClients
+                </h2>
             </div>
         </div>
     </div>
 
+    <!-- TOTAL PROJECTS -->
     <div class="col-md-3">
-        <div class="card text-bg-success mb-3">
+        <div class="card dashboard-card border-start border-success border-4 shadow-sm">
             <div class="card-body">
-                <h5>Projects</h5>
-                <h3>@Model.TotalProjects</h3>
+                <small class="text-muted text-uppercase">Total Projects</small>
+                <h2 class="fw-bold text-dark mt-2">
+                    @Model.TotalProjects
+                </h2>
             </div>
         </div>
     </div>
 
+    <!-- ACTIVE PROJECTS -->
     <div class="col-md-3">
-        <div class="card text-bg-warning mb-3">
+        <div class="card dashboard-card border-start border-warning border-4 shadow-sm">
             <div class="card-body">
-                <h5>Developers</h5>
-                <h3>@Model.TotalDevelopers</h3>
+                <small class="text-muted text-uppercase">Active Projects</small>
+                <h2 class="fw-bold text-dark mt-2">
+                    @Model.ActiveProjects
+                </h2>
             </div>
         </div>
     </div>
 
+    <!-- TOTAL DEVELOPERS -->
     <div class="col-md-3">
-        <div class="card text-bg-dark mb-3">
+        <div class="card dashboard-card border-start border-dark border-4 shadow-sm">
             <div class="card-body">
-                <h5>Total Hours</h5>
-                <h3>@Model.TotalHours</h3>
+                <small class="text-muted text-uppercase">Total Developers</small>
+                <h2 class="fw-bold text-dark mt-2">
+                    @Model.TotalDevelopers
+                </h2>
             </div>
         </div>
     </div>
 
-</div>
-
-<div class="row">
+    <!-- TOTAL HOURS -->
     <div class="col-md-6">
-        <div class="card text-bg-info">
+        <div class="card dashboard-card border-start border-primary border-4 shadow-sm">
             <div class="card-body">
-                <h5>Hours This Week</h5>
-                <h3>@Model.HoursThisWeek</h3>
+                <small class="text-muted text-uppercase">Total Hours Logged</small>
+                <h2 class="fw-bold text-dark mt-2">
+                    @Model.TotalHours
+                </h2>
             </div>
         </div>
     </div>
+
+    <!-- HOURS THIS WEEK -->
+    <div class="col-md-6">
+        <div class="card dashboard-card border-start border-success border-4 shadow-sm">
+            <div class="card-body">
+                <small class="text-muted text-uppercase">Hours This Week</small>
+                <h2 class="fw-bold text-dark mt-2">
+                    @Model.HoursThisWeek
+                </h2>
+            </div>
+        </div>
+    </div>
+
 </div>

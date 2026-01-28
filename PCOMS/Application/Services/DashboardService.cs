@@ -1,37 +1,63 @@
-﻿using Microsoft.AspNetCore.Identity;
-using PCOMS.Application.DTOs;
+﻿using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
 using PCOMS.Data;
+using PCOMS.Models;
 
 namespace PCOMS.Application.Services
 {
     public class DashboardService : IDashboardService
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
 
-        public DashboardService(
-            ApplicationDbContext context,
-            UserManager<IdentityUser> userManager)
+        public DashboardService(ApplicationDbContext context)
         {
             _context = context;
-            _userManager = userManager;
         }
 
-        public DashboardDto GetDashboard()
+        // =========================
+        // ADMIN DASHBOARD
+        // =========================
+        public AdminDashboardDto GetAdminDashboard()
         {
-            var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+            var startOfWeek =
+                DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
 
-            return new DashboardDto
+            return new AdminDashboardDto
             {
                 TotalClients = _context.Clients.Count(),
                 TotalProjects = _context.Projects.Count(),
-                TotalDevelopers = _userManager.Users.Count(),
+                ActiveProjects = _context.Projects.Count(p =>
+                    p.Status == ProjectStatus.Active),
+                TotalDevelopers = _context.Users.Count(),
                 TotalHours = _context.TimeEntries.Sum(t => t.Hours),
                 HoursThisWeek = _context.TimeEntries
-                    .Where(t => t.WorkDate >= startOfWeek)
+                    .Where(t => t.EntryDate >= startOfWeek)
                     .Sum(t => t.Hours)
             };
         }
+
+        // =========================
+        // DEVELOPER DASHBOARD
+        // =========================
+        // DEVELOPER DASHBOARD
+        // =========================
+        public DeveloperDashboardDto GetDeveloperDashboard(string developerId)
+        {
+            var entries = _context.TimeEntries
+                .Where(t => t.DeveloperId == developerId)
+                .ToList();
+
+            return new DeveloperDashboardDto
+            {
+                TotalHours = entries.Sum(e => e.Hours),
+                PendingHours = entries
+                    .Where(e => e.Status == TimeEntryStatus.Pending)
+                    .Sum(e => e.Hours),
+                ApprovedHours = entries
+                    .Where(e => e.Status == TimeEntryStatus.Approved)
+                    .Sum(e => e.Hours)
+            };
+        }
+
     }
 }

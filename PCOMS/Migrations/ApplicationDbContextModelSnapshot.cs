@@ -219,23 +219,27 @@ namespace PCOMS.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Details")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Entity")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserId")
+                    b.Property<int>("EntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PerformedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PerformedByUserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs");
                 });
@@ -269,6 +273,60 @@ namespace PCOMS.Migrations
                     b.ToTable("Clients");
                 });
 
+            modelBuilder.Entity("PCOMS.Models.ClientUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ClientUsers");
+                });
+
+            modelBuilder.Entity("PCOMS.Models.Invoice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("Invoices");
+                });
+
             modelBuilder.Entity("PCOMS.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -282,6 +340,15 @@ namespace PCOMS.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Hours")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ManagerId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -316,24 +383,10 @@ namespace PCOMS.Migrations
 
                     b.HasIndex("DeveloperId");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId", "DeveloperId")
+                        .IsUnique();
 
                     b.ToTable("ProjectAssignments");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ProjectDeveloper", b =>
-                {
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("DeveloperId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ProjectId", "DeveloperId");
-
-                    b.HasIndex("DeveloperId");
-
-                    b.ToTable("ProjectDevelopers");
                 });
 
             modelBuilder.Entity("PCOMS.Models.TimeEntry", b =>
@@ -342,9 +395,6 @@ namespace PCOMS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
@@ -352,10 +402,19 @@ namespace PCOMS.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("EntryDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("Hours")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsInvoiced")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("WorkDate")
@@ -421,15 +480,34 @@ namespace PCOMS.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PCOMS.Models.AuditLog", b =>
+            modelBuilder.Entity("PCOMS.Models.ClientUser", b =>
                 {
+                    b.HasOne("PCOMS.Models.Client", "Client")
+                        .WithMany("ClientUsers")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Client");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PCOMS.Models.Invoice", b =>
+                {
+                    b.HasOne("PCOMS.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
                 });
 
             modelBuilder.Entity("PCOMS.Models.Project", b =>
@@ -462,25 +540,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.ProjectDeveloper", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Developer")
-                        .WithMany()
-                        .HasForeignKey("DeveloperId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany("ProjectDevelopers")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Developer");
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("PCOMS.Models.TimeEntry", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Developer")
@@ -490,7 +549,7 @@ namespace PCOMS.Migrations
                         .IsRequired();
 
                     b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
+                        .WithMany("TimeEntries")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -502,12 +561,14 @@ namespace PCOMS.Migrations
 
             modelBuilder.Entity("PCOMS.Models.Client", b =>
                 {
+                    b.Navigation("ClientUsers");
+
                     b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("PCOMS.Models.Project", b =>
                 {
-                    b.Navigation("ProjectDevelopers");
+                    b.Navigation("TimeEntries");
                 });
 #pragma warning restore 612, 618
         }

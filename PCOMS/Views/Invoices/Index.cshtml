@@ -1,0 +1,33 @@
+﻿@model List<PCOMS.Application.DTOs.InvoiceDto>
+
+<h2>Invoices</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>Period</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var invoice in Model)
+        {
+            <tr>
+                <td>@invoice.ClientName</td>
+                <td>@invoice.Period</td>
+                <td>@invoice.TotalAmount</td>
+                <td>
+                    <!-- ✅ ADD IT RIGHT HERE -->
+                    <a asp-controller="Invoices"
+                       asp-action="Download"
+                       asp-route-id="@invoice.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        Download PDF
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

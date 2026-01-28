@@ -1,16 +1,105 @@
-﻿@model List<PCOMS.Application.DTOs.TimeEntryDto>
+﻿@using PCOMS.Models
+@model List<PCOMS.Application.DTOs.TimeEntryDto>
 
-<h2>All Time Entries</h2>
+@{
+    ViewData["Title"] = "All Time Entries";
+}
 
-<table class="table">
-    @foreach (var t in Model)
-    {
-        <tr>
-            <td>@t.WorkDate.ToShortDateString()</td>
-            <td>@t.ProjectName</td>
-            <td>@t.DeveloperEmail</td>
-            <td>@t.Hours</td>
-            <td>@t.Description</td>
-        </tr>
-    }
-</table>
+<h2 class="mb-4">⏱ All Time Entries</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info shadow-sm">
+        No time entries submitted yet.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Developer</th>
+                        <th>Project</th>
+                        <th>Description</th>
+                        <th class="text-center">Hours</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model)
+                    {
+                        <tr class="animate-row">
+                            <td>@entry.WorkDate.ToShortDateString()</td>
+
+                            <td class="text-muted">
+                                @entry.DeveloperEmail
+                            </td>
+
+                            <td>
+                                <strong>@entry.ProjectName</strong>
+                            </td>
+
+                            <td class="text-muted">
+                                @entry.Description
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge bg-info text-dark px-3 py-2">
+                                    @entry.Hours h
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (entry.Status == TimeEntryStatus.Pending)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+                                }
+                                else if (entry.Status == TimeEntryStatus.Approved)
+                                {
+                                    <span class="badge bg-success">
+                                        Approved
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        Rejected
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                @if (entry.Status == TimeEntryStatus.Pending)
+                                {
+                                    <a asp-action="Approve"
+                                       asp-route-id="@entry.Id"
+                                       class="btn btn-sm btn-success me-1">
+                                        ✓ Approve
+                                    </a>
+
+                                    <a asp-action="Reject"
+                                       asp-route-id="@entry.Id"
+                                       class="btn btn-sm btn-outline-danger">
+                                        ✕ Reject
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">
+                                        Action completed
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

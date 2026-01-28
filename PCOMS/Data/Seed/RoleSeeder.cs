@@ -8,7 +8,7 @@ namespace PCOMS.Data.Seed
         {
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-            string[] roles = { "Admin", "ProjectManager", "Developer" };
+            string[] roles = { "Admin", "ProjectManager", "Developer", "Client" };
 
             foreach (var role in roles)
             {
@@ -18,5 +18,6 @@ namespace PCOMS.Data.Seed
                 }
             }
         }
+
     }
 }

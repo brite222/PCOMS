@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "Client Portal";
+    var client = Model;
+}
+
+<h2 class="mb-4">Welcome, @client.Name</h2>
+
+<p class="text-muted">
+    Email: <strong>@client.Email</strong>
+</p>
+
+<hr />
+
+<h4 class="mb-3">Your Projects</h4>
+
+@if (client.Projects == null || client.Projects.Count == 0)
+{
+    <div class="alert alert-info">
+        No projects available yet.
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var project in client.Projects)
+        {
+            <div class="col-md-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@project.Name</h5>
+
+                        <p>
+                            Status:
+                            <span class="badge bg-secondary">
+                                @project.Status
+                            </span>
+                        </p>
+
+                        <p>
+                            <strong>Total Hours:</strong>
+                            @project.TotalHours
+                        </p>
+
+                        <a asp-action="Project"
+                           asp-route-id="@project.Id"
+                           class="btn btn-sm btn-primary">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

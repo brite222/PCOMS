@@ -1,27 +1,68 @@
 ﻿@model List<PCOMS.Application.DTOs.AuditLogDto>
 
-<h2>Audit Logs</h2>
+@{
+    ViewData["Title"] = "Audit Logs";
+}
 
-<table class="table table-sm">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>User</th>
-            <th>Action</th>
-            <th>Entity</th>
-            <th>Details</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var log in Model)
-        {
-            <tr>
-                <td>@log.CreatedAt</td>
-                <td>@log.UserEmail</td>
-                <td>@log.Action</td>
-                <td>@log.Entity</td>
-                <td>@log.Details</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Audit Logs</h2>
+    <span class="text-muted">System activity & history</span>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card empty-state">
+        <div class="card-body text-center">
+            <h5 class="text-muted">No audit logs found</h5>
+            <p class="small">Actions performed in the system will appear here.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle audit-table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Entity ID</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        <tr class="audit-row">
+                            <td>
+                                <span class="fw-semibold">@log.UserEmail</span>
+                            </td>
+
+                            <td>
+                                <span class="badge audit-badge @log.Action.ToLower()">
+                                    @log.Action
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="text-muted">@log.Entity</span>
+                            </td>
+
+                            <td>
+                                <code>#@log.EntityId</code>
+                            </td>
+
+                            <td>
+                                <span class="text-muted">
+                                    @log.PerformedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

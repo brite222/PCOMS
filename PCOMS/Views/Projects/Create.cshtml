@@ -16,9 +16,19 @@
     </div>
 
     <button class="btn btn-success">Save</button>
+
+    <a asp-action="Client"
+       asp-route-id="@Model.ClientId"
+       class="btn btn-secondary ms-2">
+        Cancel
+    </a>
+    <div class="mb-3">
+        <label>Hourly Rate</label>
+        <input asp-for="HourlyRate" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="HourlyRate"></label>
+        <input asp-for="HourlyRate" class="form-control" />
+    </div>
+
 </form>
-@if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
-{
-    <a asp-action="Create" asp-route-clientId="@ViewBag.ClientId"
-       class="btn btn-primary">Add Project</a>
-}

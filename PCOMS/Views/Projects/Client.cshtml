@@ -1,67 +1,57 @@
-﻿@model List<PCOMS.Models.Project>
+﻿@model List<PCOMS.Application.DTOs.ProjectDto>
 
-@{
-    ViewData["Title"] = "Projects";
-}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-title">Projects</h2>
 
-<h2>Projects</h2>
-
-<div class="mb-3">
     <a asp-action="Create"
        asp-route-clientId="@ViewBag.ClientId"
        class="btn btn-primary">
-        Add Project
-    </a>
-
-    <a asp-controller="Clients"
-       asp-action="Index"
-       class="btn btn-secondary ms-2">
-        Back to Clients
+        + Add Project
     </a>
 </div>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">
-        No projects have been created for this client yet.
-    </div>
-}
-else
-{
-    <table class="table table-bordered align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th style="width: 180px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var project in Model)
-            {
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead>
                 <tr>
-                    <td>@project.Name</td>
-                    <td>
-                        <span class="badge bg-secondary">
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Manager</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var project in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@project.Name</strong>
+                        </td>
+
+                        <td>
+                            <span class="badge
+                                    @(project.Status == "Active" ? "bg-success" :
+                                                                    project.Status == "Planned" ? "bg-secondary" :
+                                                                    "bg-dark")">
                             @project.Status
                         </span>
                     </td>
-                    <td>
-                        <a asp-action="Edit"
-                           asp-route-id="@project.Id"
-                           class="btn btn-sm btn-warning">
-                            Edit
-                        </a>
 
-                        <a asp-controller="ProjectAssignments"
-                           asp-action="Assign"
-                           asp-route-projectId="@project.Id"
-                           class="btn btn-sm btn-outline-primary ms-1">
-                            Assign Dev
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+                        <td>
+                            @(project.ManagerName ?? "—")
+                        </td>
+
+                        <td class="text-end">
+                            <a asp-action="Edit"
+                               asp-route-id="@project.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -6,21 +6,19 @@ namespace PCOMS.Models
     {
         public int Id { get; set; }
 
-        [Required]
-        [StringLength(150)]
-        public string Name { get; set; } = default!;
+        [Required, StringLength(150)]
+        public string Name { get; set; } = null!;
 
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = default!;
+        [Required, EmailAddress]
+        public string Email { get; set; } = null!;
 
         [Phone]
         public string? Phone { get; set; }
 
         public bool IsDeleted { get; set; } = false;
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public ICollection<Project> Projects { get; set; } = new List<Project>();
 
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
+        public ICollection<ClientUser> ClientUsers { get; set; } = new List<ClientUser>();
     }
 }

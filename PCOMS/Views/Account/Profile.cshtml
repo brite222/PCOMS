@@ -1,0 +1,52 @@
+﻿@model Microsoft.AspNetCore.Identity.IdentityUser
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<h2>My Profile</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Email</th>
+        <td>@Model.Email</td>
+    </tr>
+    <tr>
+        <th>Role</th>
+        <td>@ViewBag.Role</td>
+    </tr>
+</table>
+
+@if (ViewBag.Role == "Developer")
+{
+    <h4 class="mt-4">Assigned Projects</h4>
+
+    var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+
+    if (projects != null && projects.Any())
+    {
+        <ul class="list-group">
+            @foreach (var project in projects)
+            {
+                <li class="list-group-item">
+                    <strong>@project.Name</strong>
+                    <span class="badge bg-secondary ms-2">
+                        @project.Status
+                    </span>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            You are not assigned to any projects yet.
+        </div>
+    }
+}
+
+<div class="mt-4">
+    <a asp-action="ChangePassword" class="btn btn-warning">
+        Change Password
+    </a>
+</div>

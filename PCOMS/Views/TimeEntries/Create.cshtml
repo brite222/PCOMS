@@ -1,22 +1,37 @@
 ﻿@model PCOMS.Application.DTOs.CreateTimeEntryDto
 
+@{
+    ViewData["Title"] = "Log Time";
+}
+
 <h2>Log Time</h2>
 
-<form method="post">
-    <input type="hidden" asp-for="ProjectId" />
+<form asp-action="Create" method="post">
 
     <div class="mb-3">
-        <label asp-for="WorkDate"></label>
+        <label asp-for="ProjectId" class="form-label"></label>
+        <select asp-for="ProjectId"
+                class="form-select"
+                asp-items="@(new SelectList(ViewBag.Projects, "Id", "Name"))">
+            <option value="">-- Select Project --</option>
+        </select>
+        <span asp-validation-for="ProjectId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="WorkDate" class="form-label"></label>
         <input asp-for="WorkDate" type="date" class="form-control" />
+        <span asp-validation-for="WorkDate" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Hours"></label>
-        <input asp-for="Hours" class="form-control" />
+        <label asp-for="Hours" class="form-label"></label>
+        <input asp-for="Hours" type="number" step="0.1" class="form-control" />
+        <span asp-validation-for="Hours" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Description"></label>
+        <label asp-for="Description" class="form-label"></label>
         <textarea asp-for="Description" class="form-control"></textarea>
     </div>
 
