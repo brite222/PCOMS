@@ -1,0 +1,111 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.UpdateDocumentDto
+
+@{
+    ViewData["Title"] = "Edit Document";
+    var document = ViewBag.Document as PCOMS.Application.Interfaces.DTOs.DocumentDto;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-pencil"></i> Edit Document Metadata</h4>
+                    <p class="mb-0 text-muted">File: <strong>@document?.FileName</strong></p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> You can only edit the metadata. To update the file itself, please upload a new version.
+                    </div>
+
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="Category" class="form-label">Category</label>
+                            <select asp-for="Category" class="form-select">
+                                <option value="General">General</option>
+                                <option value="Requirements">Requirements</option>
+                                <option value="Design">Design</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Technical">Technical Documentation</option>
+                                <option value="Meeting">Meeting Notes</option>
+                                <option value="Report">Report</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Brief description of this document..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Tags" class="form-label">Tags</label>
+                            <input asp-for="Tags" class="form-control"
+                                   placeholder="e.g., important, review-needed, draft (comma-separated)" />
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                            <div class="form-text">
+                                Add tags separated by commas for easier searching
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="IsClientVisible" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsClientVisible" class="form-check-label">
+                                Make this document visible to clients
+                            </label>
+                            <div class="form-text">
+                                If checked, clients will be able to view and download this document
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="@Url.Action("Details", new { id = Model.Id })"
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Document Info -->
+            @if (document != null)
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6><i class="bi bi-info-circle"></i> Current Document Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>File Name:</strong> @document.FileName</p>
+                                <p><strong>Version:</strong> @document.Version</p>
+                                <p><strong>Size:</strong> @document.FileSizeFormatted</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Uploaded By:</strong> @document.UploadedByName</p>
+                                <p><strong>Uploaded At:</strong> @document.UploadedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                                <p><strong>Project:</strong> @document.ProjectName</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

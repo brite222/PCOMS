@@ -1,0 +1,258 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.ProductivityReportDto
+
+@{
+    ViewData["Title"] = "Productivity Report";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-10">
+            <h2><i class="bi bi-speedometer2"></i> Productivity Report</h2>
+            <p class="text-muted">@Model.StartDate.ToString("MMM dd, yyyy") - @Model.EndDate.ToString("MMM dd, yyyy")</p>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="@Url.Action("Productivity")" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> New Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Hours</h6>
+                    <h3>@Model.TotalHoursLogged.ToString("F1")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Billable Hours</h6>
+                    <h3>@Model.BillableHours.ToString("F1")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Utilization Rate</h6>
+                    <h3>@Model.UtilizationRate.ToString("F1")%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6>Active Developers</h6>
+                    <h3>@Model.TotalDevelopers</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hours Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hours Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td>Billable Hours</td>
+                            <td class="text-end text-success"><strong>@Model.BillableHours.ToString("F1")</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Non-Billable Hours</td>
+                            <td class="text-end text-muted">@Model.NonBillableHours.ToString("F1")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Hours</strong></td>
+                            <td class="text-end"><strong>@Model.TotalHoursLogged.ToString("F1")</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Team Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td>Total Developers</td>
+                            <td class="text-end">@Model.TotalDevelopers</td>
+                        </tr>
+                        <tr>
+                            <td>Average Hours per Developer</td>
+                            <td class="text-end">@Model.AverageHoursPerDeveloper.ToString("F1")</td>
+                        </tr>
+                        <tr>
+                            <td>Utilization Rate</td>
+                            <td class="text-end"><strong>@Model.UtilizationRate.ToString("F1")%</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Developer Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Developer Statistics</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.DeveloperStats.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Developer</th>
+                                        <th class="text-end">Total Hours</th>
+                                        <th class="text-end">Billable</th>
+                                        <th class="text-end">Utilization</th>
+                                        <th class="text-end">Projects</th>
+                                        <th class="text-end">Avg Daily Hours</th>
+                                        <th>Top Projects</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var dev in Model.DeveloperStats)
+                                    {
+                                        <tr>
+                                            <td>@dev.UserName</td>
+                                            <td class="text-end">@dev.TotalHours.ToString("F1")</td>
+                                            <td class="text-end text-success">@dev.BillableHours.ToString("F1")</td>
+                                            <td class="text-end">
+                                                <span class="badge @(dev.UtilizationRate >= 80 ? "bg-success" : dev.UtilizationRate >= 60 ? "bg-warning" : "bg-danger")">
+                                                    @dev.UtilizationRate.ToString("F1")%
+                                                </span>
+                                            </td>
+                                            <td class="text-end">@dev.ProjectsWorkedOn</td>
+                                            <td class="text-end">@dev.AverageDailyHours.ToString("F1")</td>
+                                            <td>
+                                                @foreach (var project in dev.TopProjects.Take(2))
+                                                {
+                                                    <span class="badge bg-secondary me-1">@project</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No developer data available for this period.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Project Statistics</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProjectStats.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Total Hours</th>
+                                        <th class="text-end">Developers</th>
+                                        <th class="text-end">Avg Hours/Dev</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var project in Model.ProjectStats)
+                                    {
+                                        <tr>
+                                            <td>@project.ProjectName</td>
+                                            <td>
+                                                <span class="badge bg-info">@project.Status</span>
+                                            </td>
+                                            <td class="text-end">@project.TotalHours.ToString("F1")</td>
+                                            <td class="text-end">@project.DevelopersAssigned</td>
+                                            <td class="text-end">@project.AverageHoursPerDeveloper.ToString("F1")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No project data available for this period.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Trends -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Daily Activity Trends</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.DailyTrends.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th class="text-end">Hours</th>
+                                        <th class="text-end">Developers</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var day in Model.DailyTrends.OrderByDescending(d => d.Date).Take(30))
+                                    {
+                                        <tr>
+                                            <td>@day.Date.ToString("MMM dd, yyyy")</td>
+                                            <td class="text-end">@day.Hours.ToString("F1")</td>
+                                            <td class="text-end">@day.Developers</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No daily trend data available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add Chart.js visualization here if needed
+    </script>
+}

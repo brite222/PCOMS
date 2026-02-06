@@ -1,0 +1,184 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.TimeEntryReportDto
+
+@{
+    ViewData["Title"] = "Time Entry Report";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-10">
+            <h2><i class="bi bi-clock-history"></i> Time Entry Report</h2>
+            <p class="text-muted">@Model.StartDate.ToString("MMM dd, yyyy") - @Model.EndDate.ToString("MMM dd, yyyy")</p>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="@Url.Action("TimeEntry")" class="btn btn-outline-info">
+                <i class="bi bi-arrow-left"></i> New Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Total Entries</h6>
+                    <h3>@Model.TotalEntries</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Hours</h6>
+                    <h3>@Model.TotalHours.ToString("F1")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary by User -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hours by Developer</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UserSummary.Any())
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Developer</th>
+                                    <th class="text-end">Hours</th>
+                                    <th class="text-end">Entries</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.UserSummary)
+                                {
+                                    <tr>
+                                        <td>@user.UserName</td>
+                                        <td class="text-end">@user.TotalHours.ToString("F1")</td>
+                                        <td class="text-end">@user.EntriesCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No user data available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Hours by Project</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProjectSummary.Any())
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th class="text-end">Hours</th>
+                                    <th class="text-end">Entries</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var project in Model.ProjectSummary)
+                                {
+                                    <tr>
+                                        <td>@project.ProjectName</td>
+                                        <td class="text-end">@project.TotalHours.ToString("F1")</td>
+                                        <td class="text-end">@project.EntriesCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No project data available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Entries -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Time Entries</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Entries.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Developer</th>
+                                        <th>Project</th>
+                                        <th>Description</th>
+                                        <th class="text-end">Hours</th>
+                                        <th class="text-center">Billable</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in Model.Entries.Take(100))
+                                    {
+                                        <tr>
+                                            <td>@entry.Date.ToString("MMM dd, yyyy")</td>
+                                            <td>@entry.UserName</td>
+                                            <td>@entry.ProjectName</td>
+                                            <td>@(entry.Description ?? "-")</td>
+                                            <td class="text-end">@entry.Hours.ToString("F1")</td>
+                                            <td class="text-center">
+                                                @if (entry.IsBillable)
+                                                {
+                                                    <span class="badge bg-success">Yes</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">No</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (Model.Entries.Count > 100)
+                        {
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-info-circle"></i>
+                                Showing first 100 of @Model.Entries.Count entries. Export to CSV for complete data.
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No time entries found for this period.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add export to CSV functionality here if needed
+    </script>
+}

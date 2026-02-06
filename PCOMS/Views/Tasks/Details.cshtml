@@ -1,0 +1,431 @@
+﻿@model PCOMS.Application.DTOs.TaskDetailsDto
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Tasks</a></li>
+                    @if (Model.ParentTaskId.HasValue)
+                    {
+                        <li class="breadcrumb-item">
+                            <a asp-action="Details" asp-route-id="@Model.ParentTaskId">@Model.ParentTaskTitle</a>
+                        </li>
+                    }
+                    <li class="breadcrumb-item active">@Model.Title</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Left Column: Task Details -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">@Model.Title</h4>
+                    <div class="btn-group">
+                        <a asp-action="Edit" asp-route-id="@Model.TaskId" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.TaskId" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            @switch (Model.Status)
+                            {
+                                case PCOMS.Models.TaskStatus.ToDo:
+                                    <span class="badge bg-secondary">To Do</span>
+                                    break;
+                                case PCOMS.Models.TaskStatus.InProgress:
+                                    <span class="badge bg-info">In Progress</span>
+                                    break;
+                                case PCOMS.Models.TaskStatus.InReview:
+                                    <span class="badge bg-warning">In Review</span>
+                                    break;
+                                case PCOMS.Models.TaskStatus.Completed:
+                                    <span class="badge bg-success">Completed</span>
+                                    break;
+                                case PCOMS.Models.TaskStatus.Cancelled:
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    break;
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Priority:</strong>
+                            @switch (Model.Priority)
+                            {
+                                case PCOMS.Models.TaskPriority.Low:
+                                    <span class="badge bg-light text-dark">Low</span>
+                                    break;
+                                case PCOMS.Models.TaskPriority.Medium:
+                                    <span class="badge bg-primary">Medium</span>
+                                    break;
+                                case PCOMS.Models.TaskPriority.High:
+                                    <span class="badge bg-warning">High</span>
+                                    break;
+                                case PCOMS.Models.TaskPriority.Critical:
+                                    <span class="badge bg-danger">Critical</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Assigned To:</strong>
+                            @if (!string.IsNullOrEmpty(Model.AssignedToName))
+                            {
+                                <span>@Model.AssignedToName</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Unassigned</span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Created By:</strong> @Model.CreatedByName
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Due Date:</strong>
+                            @if (Model.DueDate.HasValue)
+                            {
+                                <span class="@(Model.IsOverdue ? "text-danger" : "")">
+                                    @Model.DueDate.Value.ToString("MMMM dd, yyyy")
+                                </span>
+                                @if (Model.IsOverdue)
+                                {
+                                    <br /><small class="text-danger">Overdue by @Math.Abs(Model.DaysUntilDue) days</small>
+                                }
+                                else if (Model.DaysUntilDue <= 7)
+                                {
+                                    <br /><small class="text-warning">Due in @Model.DaysUntilDue days</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No due date set</span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Progress:</strong>
+                            <div class="progress mt-2" style="height: 25px;">
+                                <div class="progress-bar @(Model.ProgressPercentage == 100 ? "bg-success" : "bg-primary")" 
+                                     role="progressbar" 
+                                     style="width: @Model.ProgressPercentage%" 
+                                     aria-valuenow="@Model.ProgressPercentage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    @Model.ProgressPercentage%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <hr />
+                        <h5>Description</h5>
+                        <p class="text-muted">@Model.Description</p>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Tags))
+                    {
+                        <hr />
+                        <h5>Tags</h5>
+                        @foreach (var tag in Model.Tags.Split(','))
+                        {
+                            <span class="badge bg-secondary me-1">@tag.Trim()</span>
+                        }
+                    }
+
+                    <hr />
+                    <small class="text-muted">
+                        Created on @Model.CreatedAt.ToString("MMMM dd, yyyy") at @Model.CreatedAt.ToString("hh:mm tt")
+
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <br />
+                            <text>
+                                Last updated on @Model.UpdatedAt.Value.ToString("MMMM dd, yyyy")
+                                at @Model.UpdatedAt.Value.ToString("hh:mm tt")
+                            </text>
+
+                            @if (!string.IsNullOrEmpty(Model.UpdatedByName))
+                            {
+                                <text> by @Model.UpdatedByName</text>
+                            }
+                        }
+                    </small>
+
+
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="taskId" value="@Model.TaskId" />
+                                <select name="status" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Change Status...</option>
+                                    <option value="0" selected="@(Model.Status == PCOMS.Models.TaskStatus.ToDo)">To Do</option>
+                                    <option value="1" selected="@(Model.Status == PCOMS.Models.TaskStatus.InProgress)">In Progress</option>
+                                    <option value="2" selected="@(Model.Status == PCOMS.Models.TaskStatus.InReview)">In Review</option>
+                                    <option value="3" selected="@(Model.Status == PCOMS.Models.TaskStatus.Completed)">Completed</option>
+                                    <option value="4" selected="@(Model.Status == PCOMS.Models.TaskStatus.Cancelled)">Cancelled</option>
+                                </select>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form asp-action="Assign" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="taskId" value="@Model.TaskId" />
+                                <select name="assignedToId" class="form-select" asp-items="ViewBag.Users" onchange="this.form.submit()">
+                                    <option value="">Assign To...</option>
+                                </select>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form asp-action="Complete" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="taskId" value="@Model.TaskId" />
+                                <button type="submit" class="btn btn-success w-100" @(Model.Status == PCOMS.Models.TaskStatus.Completed ? "disabled" : "")>
+                                    <i class="bi bi-check-circle"></i> Mark Complete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subtasks -->
+            @if (Model.SubTasks.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Subtasks (@Model.SubTasks.Count)</h5>
+                        <a asp-action="Create" asp-route-parentTaskId="@Model.TaskId" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus"></i> Add Subtask
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach (var subtask in Model.SubTasks)
+                            {
+                                <a asp-action="Details" asp-route-id="@subtask.TaskId" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@subtask.Title</strong>
+                                            <span class="badge bg-@(subtask.Status == PCOMS.Models.TaskStatus.Completed ? "success" : "secondary") ms-2">
+                                                @subtask.StatusDisplay
+                                            </span>
+                                        </div>
+                                        <div class="progress" style="width: 150px;">
+                                            <div class="progress-bar" style="width: @subtask.ProgressPercentage%">
+                                                @subtask.ProgressPercentage%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <p class="text-muted mb-2">No subtasks yet</p>
+                        <a asp-action="Create" asp-route-parentTaskId="@Model.TaskId" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus"></i> Add First Subtask
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- Comments Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Comments (@Model.Comments.Count)</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddComment" method="post" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="TaskId" value="@Model.TaskId" />
+                        <div class="mb-3">
+                            <textarea name="CommentText" class="form-control" rows="3" placeholder="Add a comment..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-chat"></i> Add Comment
+                        </button>
+                    </form>
+
+                    @if (Model.Comments.Any())
+                    {
+                        <hr />
+                        @foreach (var comment in Model.Comments)
+                        {
+                            <div class="mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between">
+                                    <strong>@comment.CreatedByName</strong>
+                                    <div>
+                                        <small class="text-muted">
+                                            @comment.CreatedAt.ToString("MMM dd, yyyy 'at' hh:mm tt")
+                                            @if (comment.IsEdited)
+                                            {
+                                                <span>(edited)</span>
+                                            }
+                                        </small>
+                                        <form asp-action="DeleteComment" method="post" class="d-inline ms-2">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="commentId" value="@comment.CommentId" />
+                                            <input type="hidden" name="taskId" value="@Model.TaskId" />
+                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0" onclick="return confirm('Delete this comment?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <p class="mb-0 mt-2">@comment.CommentText</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No comments yet. Be the first to comment!</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Attachments & Info -->
+        <div class="col-lg-4">
+            <!-- Attachments -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Attachments (@Model.Attachments.Count)</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UploadAttachment" method="post" enctype="multipart/form-data" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="taskId" value="@Model.TaskId" />
+                        <div class="mb-2">
+                            <input type="file" name="file" class="form-control" required />
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                            <i class="bi bi-upload"></i> Upload File
+                        </button>
+                    </form>
+
+                    @if (Model.Attachments.Any())
+                    {
+                        <hr />
+                        <div class="list-group">
+                            @foreach (var attachment in Model.Attachments)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <i class="bi bi-file-earmark"></i>
+                                            <strong>@attachment.FileName</strong>
+                                            <br />
+                                            <small class="text-muted">
+                                                @attachment.FileSizeFormatted
+                                                <br />
+                                                Uploaded by @attachment.UploadedByName
+                                                <br />
+                                                @attachment.UploadedAt.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <form asp-action="DeleteAttachment" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="attachmentId" value="@attachment.AttachmentId" />
+                                            <input type="hidden" name="taskId" value="@Model.TaskId" />
+                                            <button type="submit" class="btn btn-sm btn-link text-danger" onclick="return confirm('Delete this file?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No attachments</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Task Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Task Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Task ID:</dt>
+                        <dd class="col-sm-7">#@Model.TaskId</dd>
+
+                        <dt class="col-sm-5">Created:</dt>
+                        <dd class="col-sm-7">@Model.CreatedAt.ToString("MMM dd, yyyy")</dd>
+
+                        <dt class="col-sm-5">Created By:</dt>
+                        <dd class="col-sm-7">@Model.CreatedByName</dd>
+
+                        @if (Model.CompletedDate.HasValue)
+                        {
+                            <dt class="col-sm-5">Completed:</dt>
+                            <dd class="col-sm-7">@Model.CompletedDate.Value.ToString("MMM dd, yyyy")</dd>
+                        }
+
+                        <dt class="col-sm-5">Comments:</dt>
+                        <dd class="col-sm-7">@Model.CommentCount</dd>
+
+                        <dt class="col-sm-5">Attachments:</dt>
+                        <dd class="col-sm-7">@Model.AttachmentCount</dd>
+
+                        <dt class="col-sm-5">Subtasks:</dt>
+                        <dd class="col-sm-7">@Model.SubTaskCount</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

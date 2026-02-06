@@ -36,6 +36,12 @@ else
                                 @project.Status
                             </span>
                         </div>
+                        <a asp-controller="Documents"
+                           asp-action="Index"
+                           asp-route-projectId="@project.Id"
+                           class="btn btn-outline-primary">
+                            Documents
+                        </a>
 
                         <!-- CLIENT -->
                         <p class="text-muted small mb-2">

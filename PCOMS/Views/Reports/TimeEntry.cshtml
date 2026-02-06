@@ -1,0 +1,122 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.GenerateReportDto
+
+@{
+    ViewData["Title"] = "Generate Time Entry Report";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-clock-history"></i> Generate Time Entry Report</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="TimeEntry" method="post">
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Report Name</label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g., Weekly Time Entries" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="StartDate" class="form-label">Start Date *</label>
+                                <input asp-for="StartDate" type="date" class="form-control" required />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EndDate" class="form-label">End Date *</label>
+                                <input asp-for="EndDate" type="date" class="form-control" required />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProjectId" class="form-label">Filter by Project (Optional)</label>
+                            <select asp-for="ProjectId" class="form-select">
+                                <option value="">All Projects</option>
+                                <!-- Add project options from ViewBag if needed -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="UserId" class="form-label">Filter by Developer (Optional)</label>
+                            <select asp-for="UserId" class="form-select">
+                                <option value="">All Developers</option>
+                                <!-- Add developer options from ViewBag if needed -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="@Url.Action("Dashboard")" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-graph-up"></i> Generate Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i class="bi bi-lightning"></i> Quick Presets</h6>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-sm btn-outline-info me-2" onclick="setToday()">Today</button>
+                    <button class="btn btn-sm btn-outline-info me-2" onclick="setYesterday()">Yesterday</button>
+                    <button class="btn btn-sm btn-outline-info me-2" onclick="setThisWeek()">This Week</button>
+                    <button class="btn btn-sm btn-outline-info" onclick="setLastWeek()">Last Week</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function setToday() {
+            const now = new Date();
+            document.querySelector('[name="StartDate"]').valueAsDate = now;
+            document.querySelector('[name="EndDate"]').valueAsDate = now;
+        }
+
+        function setYesterday() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            document.querySelector('[name="StartDate"]').valueAsDate = yesterday;
+            document.querySelector('[name="EndDate"]').valueAsDate = yesterday;
+        }
+
+        function setThisWeek() {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const start = new Date(now);
+            start.setDate(now.getDate() - dayOfWeek);
+            document.querySelector('[name="StartDate"]').valueAsDate = start;
+            document.querySelector('[name="EndDate"]').valueAsDate = now;
+        }
+
+        function setLastWeek() {
+            const now = new Date();
+            const end = new Date(now);
+            end.setDate(now.getDate() - now.getDay() - 1);
+            const start = new Date(end);
+            start.setDate(end.getDate() - 6);
+            document.querySelector('[name="StartDate"]').valueAsDate = start;
+            document.querySelector('[name="EndDate"]').valueAsDate = end;
+        }
+    </script>
+}

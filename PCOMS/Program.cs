@@ -60,6 +60,12 @@ builder.Services.AddScoped<InvoiceNumberGenerator>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<InvoicePdfService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IReportingService, ReportingService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+
+// NEW: Document Management Service
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+
 builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
     builder.Configuration.GetSection("Email"));
 
@@ -82,6 +88,10 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+var env = app.Services.GetRequiredService<IWebHostEnvironment>();
+Directory.CreateDirectory(
+    Path.Combine(env.WebRootPath, "uploads", "documents"));
+
 
 // =========================
 // Seed Roles & Admin

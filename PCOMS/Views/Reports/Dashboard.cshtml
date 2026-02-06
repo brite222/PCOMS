@@ -1,0 +1,167 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.ReportDashboardDto
+
+@{
+    ViewData["Title"] = "Reports Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="bi bi-graph-up"></i> Reports & Analytics Dashboard</h2>
+            <p class="text-muted">Get insights into your business performance</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <!-- Financial Summary -->
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Monthly Revenue</h6>
+                    <h3>@Model.FinancialSummary.MonthlyRevenue.ToString("C")</h3>
+                    <small>Profit: @Model.FinancialSummary.MonthlyProfit.ToString("C")</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Outstanding</h6>
+                    <h3>@Model.FinancialSummary.OutstandingInvoices.ToString("C")</h3>
+                    <small>Profit Margin: @Model.FinancialSummary.ProfitMargin.ToString("F1")%</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Weekly Hours</h6>
+                    <h3>@Model.ProductivitySummary.WeeklyHours.ToString("F1")</h3>
+                    <small>Utilization: @Model.ProductivitySummary.UtilizationRate.ToString("F1")%</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Active Projects</h6>
+                    <h3>@Model.ProjectsSummary.ActiveProjects</h3>
+                    <small>Total: @Model.ProjectsSummary.TotalProjects</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate Reports Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-file-earmark-bar-graph"></i> Generate Reports</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-currency-dollar"></i> Financial Report</h6>
+                                    <p class="card-text">Revenue, costs, profit analysis by project and client</p>
+                                    <a href="@Url.Action("Financial")" class="btn btn-success btn-sm">Generate</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-speedometer2"></i> Productivity Report</h6>
+                                    <p class="card-text">Developer hours, utilization rates, efficiency metrics</p>
+                                    <a href="@Url.Action("Productivity")" class="btn btn-primary btn-sm">Generate</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-clock-history"></i> Time Entry Report</h6>
+                                    <p class="card-text">Detailed time tracking analysis by user and project</p>
+                                    <a href="@Url.Action("TimeEntry")" class="btn btn-info btn-sm">Generate</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-kanban"></i> Project Status</h6>
+                                    <p class="card-text">Overview of all projects, status, and completion</p>
+                                    <a href="@Url.Action("ProjectStatus")" class="btn btn-warning btn-sm">View</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-people"></i> Client Report</h6>
+                                    <p class="card-text">Client value, billing summaries, outstanding balances</p>
+                                    <a href="@Url.Action("Client")" class="btn btn-secondary btn-sm">View</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-archive"></i> Saved Reports</h6>
+                                    <p class="card-text">View previously generated reports</p>
+                                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">View All</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-building"></i> Client Summary</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Clients:</strong> @Model.ClientsSummary.TotalClients</p>
+                    <p><strong>Active Clients:</strong> @Model.ClientsSummary.ActiveClients</p>
+                    <p><strong>Avg Client Value:</strong> @Model.ClientsSummary.AverageClientValue.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-person-workspace"></i> Team Summary</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Active Developers:</strong> @Model.ProductivitySummary.ActiveDevelopers</p>
+                    <p><strong>Weekly Hours:</strong> @Model.ProductivitySummary.WeeklyHours.ToString("F1")</p>
+                    <p><strong>Utilization Rate:</strong> @Model.ProductivitySummary.UtilizationRate.ToString("F1")%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any dashboard-specific JavaScript here
+    </script>
+}

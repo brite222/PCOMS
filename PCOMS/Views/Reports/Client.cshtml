@@ -1,0 +1,208 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.ClientReportDto
+
+@{
+    ViewData["Title"] = "Client Report";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-10">
+            <h2><i class="bi bi-people"></i> Client Report</h2>
+            <p class="text-muted">As of @Model.ReportDate.ToString("MMM dd, yyyy HH:mm")</p>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="@Url.Action("Dashboard")" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Clients</h6>
+                    <h3>@Model.TotalClients</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Active Clients</h6>
+                    <h3>@Model.ActiveClients</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Total Revenue</h6>
+                    <h3>@Model.TotalRevenue.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6>Avg Client Value</h6>
+                    <h3>@Model.AverageRevenuePerClient.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Details -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Client Details</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Clients.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Client Name</th>
+                                        <th class="text-end">Total Projects</th>
+                                        <th class="text-end">Active Projects</th>
+                                        <th class="text-end">Total Billed</th>
+                                        <th class="text-end">Total Paid</th>
+                                        <th class="text-end">Outstanding</th>
+                                        <th>Last Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var client in Model.Clients)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@client.ClientName</strong>
+                                            </td>
+                                            <td class="text-end">@client.ProjectCount</td>
+                                            <td class="text-end">
+                                                @if (client.ActiveProjects > 0)
+                                                {
+                                                    <span class="badge bg-success">@client.ActiveProjects</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">0</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">@client.TotalBilled.ToString("C")</td>
+                                            <td class="text-end text-success">@client.TotalPaid.ToString("C")</td>
+                                            <td class="text-end">
+                                                @if (client.Outstanding > 0)
+                                                {
+                                                    <span class="text-warning">@client.Outstanding.ToString("C")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (client.LastActivityDate != default)
+                                                {
+                                                    @client.LastActivityDate.ToString("MMM dd, yyyy")
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">No activity</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>TOTALS</th>
+                                        <th class="text-end">@Model.Clients.Sum(c => c.ProjectCount)</th>
+                                        <th class="text-end">@Model.Clients.Sum(c => c.ActiveProjects)</th>
+                                        <th class="text-end">@Model.Clients.Sum(c => c.TotalBilled).ToString("C")</th>
+                                        <th class="text-end">@Model.Clients.Sum(c => c.TotalPaid).ToString("C")</th>
+                                        <th class="text-end">@Model.Clients.Sum(c => c.Outstanding).ToString("C")</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No clients found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Clients -->
+    @if (Model.Clients.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Top 5 Clients by Revenue</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                @foreach (var client in Model.Clients.OrderByDescending(c => c.TotalBilled).Take(5))
+                                {
+                                    <tr>
+                                        <td>@client.ClientName</td>
+                                        <td class="text-end"><strong>@client.TotalBilled.ToString("C")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Clients with Outstanding Balances</h5>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var clientsWithOutstanding = Model.Clients.Where(c => c.Outstanding > 0).OrderByDescending(c => c.Outstanding).Take(5).ToList();
+                        }
+                        @if (clientsWithOutstanding.Any())
+                        {
+                            <table class="table table-sm">
+                                <tbody>
+                                    @foreach (var client in clientsWithOutstanding)
+                                    {
+                                        <tr>
+                                            <td>@client.ClientName</td>
+                                            <td class="text-end text-warning"><strong>@client.Outstanding.ToString("C")</strong></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No outstanding balances</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Add chart visualization if needed
+    </script>
+}

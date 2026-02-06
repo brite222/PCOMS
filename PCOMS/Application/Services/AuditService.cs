@@ -15,13 +15,16 @@ namespace PCOMS.Application.Services
             _context = context;
         }
 
-        public void Log(
+        // ================= ASYNC =================
+
+        public async Task LogAsync(
             string userId,
             string action,
             string entity,
             int entityId,
             string? oldValue = null,
-            string? newValue = null)
+            string? newValue = null,
+            string logDetails = "")
         {
             var log = new AuditLog
             {
@@ -35,29 +38,53 @@ namespace PCOMS.Application.Services
             };
 
             _context.AuditLogs.Add(log);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        // ✅ RETURN DTOs — NOT ENTITIES
+        public async Task<List<AuditLogDto>> GetAllAsync()
+        {
+            return await QueryLogs().ToListAsync();
+        }
+
+        // ================= SYNC WRAPPERS =================
+
+        public void Log(
+            string userId,
+            string action,
+            string entity,
+            int entityId,
+            string? oldValue = null,
+            string? newValue = null,
+            string logDetails = "")
+        {
+            LogAsync(userId, action, entity, entityId, oldValue, newValue, logDetails)
+                .GetAwaiter().GetResult();
+        }
+
         public List<AuditLogDto> GetAll()
         {
+            return GetAllAsync().GetAwaiter().GetResult();
+        }
+
+        // ================= QUERY =================
+
+        private IQueryable<AuditLogDto> QueryLogs()
+        {
             return _context.AuditLogs
-     .Select(a => new AuditLogDto
-     {
-         Id = a.Id,
-         Action = a.Action,
-         Entity = a.Entity,
-         EntityId = a.EntityId,
-         PerformedAt = a.PerformedAt,
-
-         UserEmail = _context.Users
-             .Where(u => u.Id == a.PerformedByUserId)
-             .Select(u => u.Email!)
-             .FirstOrDefault() ?? "System"
-     })
-     .OrderByDescending(a => a.PerformedAt)
-     .ToList();
-
+                .AsNoTracking()
+                .Select(a => new AuditLogDto
+                {
+                    Id = a.Id,
+                    Action = a.Action,
+                    Entity = a.Entity,
+                    EntityId = a.EntityId,
+                    PerformedAt = a.PerformedAt,
+                    UserEmail = _context.Users
+                        .Where(u => u.Id == a.PerformedByUserId)
+                        .Select(u => u.Email)
+                        .FirstOrDefault() ?? "System"
+                })
+                .OrderByDescending(a => a.PerformedAt);
         }
     }
 }

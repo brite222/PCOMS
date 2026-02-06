@@ -1,0 +1,274 @@
+﻿@model List<PCOMS.Application.DTOs.TaskDto>
+@{
+    ViewData["Title"] = ViewBag.PageTitle ?? "Tasks";
+    var stats = ViewBag.Statistics as PCOMS.Application.DTOs.TaskStatisticsDto;
+    var filter = ViewBag.Filter as PCOMS.Application.DTOs.TaskFilterDto;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>@ViewData["Title"]</h2>
+            <div class="btn-group mb-3">
+                <a asp-action="Index" class="btn btn-outline-primary">All Tasks</a>
+                <a asp-action="MyTasks" class="btn btn-outline-primary">My Tasks</a>
+                <a asp-action="Overdue" class="btn btn-outline-danger">Overdue</a>
+                <a asp-action="DueThisWeek" class="btn btn-outline-warning">Due This Week</a>
+                <a asp-action="Unassigned" class="btn btn-outline-secondary">Unassigned</a>
+            </div>
+            <a asp-action="Create" class="btn btn-success float-end">
+                <i class="bi bi-plus-circle"></i> Create Task
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (stats != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Tasks</h5>
+                        <h2>@stats.TotalTasks</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">In Progress</h5>
+                        <h2>@stats.InProgressTasks</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Completed</h5>
+                        <h2>@stats.CompletedTasks</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">Overdue</h5>
+                        <h2>@stats.OverdueTasks</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filter Tasks</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="Status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="0">To Do</option>
+                        <option value="1">In Progress</option>
+                        <option value="2">In Review</option>
+                        <option value="3">Completed</option>
+                        <option value="4">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Priority</label>
+                    <select name="Priority" class="form-select">
+                        <option value="">All Priorities</option>
+                        <option value="0">Low</option>
+                        <option value="1">Medium</option>
+                        <option value="2">High</option>
+                        <option value="3">Critical</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Assigned To</label>
+                    <select name="AssignedToId" class="form-select" asp-items="ViewBag.Users">
+                        <option value="">All Users</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="SearchTerm" class="form-control" placeholder="Search title or description...">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a asp-action="Index" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Assigned To</th>
+                                <th>Due Date</th>
+                                <th>Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in Model)
+                            {
+                                <tr class="@(task.IsOverdue ? "table-danger" : "")">
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@task.TaskId" class="text-decoration-none">
+                                            <strong>@task.Title</strong>
+                                        </a>
+                                        @if (task.SubTaskCount > 0)
+                                        {
+                                            <span class="badge bg-secondary ms-2">@task.SubTaskCount subtasks</span>
+                                        }
+                                        @if (task.CommentCount > 0)
+                                        {
+                                            <span class="badge bg-info ms-1">
+                                                <i class="bi bi-chat"></i> @task.CommentCount
+                                            </span>
+                                        }
+                                        @if (task.AttachmentCount > 0)
+                                        {
+                                            <span class="badge bg-warning ms-1">
+                                                <i class="bi bi-paperclip"></i> @task.AttachmentCount
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (task.Status)
+                                        {
+                                            case PCOMS.Models.TaskStatus.ToDo:
+                                                <span class="badge bg-secondary">To Do</span>
+                                                break;
+                                            case PCOMS.Models.TaskStatus.InProgress:
+                                                <span class="badge bg-info">In Progress</span>
+                                                break;
+                                            case PCOMS.Models.TaskStatus.InReview:
+                                                <span class="badge bg-warning">In Review</span>
+                                                break;
+                                            case PCOMS.Models.TaskStatus.Completed:
+                                                <span class="badge bg-success">Completed</span>
+                                                break;
+                                            case PCOMS.Models.TaskStatus.Cancelled:
+                                                <span class="badge bg-danger">Cancelled</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (task.Priority)
+                                        {
+                                            case PCOMS.Models.TaskPriority.Low:
+                                                <span class="badge bg-light text-dark">Low</span>
+                                                break;
+                                            case PCOMS.Models.TaskPriority.Medium:
+                                                <span class="badge bg-primary">Medium</span>
+                                                break;
+                                            case PCOMS.Models.TaskPriority.High:
+                                                <span class="badge bg-warning">High</span>
+                                                break;
+                                            case PCOMS.Models.TaskPriority.Critical:
+                                                <span class="badge bg-danger">Critical</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(task.AssignedToName))
+                                        {
+                                            <span>@task.AssignedToName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unassigned</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (task.DueDate.HasValue)
+                                        {
+                                            <span class="@(task.IsOverdue ? "text-danger" : "")">
+                                                @task.DueDate.Value.ToString("MMM dd, yyyy")
+                                            </span>
+                                            @if (task.IsOverdue)
+                                            {
+                                                <br />
+                                
+                                                <small class="text-danger">Overdue by @Math.Abs(task.DaysUntilDue) days</small>
+                                            }
+                                            else if (task.DaysUntilDue <= 7)
+                                            {
+                                                <br />
+                                
+                                                <small class="text-warning">Due in @task.DaysUntilDue days</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No due date</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar @(task.ProgressPercentage == 100 ? "bg-success" : "bg-primary")"
+                                                 role="progressbar"
+                                                 style="width: @task.ProgressPercentage%"
+                                                 aria-valuenow="@task.ProgressPercentage"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                @task.ProgressPercentage%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@task.TaskId" class="btn btn-info" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@task.TaskId" class="btn btn-warning" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No tasks found. <a asp-action="Create">Create your first task</a>.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

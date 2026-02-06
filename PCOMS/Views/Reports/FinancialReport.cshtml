@@ -1,0 +1,273 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.FinancialReportDto
+
+@{
+    ViewData["Title"] = "Financial Report";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-10">
+            <h2><i class="bi bi-currency-dollar"></i> Financial Report</h2>
+            <p class="text-muted">@Model.StartDate.ToString("MMM dd, yyyy") - @Model.EndDate.ToString("MMM dd, yyyy")</p>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="@Url.Action("Financial")" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> New Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Total Revenue</h6>
+                    <h3>@Model.TotalRevenue.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6>Total Costs</h6>
+                    <h3>@Model.TotalCosts.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Gross Profit</h6>
+                    <h3>@Model.GrossProfit.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Profit Margin</h6>
+                    <h3>@Model.ProfitMargin.ToString("F1")%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Revenue Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td>Total Invoiced</td>
+                            <td class="text-end"><strong>@Model.InvoicedAmount.ToString("C")</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Paid</td>
+                            <td class="text-end text-success">@Model.PaidAmount.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <td>Outstanding</td>
+                            <td class="text-end text-warning">@Model.OutstandingAmount.ToString("C")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Cost Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td>Labor Costs</td>
+                            <td class="text-end">@Model.LaborCosts.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <td>Project Expenses</td>
+                            <td class="text-end">@Model.ProjectExpenses.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Costs</strong></td>
+                            <td class="text-end"><strong>@Model.TotalCosts.ToString("C")</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Revenue by Project</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProjectBreakdown.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Client</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Costs</th>
+                                        <th class="text-end">Profit</th>
+                                        <th class="text-end">Margin</th>
+                                        <th class="text-end">Hours</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var project in Model.ProjectBreakdown)
+                                    {
+                                        <tr>
+                                            <td>@project.ProjectName</td>
+                                            <td>@project.ClientName</td>
+                                            <td class="text-end">@project.Revenue.ToString("C")</td>
+                                            <td class="text-end">@project.Costs.ToString("C")</td>
+                                            <td class="text-end">
+                                                <span class="@(project.Profit >= 0 ? "text-success" : "text-danger")">
+                                                    @project.Profit.ToString("C")
+                                                </span>
+                                            </td>
+                                            <td class="text-end">@project.ProfitMargin.ToString("F1")%</td>
+                                            <td class="text-end">@project.HoursLogged.ToString("F1")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2">TOTAL</th>
+                                        <th class="text-end">@Model.ProjectBreakdown.Sum(p => p.Revenue).ToString("C")</th>
+                                        <th class="text-end">@Model.ProjectBreakdown.Sum(p => p.Costs).ToString("C")</th>
+                                        <th class="text-end">@Model.ProjectBreakdown.Sum(p => p.Profit).ToString("C")</th>
+                                        <th></th>
+                                        <th class="text-end">@Model.ProjectBreakdown.Sum(p => p.HoursLogged).ToString("F1")</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No project data available for this period.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Revenue by Client</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ClientBreakdown.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th class="text-end">Projects</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Costs</th>
+                                        <th class="text-end">Profit</th>
+                                        <th class="text-end">Outstanding</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var client in Model.ClientBreakdown)
+                                    {
+                                        <tr>
+                                            <td>@client.ClientName</td>
+                                            <td class="text-end">@client.ProjectCount</td>
+                                            <td class="text-end">@client.TotalRevenue.ToString("C")</td>
+                                            <td class="text-end">@client.TotalCosts.ToString("C")</td>
+                                            <td class="text-end">
+                                                <span class="@(client.TotalProfit >= 0 ? "text-success" : "text-danger")">
+                                                    @client.TotalProfit.ToString("C")
+                                                </span>
+                                            </td>
+                                            <td class="text-end text-warning">@client.OutstandingBalance.ToString("C")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No client data available for this period.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Monthly Trends</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.MonthlyTrends.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Costs</th>
+                                        <th class="text-end">Profit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var month in Model.MonthlyTrends)
+                                    {
+                                        <tr>
+                                            <td>@month.MonthName</td>
+                                            <td class="text-end">@month.Revenue.ToString("C")</td>
+                                            <td class="text-end">@month.Costs.ToString("C")</td>
+                                            <td class="text-end">
+                                                <span class="@(month.Profit >= 0 ? "text-success" : "text-danger")">
+                                                    @month.Profit.ToString("C")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No monthly trend data available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add Chart.js visualization here if needed
+    </script>
+}

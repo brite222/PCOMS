@@ -1,0 +1,144 @@
+﻿@{
+    ViewData["Title"] = "Upload New Version";
+    var document = ViewBag.Document as PCOMS.Application.Interfaces.DTOs.DocumentDto;
+
+    // Get file extension manually without Path.GetExtension
+    string fileExtension = "";
+    if (document != null && !string.IsNullOrEmpty(document.FileName))
+    {
+        int lastDot = document.FileName.LastIndexOf('.');
+        if (lastDot >= 0)
+        {
+            fileExtension = document.FileName.Substring(lastDot);
+        }
+    }
+
+    int nextVersion = document != null ? document.Version + 1 : 0;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-arrow-up-circle"></i> Upload New Version</h4>
+                    <p class="mb-0 text-muted">Document: <strong>@(document?.FileName ?? "")</strong></p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Important:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>The new file must be the same type as the original (same extension)</li>
+                            <li>The original file will be preserved as version @(document?.Version ?? 0)</li>
+                            <li>The new file will become version @nextVersion</li>
+                            <li>Category and tags will be inherited from the current version</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="UploadVersion" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="id" value="@(document?.Id ?? 0)" />
+
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Select New Version File *</label>
+                            <input type="file" class="form-control" id="file" name="file" required />
+                            <div class="form-text">
+                                Current file type: <strong>@fileExtension</strong>
+                                - Please upload the same file type
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Version Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="What changed in this version? (e.g., 'Updated requirements based on client feedback')"></textarea>
+                            <div class="form-text">
+                                Describe what's new or different in this version
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="@Url.Action("Details", new { id = document?.Id ?? 0 })"
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-arrow-up-circle"></i> Upload Version @nextVersion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Version Info -->
+            @if (document != null)
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6><i class="bi bi-file-earmark"></i> Current Version (@document.Version)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>File Name:</strong> @document.FileName</p>
+                                <p><strong>Category:</strong> <span class="badge bg-secondary">@document.Category</span></p>
+                                <p><strong>Size:</strong> @document.FileSizeFormatted</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Uploaded By:</strong> @document.UploadedByName</p>
+                                <p><strong>Uploaded At:</strong> @document.UploadedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                                @if (!string.IsNullOrEmpty(document.Description))
+                                {
+                                    <p><strong>Description:</strong> @document.Description</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Version Control Guidelines -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6><i class="bi bi-info-circle"></i> Version Control Best Practices</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul>
+                            <li><strong>Clear Descriptions:</strong> Always describe what changed in the version description</li>
+                            <li><strong>Major vs Minor:</strong> Use descriptions to indicate major vs minor changes</li>
+                            <li><strong>Review Before Upload:</strong> Ensure the new version is correct before uploading</li>
+                            <li><strong>Preserve History:</strong> All previous versions remain accessible</li>
+                            <li><strong>Team Communication:</strong> Notify team members of significant version updates</li>
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // File type validation
+        document.getElementById('file').addEventListener('change', function() {
+            const allowedExtension = '@fileExtension'.toLowerCase();
+            const selectedFile = this.files[0];
+
+            if (selectedFile) {
+                const fileName = selectedFile.name;
+                const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+
+                if (allowedExtension && fileExtension !== allowedExtension) {
+                    alert('Please select a ' + allowedExtension + ' file. The selected file type is ' + fileExtension);
+                    this.value = '';
+                }
+
+                // File size validation (50MB)
+                const maxSize = 50 * 1024 * 1024;
+                if (selectedFile.size > maxSize) {
+                    alert('File size must not exceed 50MB');
+                    this.value = '';
+                }
+            }
+        });
+    </script>
+}

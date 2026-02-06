@@ -1,0 +1,54 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.ProjectStatusReportDto
+
+<h2>Project Status Report</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total</h6><h3>@Model.TotalProjects</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Active</h6><h3>@Model.ActiveProjects</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6>Completed</h6><h3>@Model.CompletedProjects</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Project</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>Hours</th>
+            <th>Budget</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var p in Model.Projects)
+        {
+            <tr>
+                <td>@p.ProjectName</td>
+                <td>@p.ClientName</td>
+                <td>@p.Status</td>
+                <td>@p.HoursLogged</td>
+                <td>@p.Budget</td>
+            </tr>
+        }
+    </tbody>
+</table>

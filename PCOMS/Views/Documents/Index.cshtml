@@ -1,0 +1,247 @@
+﻿@using PCOMS.Application.Interfaces.DTOs
+@model IEnumerable<DocumentDto>
+
+@{
+    ViewData["Title"] = "Documents";
+
+    var stats = ViewBag.Stats;
+    int projectId = ViewBag.ProjectId;
+    string projectName = ViewBag.ProjectName ?? "Project";
+    string? category = ViewBag.Category as string;
+}
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2>Documents</h2>
+            <div class="text-muted">
+                Project: <strong>@projectName</strong>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager") || User.IsInRole("Developer"))
+        {
+            <a asp-action="Upload"
+               asp-route-projectId="@projectId"
+               class="btn btn-primary">
+                Upload Document
+            </a>
+        }
+    </div>
+
+    <!-- STATS -->
+    @if (stats != null)
+    {
+        <div class="row mb-4">
+
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted">Total Documents</div>
+                        <h4>@stats.TotalCount</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted">Total Storage</div>
+                        <h4>@FormatBytes((long)stats.TotalSize)</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted mb-1">Categories</div>
+
+                        @foreach (var c in stats.CategoryCounts)
+                        {
+                            <span class="badge bg-secondary me-1">
+                                @c.Key (@c.Value)
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+    <!-- FILTER -->
+    <form method="get" class="mb-3">
+        <input type="hidden" name="projectId" value="@projectId" />
+
+        <div class="row g-2">
+
+            <div class="col-md-4">
+                <select name="category" class="form-select">
+
+                    <option value="">All Categories</option>
+
+                    @if (stats != null)
+                    {
+                        foreach (var c in stats.CategoryCounts.Keys)
+                        {
+                            if (c == category)
+                            {
+                                <option value="@c" selected>@c</option>
+                            }
+                            else
+                            {
+                                <option value="@c">@c</option>
+                            }
+                        }
+                    }
+
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button class="btn btn-outline-primary w-100">
+                    Filter
+                </button>
+            </div>
+
+            <div class="col-md-2">
+                <a asp-action="Index"
+                   asp-route-projectId="@projectId"
+                   class="btn btn-outline-secondary w-100">
+                    Clear
+                </a>
+            </div>
+
+        </div>
+    </form>
+
+    <!-- TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Category</th>
+                                <th>Version</th>
+                                <th>Size</th>
+                                <th>Uploaded By</th>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th width="220"></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var d in Model)
+                            {
+                                <tr>
+
+                                    <td>
+                                        <a asp-action="Details"
+                                           asp-route-id="@d.Id">
+                                            @d.FileName
+                                        </a>
+
+                                        @if (!string.IsNullOrWhiteSpace(d.Description))
+                                        {
+                                            <div class="small text-muted">
+                                                @d.Description
+                                            </div>
+                                        }
+                                    </td>
+
+                                    <td>@d.Category</td>
+
+                                    <td>v@d.Version</td>
+
+                                    <td>@d.FileSizeFormatted</td>
+
+                                    <td>@d.UploadedByName</td>
+
+                                    <td>@d.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+
+                                    <td>
+                                        @if (d.IsClientVisible)
+                                        {
+                                            <span class="badge bg-success">Visible</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Hidden</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+
+                                            <a asp-action="Download"
+                                               asp-route-id="@d.Id"
+                                               class="btn btn-outline-primary">
+                                                Download
+                                            </a>
+
+                                            <a asp-action="Details"
+                                               asp-route-id="@d.Id"
+                                               class="btn btn-outline-info">
+                                                Details
+                                            </a>
+
+                                            @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                                            {
+                                                <a asp-action="Edit"
+                                                   asp-route-id="@d.Id"
+                                                   class="btn btn-outline-warning">
+                                                    Edit
+                                                </a>
+                                            }
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No documents found for this project.
+                </div>
+            }
+
+        </div>
+    </div>
+
+</div>
+
+@functions {
+    string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

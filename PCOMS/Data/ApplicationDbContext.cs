@@ -21,6 +21,14 @@ namespace PCOMS.Data
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<Invoice> Invoices { get; set; } = null!;
         public DbSet<ClientUser> ClientUsers { get; set; } = null!;
+        public DbSet<Report> Reports { get; set; } = null!;
+        public DbSet<TaskItem> Tasks { get; set; }
+        public DbSet<TaskComment> TaskComments { get; set; }
+        public DbSet<TaskAttachment> TaskAttachments { get; set; }
+
+
+        // NEW: Document Management
+        public DbSet<Document> Documents { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -36,7 +44,7 @@ namespace PCOMS.Data
             // =========================
             builder.Entity<ClientUser>()
                 .HasOne(cu => cu.Client)
-                .WithMany(c => c.ClientUsers)   // ✅ THIS FIXES ClientId1
+                .WithMany(c => c.ClientUsers)
                 .HasForeignKey(cu => cu.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -45,6 +53,30 @@ namespace PCOMS.Data
                 .WithMany()
                 .HasForeignKey(cu => cu.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // =========================
+            // NEW: Document Configuration
+            // =========================
+            builder.Entity<Document>()
+                .HasOne(d => d.Project)
+                .WithMany()
+                .HasForeignKey(d => d.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Document>()
+                .HasOne(d => d.PreviousVersion)
+                .WithMany()
+                .HasForeignKey(d => d.PreviousVersionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Document>()
+                .HasIndex(d => d.ProjectId);
+
+            builder.Entity<Document>()
+                .HasIndex(d => d.Category);
+
+            builder.Entity<Document>()
+                .HasIndex(d => d.IsDeleted);
         }
     }
 }
