@@ -1,0 +1,214 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.BudgetSummaryDto
+
+@{
+    ViewData["Title"] = "Budget Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-10">
+            <h2><i class="bi bi-cash-stack"></i> Budget Dashboard - @Model.ProjectName</h2>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="@Url.Action("Expenses", new { projectId = Model.ProjectId })" class="btn btn-primary">
+                <i class="bi bi-list"></i> View Expenses
+            </a>
+        </div>
+    </div>
+
+    <!-- Budget Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Budget</h6>
+                    <h3>@Model.TotalBudget.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6>Total Spent</h6>
+                    <h3>@Model.TotalSpent.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Remaining</h6>
+                    <h3>@Model.Remaining.ToString("C")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card @(Model.PercentageUsed >= 90 ? "bg-danger" : Model.PercentageUsed >= 75 ? "bg-warning" : "bg-info") text-white">
+                <div class="card-body">
+                    <h6>Budget Used</h6>
+                    <h3>@Model.PercentageUsed.ToString("F1")%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Budget Usage</h5>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar @(Model.PercentageUsed >= 90 ? "bg-danger" : Model.PercentageUsed >= 75 ? "bg-warning" : "bg-success")"
+                             role="progressbar"
+                             style="width: @Math.Min(Model.PercentageUsed, 100)%"
+                             aria-valuenow="@Model.PercentageUsed"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            @Model.PercentageUsed.ToString("F1")% Used
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Breakdown by Category -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-people"></i> Labor Budget</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Budgeted:</strong> @Model.LaborBudget.ToString("C")</p>
+                    <p><strong>Spent:</strong> @Model.LaborSpent.ToString("C")</p>
+                    <p><strong>Remaining:</strong> @((Model.LaborBudget - Model.LaborSpent).ToString("C"))</p>
+                    <div class="progress">
+                        <div class="progress-bar bg-info"
+                             style="width: @(Model.LaborBudget > 0 ? (Model.LaborSpent / Model.LaborBudget * 100) : 0)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-box"></i> Material Budget</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Budgeted:</strong> @Model.MaterialBudget.ToString("C")</p>
+                    <p><strong>Spent:</strong> @Model.MaterialSpent.ToString("C")</p>
+                    <p><strong>Remaining:</strong> @((Model.MaterialBudget - Model.MaterialSpent).ToString("C"))</p>
+                    <div class="progress">
+                        <div class="progress-bar bg-info"
+                             style="width: @(Model.MaterialBudget > 0 ? (Model.MaterialSpent / Model.MaterialBudget * 100) : 0)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="bi bi-three-dots"></i> Other Budget</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Budgeted:</strong> @Model.OtherBudget.ToString("C")</p>
+                    <p><strong>Spent:</strong> @Model.OtherSpent.ToString("C")</p>
+                    <p><strong>Remaining:</strong> @((Model.OtherBudget - Model.OtherSpent).ToString("C"))</p>
+                    <div class="progress">
+                        <div class="progress-bar bg-info"
+                             style="width: @(Model.OtherBudget > 0 ? (Model.OtherSpent / Model.OtherBudget * 100) : 0)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Expense Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p><strong>Total Expenses:</strong> @Model.TotalExpenses</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Pending:</strong> <span class="badge bg-warning">@Model.PendingExpenses</span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Approved:</strong> <span class="badge bg-success">@Model.ApprovedExpenses</span></p>
+                        </div>
+                        <div class="col-md-3">
+                            <p><strong>Rejected:</strong> <span class="badge bg-danger">@Model.RejectedExpenses</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (Model.HasWarningAlert || Model.HasCriticalAlert || Model.HasExceededBudget)
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                @if (Model.HasExceededBudget)
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Budget Exceeded!</strong> This project has exceeded its allocated budget.
+                        <a href="@Url.Action("Alerts", new { projectId = Model.ProjectId })">View Alerts</a>
+                    </div>
+                }
+                else if (Model.HasCriticalAlert)
+                {
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Critical Alert!</strong> Budget usage is at critical levels (>90%).
+                        <a href="@Url.Action("Alerts", new { projectId = Model.ProjectId })">View Alerts</a>
+                    </div>
+                }
+                else if (Model.HasWarningAlert)
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Warning!</strong> Budget usage has exceeded warning threshold (>75%).
+                        <a href="@Url.Action("Alerts", new { projectId = Model.ProjectId })">View Alerts</a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("CreateExpense", new { projectId = Model.ProjectId })" class="btn btn-primary me-2">
+                        <i class="bi bi-plus-circle"></i> Submit Expense
+                    </a>
+                    <a href="@Url.Action("PendingExpenses", new { projectId = Model.ProjectId })" class="btn btn-warning me-2">
+                        <i class="bi bi-hourglass"></i> Pending Approvals (@Model.PendingExpenses)
+                    </a>
+                    <a href="@Url.Action("BudgetVsActual", new { projectId = Model.ProjectId })" class="btn btn-info me-2">
+                        <i class="bi bi-graph-up"></i> Budget vs Actual Report
+                    </a>
+                    <a href="@Url.Action("Edit", new { id = ViewBag.BudgetId })" class="btn btn-secondary">
+                        <i class="bi bi-pencil"></i> Edit Budget
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

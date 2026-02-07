@@ -1,0 +1,189 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.ExpenseDto>
+
+@{
+    ViewData["Title"] = "Pending Expense Approvals";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="bi bi-hourglass"></i> Pending Expense Approvals</h2>
+            <p class="text-muted">Review and approve/reject submitted expenses</p>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var expense in Model)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5>@expense.Description</h5>
+                                    <small class="text-muted">Submitted by @expense.SubmittedByName on @expense.SubmittedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <h4 class="text-primary">@expense.Amount.ToString("C")</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <strong>Category:</strong> <span class="badge bg-secondary">@expense.Category</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Date:</strong> @expense.ExpenseDate.ToString("MMM dd, yyyy")
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(expense.Vendor))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <strong>Vendor:</strong> @expense.Vendor
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(expense.ReceiptNumber))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <strong>Receipt #:</strong> @expense.ReceiptNumber
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="row mb-2">
+                                <div class="col-md-12">
+                                    @if (expense.IsBillable)
+                                    {
+                                        <span class="badge bg-success">Billable</span>
+                                    }
+                                    @if (expense.IsReimbursable)
+                                    {
+                                        <span class="badge bg-info">Reimbursable</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(expense.Notes))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <strong>Notes:</strong>
+                                        <p class="mb-0">@expense.Notes</p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(expense.ReceiptFilePath))
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <a href="/@expense.ReceiptFilePath" target="_blank" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-file-earmark"></i> View Receipt
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@expense.Id" />
+                                        <button type="button" class="btn btn-success me-2" onclick="approveExpense(@expense.Id)">
+                                            <i class="bi bi-check-circle"></i> Approve
+                                        </button>
+                                        <button type="button" class="btn btn-danger me-2" onclick="rejectExpense(@expense.Id)">
+                                            <i class="bi bi-x-circle"></i> Reject
+                                        </button>
+                                        <a href="@Url.Action("ExpenseDetails", new { id = expense.Id })" class="btn btn-outline-info">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Summary -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5>Total Pending: @Model.Count()</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Total Amount: @Model.Sum(e => e.Amount).ToString("C")</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Billable: @Model.Where(e => e.IsBillable).Sum(e => e.Amount).ToString("C")</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i>
+            <strong>All caught up!</strong> No pending expenses to review.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function approveExpense(id) {
+            const notes = prompt('Approval notes (optional):');
+            if (notes !== null) {
+                submitApproval(id, 'ApproveExpense', notes);
+            }
+        }
+
+        function rejectExpense(id) {
+            const notes = prompt('Rejection reason:');
+            if (notes) {
+                submitApproval(id, 'RejectExpense', notes);
+            } else {
+                alert('Rejection reason is required');
+            }
+        }
+
+        function submitApproval(id, action, notes) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("")' + action;
+
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = id;
+
+            const notesInput = document.createElement('input');
+            notesInput.type = 'hidden';
+            notesInput.name = 'notes';
+            notesInput.value = notes || '';
+
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
+
+            form.appendChild(idInput);
+            form.appendChild(notesInput);
+            form.appendChild(tokenInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

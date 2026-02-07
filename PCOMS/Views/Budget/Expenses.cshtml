@@ -1,0 +1,227 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.ExpenseDto>
+
+@{
+    ViewData["Title"] = "Expenses";
+    var filter = ViewBag.Filter as PCOMS.Application.Interfaces.DTOs.ExpenseFilterDto;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-receipt"></i> Expenses</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("CreateExpense", new { projectId = filter?.ProjectId })" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Submit Expense
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="Status" class="form-select">
+                        <option value="">All</option>
+                        <option value="Pending" selected="@(filter?.Status == "Pending" ? "selected" : null)">Pending</option>
+                        <option value="Approved" selected="@(filter?.Status == "Approved" ? "selected" : null)">Approved</option>
+                        <option value="Rejected" selected="@(filter?.Status == "Rejected" ? "selected" : null)">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Category</label>
+                    <select name="Category" class="form-select">
+                        <option value="">All Categories</option>
+                        <option value="Labor">Labor</option>
+                        <option value="Materials">Materials</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Software">Software</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Meals">Meals</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="FromDate" class="form-control" value="@filter?.FromDate?.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="ToDate" class="form-control" value="@filter?.ToDate?.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Billable</label>
+                    <select name="IsBillable" class="form-select">
+                        <option value="">All</option>
+                        <option value="true">Billable</option>
+                        <option value="false">Non-Billable</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    <a href="@Url.Action("Expenses")" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Vendor</th>
+                                <th class="text-end">Amount</th>
+                                <th>Status</th>
+                                <th>Submitted By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var expense in Model)
+                            {
+                                <tr>
+                                    <td>@expense.ExpenseDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <strong>@expense.Description</strong>
+                                        @if (expense.IsBillable)
+                                        {
+                                            <span class="badge bg-success">Billable</span>
+                                        }
+                                        @if (expense.IsReimbursable)
+                                        {
+                                            <span class="badge bg-info">Reimbursable</span>
+                                        }
+                                    </td>
+                                    <td><span class="badge bg-secondary">@expense.Category</span></td>
+                                    <td>@(expense.Vendor ?? "-")</td>
+                                    <td class="text-end"><strong>@expense.Amount.ToString("C")</strong></td>
+                                    <td>
+                                        @{
+                                            var statusClass = expense.Status switch
+                                            {
+                                                "Pending" => "bg-warning",
+                                                "Approved" => "bg-success",
+                                                "Rejected" => "bg-danger",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">@expense.Status</span>
+                                    </td>
+                                    <td>@expense.SubmittedByName</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="@Url.Action("ExpenseDetails", new { id = expense.Id })"
+                                               class="btn btn-outline-info" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            @if (expense.Status == "Pending" && (User.IsInRole("Admin") || User.IsInRole("ProjectManager")))
+                                            {
+                                                <button type="button" class="btn btn-outline-success"
+                                                        onclick="approveExpense(@expense.Id)" title="Approve">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger"
+                                                        onclick="rejectExpense(@expense.Id)" title="Reject">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="4" class="text-end">Total:</th>
+                                <th class="text-end">@Model.Sum(e => e.Amount).ToString("C")</th>
+                                <th colspan="3"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    No expenses found. <a href="@Url.Action("CreateExpense", new { projectId = filter?.ProjectId })">Submit your first expense</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function approveExpense(id) {
+            if (confirm('Approve this expense?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("ApproveExpense")';
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                form.appendChild(idInput);
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function rejectExpense(id) {
+            const notes = prompt('Rejection reason (optional):');
+            if (notes !== null) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("RejectExpense")';
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+
+                const notesInput = document.createElement('input');
+                notesInput.type = 'hidden';
+                notesInput.name = 'notes';
+                notesInput.value = notes;
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                form.appendChild(idInput);
+                form.appendChild(notesInput);
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -26,5 +27,10 @@ namespace PCOMS.Models
         public decimal HourlyRate { get; set; } = 0m;
         public decimal Hours { get; set; } = 0m;
         public ICollection<TimeEntry> TimeEntries { get; set; }
+        public string? ProjectManagerId { get; set; }
+        public IdentityUser? ProjectManager { get; set; }
+
+
+
     }
 }

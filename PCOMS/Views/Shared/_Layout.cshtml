@@ -34,7 +34,16 @@
 
                 <!-- LEFT NAV -->
                 <ul class="navbar-nav me-auto">
-
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Communication" asp-action="Notifications">
+                            <i class="bi bi-bell"></i> Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Communication" asp-action="Activity">
+                            <i class="bi bi-activity"></i> Activity
+                        </a>
+                    </li>
                     <!-- CLIENTS -->
                     @if (User.IsInRole("Client"))
                     {
@@ -46,6 +55,15 @@
                             </a>
                         </li>
                     }
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           asp-controller="Communication"
+                           asp-action="Chat"
+                           asp-route-projectId="1">
+                            <i class="bi bi-chat-dots"></i> Chat
+                        </a>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link"
                            asp-controller="Documents"
@@ -61,7 +79,21 @@
                     <li class="nav-item">
                         <a class="nav-link" asp-area="" asp-controller="Tasks" asp-action="Index">Tasks</a>
                     </li>
-
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Budget" asp-action="Index">
+                            <i class="bi bi-cash-stack"></i> Budgets
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-bell"></i>
+                            <span class="badge bg-danger" id="notificationCount">0</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="@Url.Action("Notifications", "Communication")">View All</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Notifications", "Communication", new { unreadOnly = true })">Unread Only</a></li>
+                        </ul>
+                    </li>
 
                     <!-- DASHBOARD (ROLE AWARE) -->
                     @if (User.IsInRole("Developer"))
@@ -84,7 +116,19 @@
                             </a>
                         </li>
                     }
-
+                    @section Scripts {
+                        <script>
+                            // Update notification count
+                            setInterval(async () => {
+                                const response = await fetch('/Communication/GetUnreadCount');
+                                const data = await response.json();
+                                document.getElementById('notificationCount').textContent = data.count;
+                                if (data.count > 0) {
+                                    document.getElementById('notificationCount').classList.remove('d-none');
+                                }
+                            }, 30000); // Every 30 seconds
+                        </script>
+                    }
                     <!-- ADMIN / PROJECT MANAGER -->
                     @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
                     {

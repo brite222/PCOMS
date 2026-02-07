@@ -1,0 +1,118 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.NotificationDto>
+
+@{
+    ViewData["Title"] = "Notifications";
+    var unreadOnly = ViewBag.UnreadOnly as bool? ?? false;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-bell"></i> Notifications</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <form asp-action="MarkAllAsRead" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-check-all"></i> Mark All as Read
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link @(!unreadOnly ? "active" : "")" href="@Url.Action("Notifications", new { unreadOnly = false })">
+                All Notifications
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(unreadOnly ? "active" : "")" href="@Url.Action("Notifications", new { unreadOnly = true })">
+                Unread Only
+            </a>
+        </li>
+    </ul>
+
+    @if (Model.Any())
+    {
+        <div class="list-group">
+            @foreach (var notification in Model)
+            {
+                var typeIcon = notification.Type switch
+                {
+                    "Success" => "bi-check-circle text-success",
+                    "Warning" => "bi-exclamation-triangle text-warning",
+                    "Error" => "bi-x-circle text-danger",
+                    "TaskAssigned" => "bi-clipboard-check text-primary",
+                    "ExpenseApproved" => "bi-cash-coin text-success",
+                    "ExpenseRejected" => "bi-x-circle text-danger",
+                    "BudgetAlert" => "bi-exclamation-triangle text-warning",
+                    _ => "bi-info-circle text-info"
+                };
+
+                <div class="list-group-item @(!notification.IsRead ? "list-group-item-action bg-light" : "")">
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            <i class="bi @typeIcon" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="col-md-9">
+                            <h6 class="mb-1">
+                                @notification.Title
+                                @if (!notification.IsRead)
+                                {
+                                    <span class="badge bg-primary">New</span>
+                                }
+                            </h6>
+                            <p class="mb-1">@notification.Message</p>
+                            <small class="text-muted">@notification.TimeAgo</small>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                            {
+                                <a href="@notification.ActionUrl" class="btn btn-sm btn-outline-primary mb-2">
+                                    <i class="bi bi-arrow-right"></i> View
+                                </a>
+                            }
+                            
+                            <div class="btn-group-vertical">
+                                @if (!notification.IsRead)
+                                {
+                                    <form asp-action="MarkAsRead" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@notification.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-check"></i> Mark Read
+                                        </button>
+                                    </form>
+                                }
+                                
+                                <form asp-action="DeleteNotification" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@notification.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+
+            @if (unreadOnly)
+            {
+                <text><strong>No unread notifications!</strong> You're all caught up.</text>
+            }
+            else
+            {
+                <text><strong>No notifications yet.</strong> We'll notify you of important updates here.</text>
+            }
+
+        </div>
+    }
+
+</div>

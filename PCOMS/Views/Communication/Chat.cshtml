@@ -1,0 +1,172 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.TeamMessageDto>
+
+@{
+    ViewData["Title"] = "Team Chat";
+    var projectId = ViewBag.ProjectId as int? ?? 0;
+    var projectName = Model.FirstOrDefault()?.ProjectName ?? "Project Chat";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="bi bi-chat-dots"></i> @projectName - Team Chat</h2>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    @if (Model.Any())
+                    {
+                        @foreach (var message in Model.OrderBy(m => m.SentAt))
+                        {
+                            <div class="mb-3 p-3 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>@message.SenderName</strong>
+                                        <small class="text-muted ms-2">@message.TimeAgo</small>
+                                        @if (message.EditedAt.HasValue)
+                                        {
+                                            <small class="text-muted">(edited)</small>
+                                        }
+                                    </div>
+                                    <div>
+                                        @if (User.Identity!.Name == message.SenderName)
+                                        {
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="editMessage(@message.Id, '@message.Content')">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <form asp-action="DeleteMessage" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@message.Id" />
+                                                    <input type="hidden" name="projectId" value="@projectId" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this message?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <p class="mt-2 mb-1">@message.Content</p>
+
+                                @if (!string.IsNullOrEmpty(message.AttachmentPath))
+                                {
+                                    <div class="mt-2">
+                                        <a href="/@message.AttachmentPath" target="_blank" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-paperclip"></i> @message.AttachmentName
+                                        </a>
+                                    </div>
+                                }
+
+                                <!-- Reactions -->
+                                @if (message.Reactions.Any())
+                                {
+                                    <div class="mt-2">
+                                        @foreach (var reactionGroup in message.Reactions.GroupBy(r => r.Emoji))
+                                        {
+                                            <span class="badge bg-light text-dark me-1">
+                                                @reactionGroup.Key @reactionGroup.Count()
+                                            </span>
+                                        }
+                                    </div>
+                                }
+
+                                <!-- Reaction Buttons -->
+                                <div class="mt-2">
+                                    <form asp-action="AddReaction" method="post" class="d-inline">
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <input type="hidden" name="projectId" value="@projectId" />
+                                        <input type="hidden" name="emoji" value="👍" />
+                                        <button type="submit" class="btn btn-sm btn-light">👍</button>
+                                    </form>
+                                    <form asp-action="AddReaction" method="post" class="d-inline">
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <input type="hidden" name="projectId" value="@projectId" />
+                                        <input type="hidden" name="emoji" value="❤️" />
+                                        <button type="submit" class="btn btn-sm btn-light">❤️</button>
+                                    </form>
+                                    <form asp-action="AddReaction" method="post" class="d-inline">
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <input type="hidden" name="projectId" value="@projectId" />
+                                        <input type="hidden" name="emoji" value="😊" />
+                                        <button type="submit" class="btn btn-sm btn-light">😊</button>
+                                    </form>
+                                </div>
+
+                                @if (message.RepliesCount > 0)
+                                {
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="loadReplies(@message.Id)">
+                                            <i class="bi bi-chat"></i> @message.RepliesCount replies
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No messages yet. Start the conversation!</p>
+                    }
+                </div>
+                <form asp-action="AddReaction" method="post" class="d-inline">
+                    <input type="hidden" name="emoji" value="🎉" />
+                    <!-- other fields -->
+                    <button type="submit" class="btn btn-sm btn-light">🎉</button>
+                </form>
+                <!-- Send Message Form -->
+                <div class="card-footer">
+                    <form asp-action="SendMessage" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="ProjectId" value="@projectId" />
+
+                        <div class="input-group">
+                            <textarea name="Content" class="form-control" rows="2" placeholder="Type your message..." required></textarea>
+                            <input type="file" name="Attachment" class="form-control" style="max-width: 200px;" />
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editMessage(id, content) {
+            // Simple edit implementation
+            var newContent = prompt('Edit message:', content);
+            if (newContent && newContent !== content) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("EditMessage")';
+
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'Id';
+                idInput.value = id;
+
+                var contentInput = document.createElement('input');
+                contentInput.type = 'hidden';
+                contentInput.name = 'Content';
+                contentInput.value = newContent;
+
+                form.appendChild(idInput);
+                form.appendChild(contentInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function loadReplies(messageId) {
+            // Could load replies via AJAX
+            alert('Replies feature - implement AJAX call to load replies');
+        }
+    </script>
+}

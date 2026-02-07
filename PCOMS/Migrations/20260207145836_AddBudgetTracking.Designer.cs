@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PCOMS.Data;
 
@@ -10,9 +11,11 @@ using PCOMS.Data;
 namespace PCOMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260207145836_AddBudgetTracking")]
+    partial class AddBudgetTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.12");
@@ -207,50 +210,6 @@ namespace PCOMS.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ActivityLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Details")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("EntityId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("EntityName")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("ActivityLogs");
                 });
 
             modelBuilder.Entity("PCOMS.Models.AuditLog", b =>
@@ -566,86 +525,6 @@ namespace PCOMS.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.MessageReaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Emoji")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TeamMessageId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeamMessageId");
-
-                    b.ToTable("MessageReactions");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ActionUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ReadAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("RelatedEntityId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("RelatedEntityType")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("PCOMS.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -675,22 +554,12 @@ namespace PCOMS.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ProjectManagerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProjectManagerId1")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClientId");
-
-                    b.HasIndex("ProjectManagerId");
-
-                    b.HasIndex("ProjectManagerId1");
 
                     b.ToTable("Projects");
                 });
@@ -975,53 +844,6 @@ namespace PCOMS.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.TeamMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AttachmentName")
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AttachmentPath")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("EditedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ParentMessageId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentMessageId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("TeamMessages");
-                });
-
             modelBuilder.Entity("PCOMS.Models.TimeEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -1113,16 +935,6 @@ namespace PCOMS.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PCOMS.Models.ActivityLog", b =>
-                {
-                    b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("PCOMS.Models.BudgetAlert", b =>
                 {
                     b.HasOne("PCOMS.Models.ProjectBudget", "ProjectBudget")
@@ -1193,17 +1005,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Client");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.MessageReaction", b =>
-                {
-                    b.HasOne("PCOMS.Models.TeamMessage", "TeamMessage")
-                        .WithMany("Reactions")
-                        .HasForeignKey("TeamMessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TeamMessage");
-                });
-
             modelBuilder.Entity("PCOMS.Models.Project", b =>
                 {
                     b.HasOne("PCOMS.Models.Client", "Client")
@@ -1212,18 +1013,7 @@ namespace PCOMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "ProjectManager")
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId1");
-
                     b.Navigation("Client");
-
-                    b.Navigation("ProjectManager");
                 });
 
             modelBuilder.Entity("PCOMS.Models.ProjectAssignment", b =>
@@ -1323,24 +1113,6 @@ namespace PCOMS.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.TeamMessage", b =>
-                {
-                    b.HasOne("PCOMS.Models.TeamMessage", "ParentMessage")
-                        .WithMany("Replies")
-                        .HasForeignKey("ParentMessageId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ParentMessage");
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("PCOMS.Models.TimeEntry", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Developer")
@@ -1379,13 +1151,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("SubTasks");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.TeamMessage", b =>
-                {
-                    b.Navigation("Reactions");
-
-                    b.Navigation("Replies");
                 });
 #pragma warning restore 612, 618
         }

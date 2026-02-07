@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PCOMS.Models;
 
@@ -25,7 +26,13 @@ namespace PCOMS.Data
         public DbSet<TaskItem> Tasks { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
         public DbSet<TaskAttachment> TaskAttachments { get; set; }
-
+        public DbSet<ProjectBudget> ProjectBudgets { get; set; } = null!;
+        public DbSet<Expense> Expenses { get; set; } = null!;
+        public DbSet<BudgetAlert> BudgetAlerts { get; set; } = null!;
+        public DbSet<Notification> Notifications { get; set; } = null!;
+        public DbSet<TeamMessage> TeamMessages { get; set; } = null!;
+        public DbSet<MessageReaction> MessageReactions { get; set; } = null!;
+        public DbSet<ActivityLog> ActivityLogs { get; set; } = null!;
 
         // NEW: Document Management
         public DbSet<Document> Documents { get; set; } = null!;
@@ -77,6 +84,38 @@ namespace PCOMS.Data
 
             builder.Entity<Document>()
                 .HasIndex(d => d.IsDeleted);
+            // TeamMessage
+            builder.Entity<TeamMessage>()
+                .HasOne(m => m.Project)
+                .WithMany()
+                .HasForeignKey(m => m.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<TeamMessage>()
+                .HasOne(m => m.ParentMessage)
+                .WithMany(m => m.Replies)
+                .HasForeignKey(m => m.ParentMessageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // MessageReaction
+            builder.Entity<MessageReaction>()
+                .HasOne(r => r.TeamMessage)
+                .WithMany(m => m.Reactions)
+                .HasForeignKey(r => r.TeamMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ActivityLog
+            builder.Entity<ActivityLog>()
+                .HasOne(a => a.Project)
+                .WithMany()
+                .HasForeignKey(a => a.ProjectId)
+                .OnDelete(DeleteBehavior.SetNull);
+            builder.Entity<Project>()
+                .HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(p => p.ProjectManagerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

@@ -62,6 +62,8 @@ builder.Services.AddScoped<InvoicePdfService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IBudgetService, BudgetService>();
+builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 
 // NEW: Document Management Service
 builder.Services.AddScoped<IDocumentService, DocumentService>();
