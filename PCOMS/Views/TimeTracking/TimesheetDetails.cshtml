@@ -1,0 +1,224 @@
+﻿@model PCOMS.Application.Interfaces.DTOs.TimesheetDto
+
+@{
+    ViewData["Title"] = "Timesheet Details";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="bi bi-calendar-week"></i>
+                Timesheet: @Model.WeekStartDate.ToString("MMM dd") - @Model.WeekEndDate.ToString("MMM dd, yyyy")
+            </h2>
+            <p class="text-muted">Employee: @Model.UserName</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("Timesheets")" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Timesheets
+            </a>
+        </div>
+    </div>
+
+    <!-- Status & Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Status</h6>
+                    @{
+                        var statusClass = Model.Status switch
+                        {
+                            "Approved" => "bg-success",
+                            "Submitted" => "bg-primary",
+                            "Rejected" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <h4><span class="badge @statusClass">@Model.Status</span></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6>Total Hours</h6>
+                    <h3>@Model.TotalHours.ToString("F1")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6>Billable</h6>
+                    <h3>@Model.BillableHours.ToString("F1")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h6>Non-Billable</h6>
+                    <h3>@Model.NonBillableHours.ToString("F1")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Info -->
+    @if (Model.Status == "Submitted")
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Timesheet submitted on @Model.SubmittedAt?.ToString("MMM dd, yyyy") - Waiting for approval
+        </div>
+    }
+    else if (Model.Status == "Approved")
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i>
+            Approved by <strong>@Model.ApprovedByName</strong> on @Model.ApprovedAt?.ToString("MMM dd, yyyy")
+            @if (!string.IsNullOrEmpty(Model.ApprovalNotes))
+            {
+                <br />
+                <strong>Notes:</strong>
+ 
+                @Model.ApprovalNotes
+            }
+        </div>
+    }
+    else if (Model.Status == "Rejected")
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-x-circle"></i>
+            Rejected by <strong>@Model.ApprovedByName</strong> on @Model.ApprovedAt?.ToString("MMM dd, yyyy")
+            @if (!string.IsNullOrEmpty(Model.ApprovalNotes))
+            {
+                <br />
+                <strong>Reason:</strong>
+ 
+                @Model.ApprovalNotes
+            }
+        </div>
+    }
+
+    <!-- Time Entries -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="bi bi-list-ul"></i> Time Entries (@Model.TimeEntries.Count)</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.TimeEntries.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Project</th>
+                                <th>Task</th>
+                                <th>Description</th>
+                                <th>Hours</th>
+                                <th>Billable</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in Model.TimeEntries.OrderBy(e => e.Date))
+                            {
+                                <tr>
+                                    <td>@entry.Date.ToString("ddd, MMM dd")</td>
+                                    <td>@entry.ProjectName</td>
+                                    <td>@(entry.TaskTitle ?? "-")</td>
+                                    <td>@entry.Description</td>
+                                    <td><strong>@entry.Hours.ToString("F1")h</strong></td>
+                                    <td>
+                                        @if (entry.IsBillable)
+                                        {
+                                            <span class="badge bg-success">Yes</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (entry.HourlyRate.HasValue)
+                                        {
+                                            @entry.TotalAmount.ToString("C")
+                                        }
+                                        else
+                                        {
+                                            <text>-</text>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="4">TOTAL</th>
+                                <th>@Model.TotalHours.ToString("F1")h</th>
+                                <th>
+                                    Billable: @Model.BillableHours.ToString("F1")h
+                                </th>
+                                <th>
+                                    @if (Model.TimeEntries.Any(e => e.HourlyRate.HasValue))
+                                    {
+                                        @Model.TimeEntries.Sum(e => e.TotalAmount).ToString("C")
+                                    }
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    No time entries for this week. <a href="@Url.Action("LogTime")">Log time</a> to add entries.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Actions -->
+    @if (Model.Status == "Draft")
+    {
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>Ready to Submit?</h5>
+                        <p class="mb-0">Review all time entries above, then submit for approval.</p>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("LogTime")" class="btn btn-secondary me-2">
+                            <i class="bi bi-plus"></i> Add More Time
+                        </a>
+                        <form asp-action="SubmitTimesheet" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Submit this timesheet for approval?')">
+                                <i class="bi bi-send"></i> Submit for Approval
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Notes -->
+    @if (!string.IsNullOrEmpty(Model.Notes))
+    {
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="bi bi-sticky"></i> Notes</h6>
+            </div>
+            <div class="card-body">
+                @Model.Notes
+            </div>
+        </div>
+    }
+</div>

@@ -33,18 +33,49 @@ namespace PCOMS.Data
         public DbSet<TeamMessage> TeamMessages { get; set; } = null!;
         public DbSet<MessageReaction> MessageReactions { get; set; } = null!;
         public DbSet<ActivityLog> ActivityLogs { get; set; } = null!;
-
-        // NEW: Document Management
+        public DbSet<Timesheet> Timesheets { get; set; } = null!;
+        public DbSet<WorkSchedule> WorkSchedules { get; set; } = null!;
         public DbSet<Document> Documents { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
+            // =========================
+            // ProjectAssignment Configuration
+            // =========================
             // Prevent duplicate developer assignment
             builder.Entity<ProjectAssignment>()
                 .HasIndex(pa => new { pa.ProjectId, pa.DeveloperId })
                 .IsUnique();
+
+            builder.Entity<ProjectAssignment>()
+                .HasOne(pa => pa.Project)
+                .WithMany(p => p.ProjectAssignments)
+                .HasForeignKey(pa => pa.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ProjectAssignment>()
+                .HasOne(pa => pa.Developer)
+                .WithMany()
+                .HasForeignKey(pa => pa.DeveloperId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            // =========================
+            // Project Configuration
+            // =========================
+            builder.Entity<Project>()
+                .HasOne(p => p.Manager)
+                .WithMany()
+                .HasForeignKey(p => p.ManagerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Project>()
+                .HasOne(p => p.Client)
+                .WithMany(c => c.Projects)
+                .HasForeignKey(p => p.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // =========================
             // Client ↔ ClientUser
@@ -62,7 +93,7 @@ namespace PCOMS.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // =========================
-            // NEW: Document Configuration
+            // Document Configuration
             // =========================
             builder.Entity<Document>()
                 .HasOne(d => d.Project)
@@ -84,7 +115,10 @@ namespace PCOMS.Data
 
             builder.Entity<Document>()
                 .HasIndex(d => d.IsDeleted);
-            // TeamMessage
+
+            // =========================
+            // TeamMessage Configuration
+            // =========================
             builder.Entity<TeamMessage>()
                 .HasOne(m => m.Project)
                 .WithMany()
@@ -97,25 +131,68 @@ namespace PCOMS.Data
                 .HasForeignKey(m => m.ParentMessageId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // MessageReaction
+            builder.Entity<TeamMessage>()
+                .HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // =========================
+            // MessageReaction Configuration
+            // =========================
             builder.Entity<MessageReaction>()
                 .HasOne(r => r.TeamMessage)
                 .WithMany(m => m.Reactions)
                 .HasForeignKey(r => r.TeamMessageId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ActivityLog
+            builder.Entity<MessageReaction>()
+                .HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // =========================
+            // ActivityLog Configuration
+            // =========================
             builder.Entity<ActivityLog>()
                 .HasOne(a => a.Project)
                 .WithMany()
                 .HasForeignKey(a => a.ProjectId)
                 .OnDelete(DeleteBehavior.SetNull);
-            builder.Entity<Project>()
+
+            builder.Entity<ActivityLog>()
                 .HasOne<IdentityUser>()
                 .WithMany()
-                .HasForeignKey(p => p.ProjectManagerId)
+                .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // =========================
+            // Notification Configuration
+            // =========================
+            builder.Entity<Notification>()
+                .HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // =========================
+            // Timesheet Configuration
+            // =========================
+            builder.Entity<Timesheet>()
+                .HasMany(t => t.TimeEntries)
+                .WithOne()
+                .HasForeignKey("TimesheetId")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // =========================
+            // TimeEntry Configuration
+            // =========================
+            builder.Entity<TimeEntry>()
+                .HasOne(e => e.Project)
+                .WithMany(p => p.TimeEntries)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

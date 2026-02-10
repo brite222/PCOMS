@@ -13,7 +13,9 @@ namespace PCOMS.Application.DTOs
         [Required]
         [Range(0.1, 24)]
         public decimal Hours { get; set; }
+        [Required]
+        [StringLength(500)]
+        public string Description { get; set; } = "";
 
-        public string? Description { get; set; }
     }
 }

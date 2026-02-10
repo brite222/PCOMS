@@ -1,24 +1,54 @@
-﻿@model PCOMS.Application.DTOs.UpdateTaskDto
+﻿@model PCOMS.Application.DTOs.EditProjectDto
 @{
-    ViewData["Title"] = "Edit Task";
+    ViewData["Title"] = "Edit Project";
+    var developers = ViewBag.Developers as IList<Microsoft.AspNetCore.Identity.IdentityUser>;
+    var assignedDevelopers = ViewBag.AssignedDevelopers as List<PCOMS.Models.ProjectAssignment>;
 }
 
-<div class="container">
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Edit Project: @Model.Name</h2>
+            <a asp-action="Client" asp-route-id="@Model.ClientId" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Projects
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="row">
-        <div class="col-md-8 mx-auto">
+        <!-- Left Column: Project Details -->
+        <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h4>Edit Task #@Model.TaskId</h4>
+                    <h5 class="mb-0">Project Details</h5>
                 </div>
                 <div class="card-body">
                     <form asp-action="Edit" method="post">
                         @Html.AntiForgeryToken()
-                        <input type="hidden" asp-for="TaskId" />
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ClientId" />
+                        <input type="hidden" asp-for="ManagerId" />
 
                         <div class="mb-3">
-                            <label asp-for="Title" class="form-label">Title *</label>
-                            <input asp-for="Title" class="form-control" />
-                            <span asp-validation-for="Title" class="text-danger"></span>
+                            <label asp-for="Name" class="form-label">Project Name *</label>
+                            <input asp-for="Name" class="form-control" required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
@@ -31,67 +61,170 @@
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Status" class="form-label">Status *</label>
                                 <select asp-for="Status" class="form-select">
-                                    <option value="0">To Do</option>
-                                    <option value="1">In Progress</option>
-                                    <option value="2">In Review</option>
-                                    <option value="3">Completed</option>
-                                    <option value="4">Cancelled</option>
+                                    <option value="0">Planned</option>
+                                    <option value="1">Active</option>
+                                    <option value="2">Completed</option>
+                                    <option value="3">Archived</option>
                                 </select>
                                 <span asp-validation-for="Status" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Priority" class="form-label">Priority *</label>
-                                <select asp-for="Priority" class="form-select">
-                                    <option value="0">Low</option>
-                                    <option value="1">Medium</option>
-                                    <option value="2">High</option>
-                                    <option value="3">Critical</option>
-                                </select>
-                                <span asp-validation-for="Priority" class="text-danger"></span>
+                                <label asp-for="HourlyRate" class="form-label">Hourly Rate ($) *</label>
+                                <input asp-for="HourlyRate" type="number" step="0.01" class="form-control" required />
+                                <span asp-validation-for="HourlyRate" class="text-danger"></span>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="DueDate" class="form-label">Due Date</label>
-                                <input asp-for="DueDate" type="date" class="form-control" />
-                                <span asp-validation-for="DueDate" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="AssignedToId" class="form-label">Assign To</label>
-                                <select asp-for="AssignedToId" class="form-select" asp-items="ViewBag.Users">
-                                    <option value="">-- Unassigned --</option>
-                                </select>
-                                <span asp-validation-for="AssignedToId" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="ProgressPercentage" class="form-label">Progress: <span id="progressValue">@Model.ProgressPercentage%</span></label>
-                            <input asp-for="ProgressPercentage" type="range" class="form-range" min="0" max="100" step="5" oninput="document.getElementById('progressValue').textContent = this.value + '%'" />
-                            <span asp-validation-for="ProgressPercentage" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Tags" class="form-label">Tags</label>
-                            <input asp-for="Tags" class="form-control" placeholder="Enter tags separated by commas" />
-                            <span asp-validation-for="Tags" class="text-danger"></span>
-                            <small class="text-muted">Separate multiple tags with commas</small>
                         </div>
 
                         <hr />
 
                         <div class="d-flex justify-content-between">
-                            <a asp-action="Details" asp-route-id="@Model.TaskId" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Cancel
+                            <a asp-action="Client" asp-route-id="@Model.ClientId" class="btn btn-secondary">
+                                Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-save"></i> Save Changes
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Developer Assignment -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> Assigned Developers
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Assign New Developer Form -->
+                    <form asp-controller="Projects" asp-action="AssignDeveloper" method="post" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="projectId" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Add Developer</label>
+                            @if (developers != null && developers.Any())
+                            {
+                                <select name="developerId" class="form-select" required>
+                                    <option value="">-- Select Developer --</option>
+                                    @foreach (var dev in developers)
+                                    {
+                                        // Check if already assigned
+                                        var isAssigned = assignedDevelopers?.Any(a => a.DeveloperId == dev.Id) ?? false;
+                                        if (!isAssigned)
+                                        {
+                                            <option value="@dev.Id">@(dev.Email ?? dev.UserName) (ID: @dev.Id)</option>
+                                        }
+                                    }
+                                </select>
+                                <small class="text-muted">Found @developers.Count developer(s)</small>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <strong>No developers available!</strong><br />
+                                    Please create users with the "Developer" role in User Management first.
+                                </div>
+                            }
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-plus-circle"></i> Assign Developer
+                        </button>
+                    </form>
+
+                    <hr />
+
+                    <!-- Currently Assigned Developers -->
+                    <h6 class="mb-3">Currently Assigned (@(assignedDevelopers?.Count ?? 0))</h6>
+
+                    @if (assignedDevelopers != null && assignedDevelopers.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var assignment in assignedDevelopers)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-person"></i>
+                                        <strong>
+                                            @if (assignment.Developer != null)
+                                            {
+                                                @(assignment.Developer.Email ?? assignment.Developer.UserName ?? "Unknown")
+                                            }
+                                            else
+                                            {
+                                                <span>Developer ID: @assignment.DeveloperId</span>
+                                            }
+                                        </strong>
+                                    </div>
+                                    <form asp-controller="Projects" asp-action="RemoveDeveloper" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="projectId" value="@Model.Id" />
+                                        <input type="hidden" name="developerId" value="@assignment.DeveloperId" />
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Remove this developer from the project?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> No developers assigned yet.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Project Info Card -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Project ID:</dt>
+                        <dd class="col-sm-7">#@Model.Id</dd>
+
+                        <dt class="col-sm-5">Manager:</dt>
+                        <dd class="col-sm-7">@(Model.ManagerName ?? "Not assigned")</dd>
+
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7">
+                            @switch (Model.Status)
+                            {
+                                case PCOMS.Models.ProjectStatus.Planned:
+                                    <span class="badge bg-secondary">Planned</span>
+                                    break;
+                                case PCOMS.Models.ProjectStatus.Active:
+                                    <span class="badge bg-success">Active</span>
+                                    break;
+                                case PCOMS.Models.ProjectStatus.Completed:
+                                    <span class="badge bg-info">Completed</span>
+                                    break;
+                                case PCOMS.Models.ProjectStatus.Archived:
+                                    <span class="badge bg-dark">Archived</span>
+                                    break;
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Hourly Rate:</dt>
+                        <dd class="col-sm-7">$@Model.HourlyRate.ToString("N2")</dd>
+
+                        @if (assignedDevelopers != null)
+                        {
+                            <dt class="col-sm-5">Team Size:</dt>
+                            <dd class="col-sm-7">@assignedDevelopers.Count developer(s)</dd>
+                        }
+                    </dl>
                 </div>
             </div>
         </div>
@@ -102,4 +235,11 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
 }

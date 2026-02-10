@@ -51,7 +51,8 @@ namespace PCOMS.Application.Services
             {
                 TotalHours = entries.Sum(e => e.Hours),
                 PendingHours = entries
-                    .Where(e => e.Status == TimeEntryStatus.Pending)
+                    .Where(e => e.Status == TimeEntryStatus.Submitted
+)
                     .Sum(e => e.Hours),
                 ApprovedHours = entries
                     .Where(e => e.Status == TimeEntryStatus.Approved)

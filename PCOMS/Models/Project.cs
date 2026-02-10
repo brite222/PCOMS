@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace PCOMS.Models
@@ -22,15 +20,14 @@ namespace PCOMS.Models
 
         // Project Manager
         public string? ManagerId { get; set; }
+        public IdentityUser? Manager { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public decimal HourlyRate { get; set; } = 0m;
-        public decimal Hours { get; set; } = 0m;
-        public ICollection<TimeEntry> TimeEntries { get; set; }
-        public string? ProjectManagerId { get; set; }
-        public IdentityUser? ProjectManager { get; set; }
 
-
-
+        // Navigation
+        public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+        public ICollection<ProjectAssignment> ProjectAssignments { get; set; } = new List<ProjectAssignment>();
     }
 }

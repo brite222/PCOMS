@@ -117,19 +117,27 @@ namespace PCOMS.Application.Services
         // =========================
         public void Create(CreateProjectDto dto)
         {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new Exception("Project name is required");
+
             var project = new Project
             {
-                Name = dto.Name,
+                Name = dto.Name.Trim(),
                 Description = dto.Description,
                 ClientId = dto.ClientId,
                 HourlyRate = dto.HourlyRate,
                 Status = ProjectStatus.Active,
-                ManagerId = dto.ManagerId
+                ManagerId = dto.ManagerId,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Projects.Add(project);
             _context.SaveChanges();
         }
+
 
         // =========================
         // PRIVATE HELPERS

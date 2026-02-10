@@ -44,7 +44,8 @@ else
                             </span>
                         </td>
                         <td>
-                            @if (entry.Status == TimeEntryStatus.Pending)
+                            @if (entry.Status == TimeEntryStatus.Submitted)
+                                                
                             {
                                 <span class="badge bg-warning text-dark">Pending</span>
                             }

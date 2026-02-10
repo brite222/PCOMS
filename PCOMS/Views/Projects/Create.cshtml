@@ -1,34 +1,138 @@
 ﻿@model PCOMS.Application.DTOs.CreateProjectDto
+@{
+    ViewData["Title"] = "Create New Project";
+}
 
-<h2>Create Project</h2>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a asp-action="Client" asp-route-id="@Model.ClientId">Projects</a>
+                        </li>
+                        <li class="breadcrumb-item active">Create New</li>
+                    </ol>
+                </nav>
+                <h2 class="mb-1">
+                    <i class="bi bi-plus-circle text-primary"></i> Create New Project
+                </h2>
+                <p class="text-muted">Add a new project for this client</p>
+            </div>
 
-<form asp-action="Create" method="post">
-    <input type="hidden" asp-for="ClientId" />
+            <!-- Form Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ClientId" />
 
-    <div class="mb-3">
-        <label asp-for="Name"></label>
-        <input asp-for="Name" class="form-control" />
+                        <!-- Project Name -->
+                        <div class="mb-4">
+                            <label asp-for="Name" class="form-label fw-semibold">
+                                <i class="bi bi-folder text-primary me-2"></i>Project Name *
+                            </label>
+                            <input asp-for="Name"
+                                   class="form-control form-control-lg"
+                                   placeholder="Enter project name (e.g., Website Redesign)"
+                                   required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="form-text">Give your project a clear, descriptive name</div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label fw-semibold">
+                                <i class="bi bi-text-paragraph text-primary me-2"></i>Description
+                            </label>
+                            <textarea asp-for="Description"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="Describe the project scope, goals, and key deliverables..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Optional: Provide details about what this project entails</div>
+                        </div>
+
+                        <!-- Hourly Rate -->
+                        <div class="mb-4">
+                            <label asp-for="HourlyRate" class="form-label fw-semibold">
+                                <i class="bi bi-currency-dollar text-primary me-2"></i>Hourly Rate (₦) *
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">₦</span>
+                                <input asp-for="HourlyRate"
+                                       type="number"
+                                       step="0.01"
+                                       class="form-control"
+                                       placeholder="0.00"
+                                       required />
+                                <span class="input-group-text">/hour</span>
+                            </div>
+                            <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                            <div class="form-text">Billing rate for this project</div>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="alert alert-info d-flex align-items-start mb-4">
+                            <i class="bi bi-info-circle fs-5 me-3 mt-1"></i>
+                            <div>
+                                <strong>What happens next?</strong>
+                                <p class="mb-0 mt-1">After creating the project, you'll be able to:</p>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    <li>Assign team members to the project</li>
+                                    <li>Track time entries and billable hours</li>
+                                    <li>Upload and manage project documents</li>
+                                    <li>Monitor project progress and status</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="Client"
+                               asp-route-id="@Model.ClientId"
+                               class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg shadow">
+                                <i class="bi bi-check-circle me-2"></i>Create Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card border-0 bg-light mt-3">
+                <div class="card-body">
+                    <h6 class="mb-2">
+                        <i class="bi bi-lightbulb text-warning me-2"></i>Quick Tips
+                    </h6>
+                    <ul class="small mb-0 ps-3">
+                        <li><strong>Project Name:</strong> Use clear, client-recognizable names</li>
+                        <li><strong>Description:</strong> Include key deliverables and milestones</li>
+                        <li><strong>Hourly Rate:</strong> Set competitive rates based on project complexity</li>
+                        <li>The project will initially be set to "Active" status</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Description"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-    </div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
 
-    <button class="btn btn-success">Save</button>
-
-    <a asp-action="Client"
-       asp-route-id="@Model.ClientId"
-       class="btn btn-secondary ms-2">
-        Cancel
-    </a>
-    <div class="mb-3">
-        <label>Hourly Rate</label>
-        <input asp-for="HourlyRate" class="form-control" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="HourlyRate"></label>
-        <input asp-for="HourlyRate" class="form-control" />
-    </div>
-
-</form>
+<style>
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+</style>

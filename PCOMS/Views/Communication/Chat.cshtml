@@ -7,6 +7,23 @@
 }
 
 <div class="container-fluid mt-4">
+    <!-- Error and Success Messages -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="row mb-4">
         <div class="col-md-12">
             <h2><i class="bi bi-chat-dots"></i> @projectName - Team Chat</h2>
@@ -40,6 +57,7 @@
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                                 <form asp-action="DeleteMessage" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@message.Id" />
                                                     <input type="hidden" name="projectId" value="@projectId" />
                                                     <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this message?')">
@@ -78,22 +96,32 @@
                                 <!-- Reaction Buttons -->
                                 <div class="mt-2">
                                     <form asp-action="AddReaction" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="messageId" value="@message.Id" />
                                         <input type="hidden" name="projectId" value="@projectId" />
                                         <input type="hidden" name="emoji" value="👍" />
                                         <button type="submit" class="btn btn-sm btn-light">👍</button>
                                     </form>
                                     <form asp-action="AddReaction" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="messageId" value="@message.Id" />
                                         <input type="hidden" name="projectId" value="@projectId" />
                                         <input type="hidden" name="emoji" value="❤️" />
                                         <button type="submit" class="btn btn-sm btn-light">❤️</button>
                                     </form>
                                     <form asp-action="AddReaction" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="messageId" value="@message.Id" />
                                         <input type="hidden" name="projectId" value="@projectId" />
                                         <input type="hidden" name="emoji" value="😊" />
                                         <button type="submit" class="btn btn-sm btn-light">😊</button>
+                                    </form>
+                                    <form asp-action="AddReaction" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <input type="hidden" name="projectId" value="@projectId" />
+                                        <input type="hidden" name="emoji" value="🎉" />
+                                        <button type="submit" class="btn btn-sm btn-light">🎉</button>
                                     </form>
                                 </div>
 
@@ -113,14 +141,11 @@
                         <p class="text-muted text-center">No messages yet. Start the conversation!</p>
                     }
                 </div>
-                <form asp-action="AddReaction" method="post" class="d-inline">
-                    <input type="hidden" name="emoji" value="🎉" />
-                    <!-- other fields -->
-                    <button type="submit" class="btn btn-sm btn-light">🎉</button>
-                </form>
+
                 <!-- Send Message Form -->
                 <div class="card-footer">
                     <form asp-action="SendMessage" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="ProjectId" value="@projectId" />
 
                         <div class="input-group">
@@ -147,6 +172,13 @@
                 form.method = 'POST';
                 form.action = '@Url.Action("EditMessage")';
 
+                // Add antiforgery token
+                var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                var tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token;
+
                 var idInput = document.createElement('input');
                 idInput.type = 'hidden';
                 idInput.name = 'Id';
@@ -157,6 +189,7 @@
                 contentInput.name = 'Content';
                 contentInput.value = newContent;
 
+                form.appendChild(tokenInput);
                 form.appendChild(idInput);
                 form.appendChild(contentInput);
                 document.body.appendChild(form);

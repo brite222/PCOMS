@@ -1,0 +1,159 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.TimesheetDto>
+
+@{
+    ViewData["Title"] = "My Timesheets";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-calendar-week"></i> My Timesheets</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                <i class="bi bi-clock"></i> Time Entries
+            </a>
+            <form asp-action="CreateTimesheet" method="post" class="d-inline">
+                <input type="hidden" name="weekStartDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> New Timesheet
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var timesheet in Model)
+            {
+                var statusClass = timesheet.Status switch
+                {
+                    "Approved" => "border-success",
+                    "Submitted" => "border-primary",
+                    "Rejected" => "border-danger",
+                    _ => "border-secondary"
+                };
+
+                var statusBadge = timesheet.Status switch
+                {
+                    "Approved" => "bg-success",
+                    "Submitted" => "bg-primary",
+                    "Rejected" => "bg-danger",
+                    _ => "bg-secondary"
+                };
+
+                <div class="col-md-6 mb-3">
+                    <div class="card @statusClass">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between">
+                                <h5>
+                                    Week of @timesheet.WeekStartDate.ToString("MMM dd") - @timesheet.WeekEndDate.ToString("MMM dd, yyyy")
+                                </h5>
+                                <span class="badge @statusBadge">@timesheet.Status</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h6 class="text-muted">Total Hours</h6>
+                                    <h3>@timesheet.TotalHours.ToString("F1")</h3>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-muted">Billable</h6>
+                                    <h3 class="text-success">@timesheet.BillableHours.ToString("F1")</h3>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Non-Billable:</small>
+                                    <strong>@timesheet.NonBillableHours.ToString("F1")h</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Time Entries:</small>
+                                    <strong>@timesheet.TimeEntries.Count</strong>
+                                </div>
+                            </div>
+
+                            @if (timesheet.SubmittedAt.HasValue)
+                            {
+                                <div class="mt-2">
+                                    <small class="text-muted">Submitted: @timesheet.SubmittedAt.Value.ToString("MMM dd, yyyy")</small>
+                                </div>
+                            }
+
+                            @if (timesheet.ApprovedAt.HasValue)
+                            {
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        Approved by @timesheet.ApprovedByName on @timesheet.ApprovedAt.Value.ToString("MMM dd, yyyy")
+                                    </small>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(timesheet.ApprovalNotes))
+                            {
+                                <div class="mt-2 alert alert-info">
+                                    <strong>Notes:</strong> @timesheet.ApprovalNotes
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between">
+                                <a href="@Url.Action("TimesheetDetails", new { id = timesheet.Id })" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+
+                                @if (timesheet.Status == "Draft")
+                                {
+                                    <form asp-action="SubmitTimesheet" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@timesheet.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Submit this timesheet for approval?')">
+                                            <i class="bi bi-send"></i> Submit
+                                        </button>
+                                    </form>
+                                }
+                                else if (timesheet.Status == "Approved")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-lock"></i> Locked
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No timesheets yet. <strong>Create your first timesheet</strong> to track your weekly hours.
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5>How Timesheets Work</h5>
+                <ol>
+                    <li>Create a timesheet for the current week (Monday-Sunday)</li>
+                    <li>Log time entries throughout the week</li>
+                    <li>Review all entries on Friday</li>
+                    <li>Submit timesheet for manager approval</li>
+                    <li>Once approved, timesheet is locked</li>
+                </ol>
+
+                <form asp-action="CreateTimesheet" method="post" class="mt-3">
+                    <input type="hidden" name="weekStartDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create Timesheet for This Week
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

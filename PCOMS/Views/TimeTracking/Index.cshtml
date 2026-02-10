@@ -1,0 +1,192 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.TimeEntryDto>
+
+@{
+    ViewData["Title"] = "Time Tracking";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-clock-history"></i> My Time Entries</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("Timesheets")" class="btn btn-info me-2">
+                <i class="bi bi-calendar-week"></i> Timesheets
+            </a>
+            <a href="@Url.Action("LogTime")" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Log Time
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>From Date</label>
+                        <input type="date" name="FromDate" class="form-control" value="@ViewBag.Filter?.FromDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>To Date</label>
+                        <input type="date" name="ToDate" class="form-control" value="@ViewBag.Filter?.ToDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>Status</label>
+                        <select name="Status" class="form-control">
+                            <option value="">All</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Submitted">Submitted</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block w-100">
+                            <i class="bi bi-search"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h6>Total Hours</h6>
+                        <h3>@Model.Sum(e => e.Hours).ToString("F1")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h6>Billable Hours</h6>
+                        <h3>@Model.Where(e => e.IsBillable).Sum(e => e.Hours).ToString("F1")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h6>Non-Billable</h6>
+                        <h3>@Model.Where(e => !e.IsBillable).Sum(e => e.Hours).ToString("F1")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h6>Total Entries</h6>
+                        <h3>@Model.Count()</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Entries Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Project</th>
+                                <th>Task</th>
+                                <th>Description</th>
+                                <th>Hours</th>
+                                <th>Billable</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in Model.OrderByDescending(e => e.Date))
+                            {
+                                var statusClass = entry.Status switch
+                                {
+                                    "Approved" => "bg-success",
+                                    "Submitted" => "bg-primary",
+                                    "Rejected" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+
+                                <tr>
+                                    <td>@entry.Date.ToString("MMM dd, yyyy")</td>
+                                    <td>@entry.ProjectName</td>
+                                    <td>@(entry.TaskTitle ?? "-")</td>
+                                    <td>@entry.Description</td>
+                                    <td><strong>@entry.Hours.ToString("F1")h</strong></td>
+                                    <td>
+                                        @if (entry.IsBillable)
+                                        {
+                                            <span class="badge bg-success">Billable</span>
+                                            if (entry.HourlyRate.HasValue)
+                                            {
+                                                <br />
+                                                <small>@entry.TotalAmount.ToString("C")</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Non-billable</span>
+                                        }
+                                    </td>
+                                    <td><span class="badge @statusClass">@entry.Status</span></td>
+                                    <td>
+                                        @if (entry.Status == "Draft" || entry.Status == "Rejected")
+                                        {
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="@Url.Action("EditEntry", new { id = entry.Id })" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form asp-action="DeleteEntry" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@entry.Id" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this entry?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Locked</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-secondary">
+                                <th colspan="4">TOTAL</th>
+                                <th>@Model.Sum(e => e.Hours).ToString("F1")h</th>
+                                <th>
+                                    @if (Model.Any(e => e.IsBillable && e.HourlyRate.HasValue))
+                                    {
+                                        @Model.Where(e => e.IsBillable).Sum(e => e.TotalAmount).ToString("C")
+                                    }
+                                </th>
+                                <th colspan="2"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No time entries found. <a href="@Url.Action("LogTime")">Log your first time entry</a>
+        </div>
+    }
+</div>

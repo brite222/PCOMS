@@ -1,0 +1,167 @@
+﻿@model IEnumerable<PCOMS.Application.Interfaces.DTOs.TimesheetDto>
+
+@{
+    ViewData["Title"] = "Pending Timesheet Approvals";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="bi bi-check2-square"></i> Pending Timesheet Approvals</h2>
+            <p class="text-muted">Review and approve team member timesheets</p>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>@Model.Count()</strong> timesheet(s) waiting for your approval
+        </div>
+
+        @foreach (var timesheet in Model)
+        {
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>
+                                <i class="bi bi-person"></i> @timesheet.UserName
+                            </h5>
+                            <small>Week of @timesheet.WeekStartDate.ToString("MMM dd") - @timesheet.WeekEndDate.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5>@timesheet.TotalHours.ToString("F1") hours</h5>
+                            <small>Submitted: @timesheet.SubmittedAt?.ToString("MMM dd, yyyy")</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Summary -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Total Hours</h6>
+                                    <h3>@timesheet.TotalHours.ToString("F1")</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Billable</h6>
+                                    <h3 class="text-success">@timesheet.BillableHours.ToString("F1")</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Non-Billable</h6>
+                                    <h3 class="text-info">@timesheet.NonBillableHours.ToString("F1")</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Entries -->
+                    <h6><i class="bi bi-list-ul"></i> Time Entries (@timesheet.TimeEntries.Count)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Project</th>
+                                    <th>Task</th>
+                                    <th>Description</th>
+                                    <th>Hours</th>
+                                    <th>Billable</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entry in timesheet.TimeEntries.OrderBy(e => e.Date))
+                                {
+                                    <tr>
+                                        <td>@entry.Date.ToString("ddd, MMM dd")</td>
+                                        <td>@entry.ProjectName</td>
+                                        <td>@(entry.TaskTitle ?? "-")</td>
+                                        <td>@entry.Description</td>
+                                        <td><strong>@entry.Hours.ToString("F1")h</strong></td>
+                                        <td>
+                                            @if (entry.IsBillable)
+                                            {
+                                                <span class="badge bg-success">Yes</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">No</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Approval Actions -->
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <form asp-action="ApproveTimesheet" method="post" class="d-inline me-2">
+                                <input type="hidden" name="id" value="@timesheet.Id" />
+                                <div class="input-group" style="max-width: 600px; display: inline-flex;">
+                                    <input type="text" name="notes" class="form-control" placeholder="Optional approval notes..." />
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('Approve this timesheet?')">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </div>
+                            </form>
+
+                            <button type="button" class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#reject-@timesheet.Id">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+
+                            <!-- Reject Form (Collapsible) -->
+                            <div class="collapse mt-3" id="reject-@timesheet.Id">
+                                <div class="card card-body bg-light">
+                                    <form asp-action="RejectTimesheet" method="post">
+                                        <input type="hidden" name="id" value="@timesheet.Id" />
+                                        <div class="mb-3">
+                                            <label class="form-label">Reason for Rejection *</label>
+                                            <textarea name="notes" class="form-control" rows="2" required placeholder="Please explain why this timesheet is being rejected..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Reject this timesheet?')">
+                                            <i class="bi bi-x-circle"></i> Confirm Rejection
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i>
+            <strong>All caught up!</strong> No pending timesheet approvals at this time.
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5>Timesheet Approval Process</h5>
+                <ol>
+                    <li>Team members submit weekly timesheets</li>
+                    <li>Submitted timesheets appear in this queue</li>
+                    <li>Review time entries for accuracy</li>
+                    <li>Approve or reject with feedback</li>
+                    <li>Approved timesheets are locked</li>
+                    <li>Rejected timesheets return to employee for correction</li>
+                </ol>
+            </div>
+        </div>
+    }
+</div>

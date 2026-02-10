@@ -4,14 +4,17 @@ namespace PCOMS.Application.DTOs
 {
     public class CreateProjectDto
     {
+        [Required]
         public int ClientId { get; set; }
 
         [Required]
-        public string Name { get; set; } = default!;
+        public string Name { get; set; } = null!;
 
         public string? Description { get; set; }
-        public decimal HourlyRate { get; set; }
-        public string? ManagerId { get; set; }
 
+        [Required]
+        public decimal HourlyRate { get; set; }
+
+        public string? ManagerId { get; set; }
     }
 }

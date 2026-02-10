@@ -67,13 +67,30 @@ namespace PCOMS.Controllers
         // ==========================================
         // TEAM MESSAGES
         // ==========================================
+
         [HttpGet]
         public async Task<IActionResult> Chat(int projectId, int pageNumber = 1)
         {
-            var messages = await _communicationService.GetProjectMessagesAsync(projectId, pageNumber);
-            ViewBag.ProjectId = projectId;
-            ViewBag.PageNumber = pageNumber;
-            return View(messages);
+            if (projectId <= 0)
+            {
+                _logger.LogWarning("Invalid projectId: {ProjectId}", projectId);
+                TempData["Error"] = "Please select a project to view its chat.";
+                return RedirectToAction("Index", "Projects");
+            }
+
+            try
+            {
+                var messages = await _communicationService.GetProjectMessagesAsync(projectId, pageNumber);
+                ViewBag.ProjectId = projectId;
+                ViewBag.PageNumber = pageNumber;
+                return View(messages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading chat for project {ProjectId}", projectId);
+                TempData["Error"] = $"Project with ID {projectId} not found";
+                return RedirectToAction("Index", "Projects");
+            }
         }
 
         [HttpPost]
@@ -82,21 +99,45 @@ namespace PCOMS.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Failed to send message";
+                TempData["Error"] = "Invalid message data";
                 return RedirectToAction("Chat", new { projectId = dto.ProjectId });
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var message = await _communicationService.CreateMessageAsync(dto, userId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (message == null)
+            if (string.IsNullOrEmpty(userId))
             {
-                TempData["Error"] = "Failed to send message";
+                TempData["Error"] = "User not authenticated";
                 return RedirectToAction("Chat", new { projectId = dto.ProjectId });
             }
 
-            TempData["Success"] = "Message sent";
-            return RedirectToAction("Chat", new { projectId = dto.ProjectId });
+            try
+            {
+                _logger.LogInformation($"Creating message - ProjectId: {dto.ProjectId}, SenderId: {userId}");
+
+                var message = await _communicationService.CreateMessageAsync(dto, userId);
+
+                if (message == null)
+                {
+                    TempData["Error"] = "Failed to send message";
+                    return RedirectToAction("Chat", new { projectId = dto.ProjectId });
+                }
+
+                TempData["Success"] = "Message sent";
+                return RedirectToAction("Chat", new { projectId = dto.ProjectId });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Validation error sending message");
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Chat", new { projectId = dto.ProjectId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error sending message");
+                TempData["Error"] = "An unexpected error occurred";
+                return RedirectToAction("Chat", new { projectId = dto.ProjectId });
+            }
         }
 
         [HttpGet]

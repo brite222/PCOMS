@@ -101,7 +101,7 @@
                 </div>
                 <div class="card-body">
                     <!-- Assign New Developer Form -->
-                    <form asp-controller="ProjectAssignments" asp-action="Assign" method="post" class="mb-4">
+                    <form asp-controller="Projects" asp-action="AssignDeveloper" method="post" class="mb-4">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="projectId" value="@Model.Id" />
 
@@ -157,7 +157,7 @@
                                             }
                                         </strong>
                                     </div>
-                                    <form asp-controller="ProjectAssignments" asp-action="Remove" method="post" class="d-inline">
+                                    <form asp-controller="Projects" asp-action="RemoveDeveloper" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="projectId" value="@Model.Id" />
                                         <input type="hidden" name="developerId" value="@assignment.DeveloperId" />

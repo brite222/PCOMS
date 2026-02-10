@@ -250,6 +250,8 @@ namespace PCOMS.Migrations
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("ActivityLogs");
                 });
 
@@ -592,6 +594,8 @@ namespace PCOMS.Migrations
 
                     b.HasIndex("TeamMessageId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("MessageReactions");
                 });
 
@@ -643,6 +647,8 @@ namespace PCOMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Notifications");
                 });
 
@@ -664,21 +670,12 @@ namespace PCOMS.Migrations
                     b.Property<decimal>("HourlyRate")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("Hours")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ManagerId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProjectManagerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProjectManagerId1")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
@@ -688,9 +685,7 @@ namespace PCOMS.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.HasIndex("ProjectManagerId");
-
-                    b.HasIndex("ProjectManagerId1");
+                    b.HasIndex("ManagerId");
 
                     b.ToTable("Projects");
                 });
@@ -1019,6 +1014,8 @@ namespace PCOMS.Migrations
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("SenderId");
+
                     b.ToTable("TeamMessages");
                 });
 
@@ -1028,7 +1025,26 @@ namespace PCOMS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ApprovalNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DeveloperId")
@@ -1038,8 +1054,17 @@ namespace PCOMS.Migrations
                     b.Property<DateTime>("EntryDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("HourlyRate")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("Hours")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsBillable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsInvoiced")
                         .HasColumnType("INTEGER");
@@ -1050,16 +1075,129 @@ namespace PCOMS.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("TaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TimesheetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("WorkDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DeveloperId");
-
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("TimesheetId");
+
                     b.ToTable("TimeEntries");
+                });
+
+            modelBuilder.Entity("PCOMS.Models.Timesheet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ApprovalNotes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("BillableHours")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("NonBillableHours")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalHours")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("WeekEndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("WeekStartDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Timesheets");
+                });
+
+            modelBuilder.Entity("PCOMS.Models.WorkSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("HoursPerDay")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsWorkingDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WorkSchedules");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1119,6 +1257,12 @@ namespace PCOMS.Migrations
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Project");
                 });
@@ -1201,7 +1345,22 @@ namespace PCOMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("TeamMessage");
+                });
+
+            modelBuilder.Entity("PCOMS.Models.Notification", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PCOMS.Models.Project", b =>
@@ -1212,18 +1371,14 @@ namespace PCOMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Manager")
                         .WithMany()
-                        .HasForeignKey("ProjectManagerId")
+                        .HasForeignKey("ManagerId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "ProjectManager")
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId1");
 
                     b.Navigation("Client");
 
-                    b.Navigation("ProjectManager");
+                    b.Navigation("Manager");
                 });
 
             modelBuilder.Entity("PCOMS.Models.ProjectAssignment", b =>
@@ -1231,11 +1386,11 @@ namespace PCOMS.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Developer")
                         .WithMany()
                         .HasForeignKey("DeveloperId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
+                        .WithMany("ProjectAssignments")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1336,6 +1491,12 @@ namespace PCOMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("ParentMessage");
 
                     b.Navigation("Project");
@@ -1343,21 +1504,24 @@ namespace PCOMS.Migrations
 
             modelBuilder.Entity("PCOMS.Models.TimeEntry", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Developer")
-                        .WithMany()
-                        .HasForeignKey("DeveloperId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("PCOMS.Models.Project", "Project")
                         .WithMany("TimeEntries")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Developer");
+                    b.HasOne("PCOMS.Models.TaskItem", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId");
+
+                    b.HasOne("PCOMS.Models.Timesheet", null)
+                        .WithMany("TimeEntries")
+                        .HasForeignKey("TimesheetId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Project");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("PCOMS.Models.Client", b =>
@@ -1369,6 +1533,8 @@ namespace PCOMS.Migrations
 
             modelBuilder.Entity("PCOMS.Models.Project", b =>
                 {
+                    b.Navigation("ProjectAssignments");
+
                     b.Navigation("TimeEntries");
                 });
 
@@ -1386,6 +1552,11 @@ namespace PCOMS.Migrations
                     b.Navigation("Reactions");
 
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("PCOMS.Models.Timesheet", b =>
+                {
+                    b.Navigation("TimeEntries");
                 });
 #pragma warning restore 612, 618
         }

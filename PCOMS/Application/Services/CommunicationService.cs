@@ -202,17 +202,17 @@ namespace PCOMS.Application.Services
             {
                 // Get project team members (you'll need to adjust based on your project structure)
                 var project = await _context.Projects
-                    .Include(p => p.ProjectManager)
+                    .Include(p => p.Manager)
                     .FirstOrDefaultAsync(p => p.Id == projectId);
 
                 if (project == null) return;
 
                 // Notify project manager
-                if (!string.IsNullOrEmpty(project.ProjectManagerId))
+                if (!string.IsNullOrEmpty(project.ManagerId))
                 {
                     await CreateNotificationAsync(new CreateNotificationDto
                     {
-                        UserId = project.ProjectManagerId,
+                        UserId = project.ManagerId, // ✅ CORRECT
                         Title = title,
                         Message = message,
                         Type = type,
@@ -234,13 +234,54 @@ namespace PCOMS.Application.Services
         // ==========================================
         public async Task<TeamMessageDto?> CreateMessageAsync(CreateTeamMessageDto dto, string senderId)
         {
+            _logger.LogInformation("=== START CreateMessageAsync ===");
+            _logger.LogInformation($"ProjectId: {dto.ProjectId}");
+            _logger.LogInformation($"SenderId: {senderId}");
+            _logger.LogInformation($"Content length: {dto.Content?.Length ?? 0}");
+            _logger.LogInformation($"ParentMessageId: {dto.ParentMessageId}");
+
             try
             {
+                // VALIDATION: Check if project exists
+                _logger.LogInformation("Checking if project exists...");
+                var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == dto.ProjectId);
+                if (project == null)
+                {
+                    _logger.LogError($"PROJECT NOT FOUND: ID {dto.ProjectId}");
+                    throw new InvalidOperationException($"Project with ID {dto.ProjectId} not found");
+                }
+                _logger.LogInformation($"Project found: {project.Name}");
+
+                // VALIDATION: Check if sender exists
+                _logger.LogInformation("Checking if sender exists...");
+                var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+                if (sender == null)
+                {
+                    _logger.LogError($"SENDER NOT FOUND: ID {senderId}");
+                    throw new InvalidOperationException($"User with ID {senderId} not found");
+                }
+                _logger.LogInformation($"Sender found: {sender.UserName}");
+
+                // VALIDATION: If replying to a message, check parent exists
+                if (dto.ParentMessageId.HasValue)
+                {
+                    _logger.LogInformation($"Checking parent message {dto.ParentMessageId.Value}...");
+                    var parentExists = await _context.TeamMessages
+                        .AnyAsync(m => m.Id == dto.ParentMessageId.Value && !m.IsDeleted);
+                    if (!parentExists)
+                    {
+                        _logger.LogError($"PARENT MESSAGE NOT FOUND: ID {dto.ParentMessageId}");
+                        throw new InvalidOperationException($"Parent message with ID {dto.ParentMessageId} not found");
+                    }
+                    _logger.LogInformation("Parent message found");
+                }
+
                 string? attachmentPath = null;
 
                 // Handle file upload
                 if (dto.Attachment != null)
                 {
+                    _logger.LogInformation($"Processing attachment: {dto.Attachment.FileName}");
                     var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "messages");
                     Directory.CreateDirectory(uploadsFolder);
 
@@ -253,8 +294,10 @@ namespace PCOMS.Application.Services
                     }
 
                     attachmentPath = Path.Combine("uploads", "messages", uniqueFileName);
+                    _logger.LogInformation($"Attachment saved: {attachmentPath}");
                 }
 
+                _logger.LogInformation("Creating TeamMessage object...");
                 var message = new TeamMessage
                 {
                     ProjectId = dto.ProjectId,
@@ -266,14 +309,32 @@ namespace PCOMS.Application.Services
                     SentAt = DateTime.UtcNow
                 };
 
+                _logger.LogInformation("Adding message to context...");
                 _context.TeamMessages.Add(message);
+
+                _logger.LogInformation("Calling SaveChangesAsync...");
                 await _context.SaveChangesAsync();
 
-                return await GetMessageByIdAsync(message.Id);
+                _logger.LogInformation($"Message saved successfully with ID: {message.Id}");
+
+                var result = await GetMessageByIdAsync(message.Id);
+                _logger.LogInformation("=== END CreateMessageAsync (SUCCESS) ===");
+                return result;
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError("=== DATABASE UPDATE EXCEPTION ===");
+                _logger.LogError($"Message: {ex.Message}");
+                _logger.LogError($"Inner Exception: {ex.InnerException?.Message}");
+                _logger.LogError($"Stack Trace: {ex.StackTrace}");
+                throw new InvalidOperationException("Database error: " + ex.InnerException?.Message, ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating team message");
+                _logger.LogError("=== GENERAL EXCEPTION ===");
+                _logger.LogError($"Type: {ex.GetType().Name}");
+                _logger.LogError($"Message: {ex.Message}");
+                _logger.LogError($"Stack Trace: {ex.StackTrace}");
                 throw;
             }
         }

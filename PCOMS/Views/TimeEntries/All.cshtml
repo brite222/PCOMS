@@ -54,7 +54,8 @@ else
                             </td>
 
                             <td>
-                                @if (entry.Status == TimeEntryStatus.Pending)
+                                @if (entry.Status == TimeEntryStatus.Submitted
+                                                        )
                                 {
                                     <span class="badge bg-warning text-dark">
                                         Pending
@@ -75,7 +76,8 @@ else
                             </td>
 
                             <td class="text-end">
-                                @if (entry.Status == TimeEntryStatus.Pending)
+                                @if (entry.Status == TimeEntryStatus.Submitted)
+                                                        
                                 {
                                     <a asp-action="Approve"
                                        asp-route-id="@entry.Id"

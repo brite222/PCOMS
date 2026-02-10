@@ -14,6 +14,7 @@ namespace PCOMS.Application.DTOs
         public string DeveloperId { get; set; } = null!;
         public string ProjectName { get; set; } = "";
         public string DeveloperEmail { get; set; } = "";
+        public string DeveloperName { get; set; } = "";
 
         // ✅ CHANGE THIS
         public TimeEntryStatus Status { get; set; }

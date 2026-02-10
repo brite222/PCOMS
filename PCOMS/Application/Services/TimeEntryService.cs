@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
 using PCOMS.Data;
@@ -22,16 +23,67 @@ namespace PCOMS.Application.Services
         {
             var entry = new TimeEntry
             {
-                DeveloperId = developerId,
+                UserId = developerId,  // ✅ CORRECT: UserId not DeveloperId
                 ProjectId = dto.ProjectId,
-                WorkDate = dto.WorkDate,
+                Date = dto.WorkDate,    // ✅ CORRECT: Date not WorkDate
                 Hours = dto.Hours,
-                Description = dto.Description,
-                Status = TimeEntryStatus.Pending // ✅ ENUM
+                Description = dto.Description ?? "",
+                Status = TimeEntryStatus.Submitted
             };
 
             _context.TimeEntries.Add(entry);
             _context.SaveChanges();
+        }
+
+        // =========================
+        // GET FOR PROJECT
+        // =========================
+        public List<TimeEntryDto> GetForProject(int projectId)
+        {
+            return _context.TimeEntries
+                .Include(t => t.Project)
+                .Where(t => t.ProjectId == projectId && !t.IsDeleted)
+                .OrderByDescending(t => t.Date)
+                .Select(t => new TimeEntryDto
+                {
+                    Id = t.Id,
+                    ProjectId = t.ProjectId,
+                    ProjectName = t.Project.Name,
+                    DeveloperId = t.UserId,
+                    DeveloperName = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.UserName ?? "Unknown").FirstOrDefault() ?? "Unknown",
+                    DeveloperEmail = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.Email ?? "").FirstOrDefault() ?? "",
+                    WorkDate = t.Date,
+                    Hours = t.Hours,
+                    Description = t.Description ?? "",
+                    Status = t.Status,
+                    IsInvoiced = false // ✅ This property doesn't exist in your model
+                })
+                .ToList();
+        }
+
+        // =========================
+        // GET BY ID
+        // =========================
+        public TimeEntryDto? GetById(int id)
+        {
+            return _context.TimeEntries
+                .Include(t => t.Project)
+                .Where(t => t.Id == id && !t.IsDeleted)
+                .Select(t => new TimeEntryDto
+                {
+                    Id = t.Id,
+                    ProjectId = t.ProjectId,
+                    ProjectName = t.Project.Name,
+                    DeveloperId = t.UserId,
+                    DeveloperName = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.UserName ?? "Unknown").FirstOrDefault() ?? "Unknown",
+                    DeveloperEmail = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.Email ?? "").FirstOrDefault() ?? "",
+                    WorkDate = t.Date,
+                    Hours = t.Hours,
+                    Description = t.Description ?? "",
+                    Status = t.Status,
+                    IsInvoiced = false
+                })
+                .FirstOrDefault();
         }
 
         // =========================
@@ -41,37 +93,23 @@ namespace PCOMS.Application.Services
         {
             return _context.TimeEntries
                 .Include(t => t.Project)
-                .Include(t => t.Developer)
-                .Where(t => t.DeveloperId == developerId)
-                .OrderByDescending(t => t.WorkDate)
-                .Select(t => new TimeEntryDto
-                {
-                    Id = t.Id,
-                    WorkDate = t.WorkDate,
-                    Hours = t.Hours,
-                    Description = t.Description,
-                    ProjectName = t.Project.Name,
-                    DeveloperEmail = t.Developer.Email!,
-                    Status = t.Status // ✅ NO ToString()
-                })
-                .ToList();
-        }
-        public TimeEntryDto? GetById(int id)
-        {
-            return _context.TimeEntries
-                .Where(t => t.Id == id)
+                .Where(t => t.UserId == developerId && !t.IsDeleted)
+                .OrderByDescending(t => t.Date)
                 .Select(t => new TimeEntryDto
                 {
                     Id = t.Id,
                     ProjectId = t.ProjectId,
                     ProjectName = t.Project.Name,
-                    DeveloperId = t.DeveloperId,
-                    WorkDate = t.WorkDate,
+                    DeveloperId = t.UserId,
+                    DeveloperName = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.UserName ?? "Unknown").FirstOrDefault() ?? "Unknown",
+                    DeveloperEmail = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.Email ?? "").FirstOrDefault() ?? "",
+                    WorkDate = t.Date,
                     Hours = t.Hours,
-                    Description = t.Description,
-                    Status = t.Status
+                    Description = t.Description ?? "",
+                    Status = t.Status,
+                    IsInvoiced = false
                 })
-                .FirstOrDefault();
+                .ToList();
         }
 
         // =========================
@@ -81,17 +119,21 @@ namespace PCOMS.Application.Services
         {
             return _context.TimeEntries
                 .Include(t => t.Project)
-                .Include(t => t.Developer)
-                .OrderByDescending(t => t.WorkDate)
+                .Where(t => !t.IsDeleted)
+                .OrderByDescending(t => t.Date)
                 .Select(t => new TimeEntryDto
                 {
                     Id = t.Id,
-                    WorkDate = t.WorkDate,
-                    Hours = t.Hours,
-                    Description = t.Description,
+                    ProjectId = t.ProjectId,
                     ProjectName = t.Project.Name,
-                    DeveloperEmail = t.Developer.Email!,
-                    Status = t.Status // ✅ ENUM
+                    DeveloperId = t.UserId,
+                    DeveloperName = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.UserName ?? "Unknown").FirstOrDefault() ?? "Unknown",
+                    DeveloperEmail = _context.Users.Where(u => u.Id == t.UserId).Select(u => u.Email ?? "").FirstOrDefault() ?? "",
+                    WorkDate = t.Date,
+                    Hours = t.Hours,
+                    Description = t.Description ?? "",
+                    Status = t.Status,
+                    IsInvoiced = false
                 })
                 .ToList();
         }
@@ -102,22 +144,24 @@ namespace PCOMS.Application.Services
         public void Approve(int id)
         {
             var entry = _context.TimeEntries.Find(id);
-            if (entry == null || entry.IsInvoiced)
+            if (entry == null)
                 return;
 
             entry.Status = TimeEntryStatus.Approved;
             _context.SaveChanges();
         }
 
+        // =========================
+        // REJECT
+        // =========================
         public void Reject(int id)
         {
             var entry = _context.TimeEntries.Find(id);
-            if (entry == null || entry.IsInvoiced)
+            if (entry == null)
                 return;
 
             entry.Status = TimeEntryStatus.Rejected;
             _context.SaveChanges();
         }
-
     }
 }

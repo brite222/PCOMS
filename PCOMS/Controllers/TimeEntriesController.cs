@@ -103,7 +103,23 @@ namespace PCOMS.Controllers
         {
             return View(_timeEntryService.GetAll());
         }
+        // =========================
+        // PROJECT TIME ENTRIES
+        // =========================
+        [Authorize(Roles = "Admin,ProjectManager,Developer")]
+        public IActionResult Project(int id)
+        {
+            var project = _projectService.GetById(id);
+            if (project == null)
+                return NotFound();
 
+            var entries = _timeEntryService.GetForProject(id);
+
+            ViewBag.ProjectId = id;
+            ViewBag.ProjectName = project.Name;
+
+            return View(entries);
+        }
         // =========================
         // APPROVE
         // =========================
