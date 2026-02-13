@@ -1,0 +1,120 @@
+﻿@model IEnumerable<PCOMS.Models.Project>
+
+@{
+    ViewData["Title"] = "My Projects";
+    var client = ViewBag.Client as PCOMS.Models.Client;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-folder"></i> My Projects</h2>
+            <p class="text-muted">@client.Name</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Dashboard" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count()</h3>
+                    <p class="mb-0">Total Projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(p => p.Status == PCOMS.Models.ProjectStatus.Active)</h3>
+                    <p class="mb-0">Active</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(p => p.Status == PCOMS.Models.ProjectStatus.Completed)</h3>
+                    <p class="mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(p => p.Status == PCOMS.Models.ProjectStatus.Planned)</h3>
+                    <p class="mb-0">Planned</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    @if (Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var project in Model)
+            {
+                var statusClass = project.Status switch
+                {
+                    PCOMS.Models.ProjectStatus.Active => "border-success",
+                    PCOMS.Models.ProjectStatus.Completed => "border-info",
+                    PCOMS.Models.ProjectStatus.Planned => "border-secondary",
+                    PCOMS.Models.ProjectStatus.Archived => "border-dark",
+                    _ => "border-secondary"
+                };
+
+                var statusBadge = project.Status switch
+                {
+                    PCOMS.Models.ProjectStatus.Active => "bg-success",
+                    PCOMS.Models.ProjectStatus.Completed => "bg-info",
+                    PCOMS.Models.ProjectStatus.Planned => "bg-secondary",
+                    PCOMS.Models.ProjectStatus.Archived => "bg-dark",
+                    _ => "bg-secondary"
+                };
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 @statusClass shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">@project.Name</h5>
+                            <span class="badge @statusBadge">@project.Status</span>
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(project.Description))
+                            {
+                                <p class="text-muted">@project.Description</p>
+                            }
+
+                            <dl class="row small mb-0">
+                                <dt class="col-sm-5">Hourly Rate:</dt>
+                                <dd class="col-sm-7">₦@project.HourlyRate.ToString("N2")</dd>
+
+                                <dt class="col-sm-5">Started:</dt>
+                                <dd class="col-sm-7">@project.CreatedAt.ToString("MMM dd, yyyy")</dd>
+                            </dl>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a asp-action="ProjectDetails" asp-route-id="@project.Id"
+                               class="btn btn-primary w-100">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No projects found.
+        </div>
+    }
+</div>

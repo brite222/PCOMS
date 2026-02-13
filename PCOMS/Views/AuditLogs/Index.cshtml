@@ -1,68 +1,360 @@
 ﻿@model List<PCOMS.Application.DTOs.AuditLogDto>
-
 @{
     ViewData["Title"] = "Audit Logs";
+    var stats = ViewBag.Statistics as PCOMS.Application.DTOs.AuditLogStatisticsDto;
+    var filter = ViewBag.Filter as PCOMS.Application.DTOs.AuditLogFilterDto;
+    var actions = ViewBag.Actions as List<string>;
+    var entities = ViewBag.Entities as List<string>;
+    var users = ViewBag.Users as List<string>;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">Audit Logs</h2>
-    <span class="text-muted">System activity & history</span>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-shield-check text-primary"></i> Audit Logs
+                    </h2>
+                    <p class="text-muted mb-0">System activity tracking and security audit trail</p>
+                </div>
+                <div class="btn-group">
+                    <a asp-action="Export" class="btn btn-outline-success">
+                        <i class="bi bi-download"></i> Export CSV
+                    </a>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    @if (stats != null)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-journal-text text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-0 small">Total Logs</h6>
+                                <h3 class="mb-0 fw-bold">@stats.TotalLogs.ToString("N0")</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-calendar-day text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-0 small">Today</h6>
+                                <h3 class="mb-0 fw-bold text-success">@stats.TodayLogs</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-calendar-week text-info fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-0 small">This Week</h6>
+                                <h3 class="mb-0 fw-bold text-info">@stats.ThisWeekLogs</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="bi bi-people text-warning fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-0 small">Active Users</h6>
+                                <h3 class="mb-0 fw-bold text-warning">@stats.TopUsers.Count</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel me-2"></i>Filters
+            </h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <div class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-3">
+                        <label class="form-label small">Search</label>
+                        <input type="text"
+                               name="SearchTerm"
+                               value="@filter?.SearchTerm"
+                               class="form-control"
+                               placeholder="Search user or entity...">
+                    </div>
+
+                    <!-- Action Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label small">Action</label>
+                        <select name="Action" class="form-select">
+                            <option value="">All Actions</option>
+                            @if (actions != null)
+                            {
+                                @foreach (var action in actions)
+                                {
+                                    <option value="@action" selected="@(filter?.Action == action)">@action</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Entity Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label small">Entity</label>
+                        <select name="Entity" class="form-select">
+                            <option value="">All Entities</option>
+                            @if (entities != null)
+                            {
+                                @foreach (var entity in entities)
+                                {
+                                    <option value="@entity" selected="@(filter?.Entity == entity)">@entity</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- User Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label small">User</label>
+                        <select name="UserEmail" class="form-select">
+                            <option value="">All Users</option>
+                            @if (users != null)
+                            {
+                                @foreach (var user in users)
+                                {
+                                    <option value="@user" selected="@(filter?.UserEmail == user)">
+                                        @(user.Length > 20 ? user.Substring(0, 20) + "..." : user)
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Date From -->
+                    <div class="col-md-1.5">
+                        <label class="form-label small">From Date</label>
+                        <input type="date"
+                               name="FromDate"
+                               value="@filter?.FromDate?.ToString("yyyy-MM-dd")"
+                               class="form-control">
+                    </div>
+
+                    <!-- Date To -->
+                    <div class="col-md-1.5">
+                        <label class="form-label small">To Date</label>
+                        <input type="date"
+                               name="ToDate"
+                               value="@filter?.ToDate?.ToString("yyyy-MM-dd")"
+                               class="form-control">
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i> Apply Filters
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                <h5 class="text-muted mt-3">No Audit Logs Found</h5>
+                <p class="text-muted">Try adjusting your filters or check back later.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0 ps-4">
+                                    <i class="bi bi-person me-2"></i>User
+                                </th>
+                                <th class="border-0">
+                                    <i class="bi bi-lightning me-2"></i>Action
+                                </th>
+                                <th class="border-0">
+                                    <i class="bi bi-box me-2"></i>Entity
+                                </th>
+                                <th class="border-0">Entity ID</th>
+                                <th class="border-0">
+                                    <i class="bi bi-clock me-2"></i>Date & Time
+                                </th>
+                                <th class="border-0 text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in Model)
+                            {
+                                <tr class="audit-row">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-secondary bg-opacity-10 rounded-circle p-2 me-2">
+                                                <i class="bi bi-person-fill text-secondary"></i>
+                                            </div>
+                                            <span class="fw-semibold">@log.UserEmail</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @switch (log.Action.ToUpper())
+                                        {
+                                            case "CREATE":
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-plus-circle me-1"></i>CREATE
+                                                </span>
+                                                break;
+                                            case "EDIT":
+                                            case "UPDATE":
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-pencil me-1"></i>EDIT
+                                                </span>
+                                                break;
+                                            case "DELETE":
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-trash me-1"></i>DELETE
+                                                </span>
+                                                break;
+                                            case "LOGIN":
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-box-arrow-in-right me-1"></i>LOGIN
+                                                </span>
+                                                break;
+                                            case "LOGOUT":
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-box-arrow-right me-1"></i>LOGOUT
+                                                </span>
+                                                break;
+                                            case "VIEW":
+                                            case "ACCESS":
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="bi bi-eye me-1"></i>@log.Action.ToUpper()
+                                                </span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>@log.Action.ToUpper()
+                                                </span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="text-muted fw-medium">@log.Entity</span>
+                                    </td>
+                                    <td>
+                                        <code class="text-primary">#@log.EntityId</code>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="d-block">@log.PerformedAt.ToString("MMM dd, yyyy")</span>
+                                            <small class="text-muted">@log.PerformedAt.ToString("hh:mm:ss tt")</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a asp-action="Details"
+                                           asp-route-id="@log.Id"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Table Footer -->
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Showing <strong>@Model.Count</strong> log entries
+                    </small>
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Secure audit trail maintained
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
-@if (!Model.Any())
-{
-    <div class="card empty-state">
-        <div class="card-body text-center">
-            <h5 class="text-muted">No audit logs found</h5>
-            <p class="small">Actions performed in the system will appear here.</p>
-        </div>
-    </div>
-}
-else
-{
-    <div class="card shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle audit-table mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Entity</th>
-                        <th>Entity ID</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var log in Model)
-                    {
-                        <tr class="audit-row">
-                            <td>
-                                <span class="fw-semibold">@log.UserEmail</span>
-                            </td>
+<style>
+    .audit-row {
+        transition: all 0.2s ease;
+    }
 
-                            <td>
-                                <span class="badge audit-badge @log.Action.ToLower()">
-                                    @log.Action
-                                </span>
-                            </td>
+        .audit-row:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+            transform: translateX(3px);
+        }
 
-                            <td>
-                                <span class="text-muted">@log.Entity</span>
-                            </td>
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.75rem;
+    }
 
-                            <td>
-                                <code>#@log.EntityId</code>
-                            </td>
+    .badge {
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+    }
 
-                            <td>
-                                <span class="text-muted">
-                                    @log.PerformedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
-                                </span>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
+    code {
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+</style>

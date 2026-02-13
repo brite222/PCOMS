@@ -38,7 +38,7 @@ namespace PCOMS.Application.Services
                     ClientName = "Unknown Client",
                     StartDate = start,
                     EndDate = end,
-                    LineItems = new List<InvoiceLineItemDto>()
+                    LineItems = new List<InvoiceItemDto>()
                 };
             }
 
@@ -57,7 +57,7 @@ namespace PCOMS.Application.Services
             // ✅ Group by project (correct billing logic)
             var lineItems = entries
                 .GroupBy(e => e.Project)
-                .Select(g => new InvoiceLineItemDto
+                .Select(g => new InvoiceItemDto
                 {
                     ProjectId = g.Key.Id,
                     ProjectName = g.Key.Name,

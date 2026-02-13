@@ -16,5 +16,7 @@ namespace PCOMS.Models
         [Required]
         public int ClientId { get; set; }
         public Client Client { get; set; } = null!;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     }
 }

@@ -8,8 +8,7 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public List<InvoiceLineItemDto> LineItems { get; set; } = new();
-
+        public List<InvoiceItemDto> LineItems { get; set; }
         // ✅ Calculated property (DO NOT STORE IN DB)
         public decimal TotalAmount =>
             LineItems.Sum(x => x.TotalAmount);

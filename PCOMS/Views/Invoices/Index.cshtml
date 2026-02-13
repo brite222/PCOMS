@@ -1,33 +1,194 @@
-﻿@model List<PCOMS.Application.DTOs.InvoiceDto>
+﻿@model IEnumerable<PCOMS.Application.DTOs.InvoiceDto>
 
-<h2>Invoices</h2>
+@{
+    ViewData["Title"] = "Invoices";
+    var filter = ViewBag.Filter as PCOMS.Application.DTOs.InvoiceFilterDto;
+    var totalOutstanding = (decimal)ViewBag.TotalOutstanding;
+    var totalOverdue = (decimal)ViewBag.TotalOverdue;
+}
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Client</th>
-            <th>Period</th>
-            <th>Total</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var invoice in Model)
-        {
-            <tr>
-                <td>@invoice.ClientName</td>
-                <td>@invoice.Period</td>
-                <td>@invoice.TotalAmount</td>
-                <td>
-                    <!-- ✅ ADD IT RIGHT HERE -->
-                    <a asp-controller="Invoices"
-                       asp-action="Download"
-                       asp-route-id="@invoice.Id"
-                       class="btn btn-sm btn-outline-primary">
-                        Download PDF
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-receipt"></i> Invoices</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Invoice
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Total Invoices</h6>
+                    <h3>@Model.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6>Outstanding</h6>
+                    <h3>₦@totalOutstanding.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6>Overdue</h6>
+                    <h3>₦@totalOverdue.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Paid This Month</h6>
+                    <h3>@Model.Count(i => i.Status == "Paid")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Status</label>
+                        <select name="Status" class="form-control">
+                            <option value="">All</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Sent">Sent</option>
+                            <option value="PartiallyPaid">Partially Paid</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>From Date</label>
+                        <input type="date" name="FromDate" class="form-control" value="@filter?.FromDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>To Date</label>
+                        <input type="date" name="ToDate" class="form-control" value="@filter?.ToDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block w-100">
+                            <i class="bi bi-search"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoice Table -->
+    @if (Model.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client</th>
+                                <th>Project</th>
+                                <th>Date</th>
+                                <th>Due Date</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var invoice in Model)
+                            {
+                                var statusClass = invoice.Status switch
+                                {
+                                    "Paid" => "bg-success",
+                                    "PartiallyPaid" => "bg-info",
+                                    "Overdue" => "bg-danger",
+                                    "Sent" => "bg-primary",
+                                    "Draft" => "bg-secondary",
+                                    _ => "bg-secondary"
+                                };
+
+                                var rowClass = invoice.IsOverdue ? "table-danger" : "";
+
+                                <tr class="@rowClass">
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@invoice.Id">
+                                            <strong>@invoice.InvoiceNumber</strong>
+                                        </a>
+                                    </td>
+                                    <td>@invoice.ClientName</td>
+                                    <td>@invoice.ProjectName</td>
+                                    <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        @invoice.DueDate.ToString("MMM dd, yyyy")
+                                        @if (invoice.IsOverdue)
+                                        {
+                                            <br />
+                                            <small class="text-danger">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                                @invoice.DaysOverdue days overdue
+                                            </small>
+                                        }
+                                    </td>
+                                    <td><strong>₦@invoice.TotalAmount.ToString("N2")</strong></td>
+                                    <td>₦@invoice.AmountPaid.ToString("N2")</td>
+                                    <td>
+                                        <strong class="@(invoice.Balance > 0 ? "text-danger" : "text-success")">
+                                            ₦@invoice.Balance.ToString("N2")
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge @statusClass">@invoice.Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="Details" asp-route-id="@invoice.Id" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Preview" asp-route-id="@invoice.Id" class="btn btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="5">TOTALS</th>
+                                <th>₦@Model.Sum(i => i.TotalAmount).ToString("N2")</th>
+                                <th>₦@Model.Sum(i => i.AmountPaid).ToString("N2")</th>
+                                <th>₦@Model.Sum(i => i.Balance).ToString("N2")</th>
+                                <th colspan="2"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No invoices found. <a asp-action="Create">Create your first invoice</a>
+        </div>
+    }
+</div>

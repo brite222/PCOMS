@@ -14,7 +14,8 @@ namespace PCOMS.Models
 
         [Phone]
         public string? Phone { get; set; }
-
+        [StringLength(500)]
+        public string? Address { get; set; }
         public bool IsDeleted { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

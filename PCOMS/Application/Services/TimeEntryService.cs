@@ -23,15 +23,63 @@ namespace PCOMS.Application.Services
         {
             var entry = new TimeEntry
             {
-                UserId = developerId,  // ✅ CORRECT: UserId not DeveloperId
+                UserId = developerId,
                 ProjectId = dto.ProjectId,
-                Date = dto.WorkDate,    // ✅ CORRECT: Date not WorkDate
+                Date = dto.WorkDate,
                 Hours = dto.Hours,
-                Description = dto.Description ?? "",
+                Description = dto.Description,
                 Status = TimeEntryStatus.Submitted
             };
 
             _context.TimeEntries.Add(entry);
+            _context.SaveChanges();
+        }
+
+        // =========================
+        // UPDATE TIME ENTRY
+        // =========================
+        public void Update(int id, string developerId, CreateTimeEntryDto dto)
+        {
+            var entry = _context.TimeEntries.Find(id);
+            if (entry == null)
+                throw new Exception("Time entry not found");
+
+            // Check ownership
+            if (entry.UserId != developerId)
+                throw new UnauthorizedAccessException("You can only edit your own time entries");
+
+            // Don't allow editing approved entries
+            if (entry.Status == TimeEntryStatus.Approved)
+                throw new InvalidOperationException("Cannot edit approved time entries");
+
+            // Update the entry
+            entry.ProjectId = dto.ProjectId;
+            entry.Date = dto.WorkDate;
+            entry.Hours = dto.Hours;
+            entry.Description = dto.Description;
+
+            _context.SaveChanges();
+        }
+
+        // =========================
+        // DELETE TIME ENTRY
+        // =========================
+        public void Delete(int id, string developerId)
+        {
+            var entry = _context.TimeEntries.Find(id);
+            if (entry == null)
+                return;
+
+            // Check ownership
+            if (entry.UserId != developerId)
+                throw new UnauthorizedAccessException("You can only delete your own time entries");
+
+            // Don't allow deleting approved entries
+            if (entry.Status == TimeEntryStatus.Approved)
+                throw new InvalidOperationException("Cannot delete approved time entries");
+
+            // Soft delete
+            entry.IsDeleted = true;
             _context.SaveChanges();
         }
 
@@ -56,7 +104,7 @@ namespace PCOMS.Application.Services
                     Hours = t.Hours,
                     Description = t.Description ?? "",
                     Status = t.Status,
-                    IsInvoiced = false // ✅ This property doesn't exist in your model
+                    IsInvoiced = false
                 })
                 .ToList();
         }

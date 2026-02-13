@@ -1,83 +1,422 @@
-﻿@model PCOMS.Application.DTOs.AdminDashboardDto
+﻿@model dynamic
 
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-<h2 class="fw-bold mb-4">Dashboard Overview</h2>
-
-<div class="row g-4">
-
-    <!-- TOTAL CLIENTS -->
-    <div class="col-md-3">
-        <div class="card dashboard-card border-start border-primary border-4 shadow-sm">
-            <div class="card-body">
-                <small class="text-muted text-uppercase">Total Clients</small>
-                <h2 class="fw-bold text-dark mt-2">
-                    @Model.TotalClients
-                </h2>
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="bi bi-speedometer2"></i> Dashboard Overview
+            </h2>
+            <p class="text-muted">Welcome back, <strong>@User.Identity!.Name</strong></p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary btn-sm active">Today</button>
+                <button type="button" class="btn btn-outline-primary btn-sm">Week</button>
+                <button type="button" class="btn btn-outline-primary btn-sm">Month</button>
             </div>
         </div>
     </div>
 
-    <!-- TOTAL PROJECTS -->
-    <div class="col-md-3">
-        <div class="card dashboard-card border-start border-success border-4 shadow-sm">
-            <div class="card-body">
-                <small class="text-muted text-uppercase">Total Projects</small>
-                <h2 class="fw-bold text-dark mt-2">
-                    @Model.TotalProjects
-                </h2>
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-start border-primary border-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">TOTAL CLIENTS</h6>
+                            <h2 class="mb-0">@(ViewBag.TotalClients ?? 0)</h2>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> Active
+                            </small>
+                        </div>
+                        <div class="text-primary" style="font-size: 2.5rem; opacity: 0.3;">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-start border-success border-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">TOTAL PROJECTS</h6>
+                            <h2 class="mb-0">@(ViewBag.TotalProjects ?? 0)</h2>
+                            <small class="text-muted">
+                                <span class="text-success">@(ViewBag.ActiveProjects ?? 0) Active</span>
+                            </small>
+                        </div>
+                        <div class="text-success" style="font-size: 2.5rem; opacity: 0.3;">
+                            <i class="bi bi-kanban"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-start border-warning border-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">ACTIVE PROJECTS</h6>
+                            <h2 class="mb-0">@(ViewBag.ActiveProjects ?? 0)</h2>
+                            <small class="text-muted">
+                                In progress
+                            </small>
+                        </div>
+                        <div class="text-warning" style="font-size: 2.5rem; opacity: 0.3;">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-start border-info border-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">TOTAL DEVELOPERS</h6>
+                            <h2 class="mb-0">@(ViewBag.TotalDevelopers ?? 0)</h2>
+                            <small class="text-muted">
+                                Team members
+                            </small>
+                        </div>
+                        <div class="text-info" style="font-size: 2.5rem; opacity: 0.3;">
+                            <i class="bi bi-code-slash"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ACTIVE PROJECTS -->
-    <div class="col-md-3">
-        <div class="card dashboard-card border-start border-warning border-4 shadow-sm">
-            <div class="card-body">
-                <small class="text-muted text-uppercase">Active Projects</small>
-                <h2 class="fw-bold text-dark mt-2">
-                    @Model.ActiveProjects
-                </h2>
+    <!-- Time Tracking Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card border-start border-primary border-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">TOTAL HOURS LOGGED</h6>
+                            <h2 class="mb-0">@(ViewBag.TotalHours ?? 0)<small class="text-muted">.0 hrs</small></h2>
+                            <small class="text-muted">
+                                All time
+                            </small>
+                        </div>
+                        <div class="text-primary" style="font-size: 2.5rem; opacity: 0.3;">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card border-start border-success border-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">HOURS THIS WEEK</h6>
+                            <h2 class="mb-0">@(ViewBag.HoursThisWeek ?? 0)<small class="text-muted">.0 hrs</small></h2>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> Current week
+                            </small>
+                        </div>
+                        <div class="text-success" style="font-size: 2.5rem; opacity: 0.3;">
+                            <i class="bi bi-calendar-week"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- TOTAL DEVELOPERS -->
-    <div class="col-md-3">
-        <div class="card dashboard-card border-start border-dark border-4 shadow-sm">
-            <div class="card-body">
-                <small class="text-muted text-uppercase">Total Developers</small>
-                <h2 class="fw-bold text-dark mt-2">
-                    @Model.TotalDevelopers
-                </h2>
+    <div class="row">
+        <!-- Left Column - Charts & Activity -->
+        <div class="col-lg-8">
+            <!-- Project Status Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Project Status Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="projectStatusChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Hours Trend Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Hours Logged - Last 7 Days
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="hoursTrendChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity"></i> Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">New project created</h6>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-clock"></i> 2 hours ago
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Timesheet approved</h6>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-clock"></i> 5 hours ago
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Developer assigned to project</h6>
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-clock"></i> 1 day ago
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Quick Actions & Pending Items -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                        {
+                            <a asp-controller="Projects" asp-action="Create" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle"></i> New Project
+                            </a>
+                            <a asp-controller="Clients" asp-action="Create" class="btn btn-success btn-sm">
+                                <i class="bi bi-person-plus"></i> New Client
+                            </a>
+                            <a asp-controller="Invoices" asp-action="Create" class="btn btn-warning btn-sm">
+                                <i class="bi bi-receipt"></i> Create Invoice
+                            </a>
+                        }
+                        @if (User.IsInRole("Developer"))
+                        {
+                            <a asp-controller="TimeEntries" asp-action="Create" class="btn btn-primary btn-sm">
+                                <i class="bi bi-clock"></i> Log Time
+                            </a>
+                            <a asp-controller="TimeTracking" asp-action="LogTime" class="btn btn-success btn-sm">
+                                <i class="bi bi-stopwatch"></i> Track Time
+                            </a>
+                            <a asp-controller="Projects" asp-action="My" class="btn btn-info btn-sm">
+                                <i class="bi bi-kanban"></i> My Projects
+                            </a>
+                        }
+                        <a asp-controller="Reports" asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-file-earmark-text"></i> View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Approvals -->
+            @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle"></i> Pending Approvals
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Timesheets</span>
+                            <span class="badge bg-warning">@(ViewBag.PendingTimesheets ?? 0)</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Time Entries</span>
+                            <span class="badge bg-warning">@(ViewBag.PendingTimeEntries ?? 0)</span>
+                        </div>
+                        <a asp-controller="TimeTracking" asp-action="PendingApprovals" class="btn btn-warning btn-sm w-100">
+                            <i class="bi bi-check2-square"></i> Review All
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- System Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> System Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Storage Used</small>
+                            <small>45%</small>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-info" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Active Users</small>
+                            <small>@(ViewBag.ActiveUsers ?? "N/A")</small>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-success" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small>System Health</small>
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> Good
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- TOTAL HOURS -->
-    <div class="col-md-6">
-        <div class="card dashboard-card border-start border-primary border-4 shadow-sm">
-            <div class="card-body">
-                <small class="text-muted text-uppercase">Total Hours Logged</small>
-                <h2 class="fw-bold text-dark mt-2">
-                    @Model.TotalHours
-                </h2>
-            </div>
-        </div>
-    </div>
-
-    <!-- HOURS THIS WEEK -->
-    <div class="col-md-6">
-        <div class="card dashboard-card border-start border-success border-4 shadow-sm">
-            <div class="card-body">
-                <small class="text-muted text-uppercase">Hours This Week</small>
-                <h2 class="fw-bold text-dark mt-2">
-                    @Model.HoursThisWeek
-                </h2>
-            </div>
-        </div>
-    </div>
-
 </div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+
+    .timeline-item:not(:last-child) .timeline-marker::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        width: 2px;
+        height: 20px;
+        background: #dee2e6;
+        transform: translateX(-50%);
+    }
+
+    .timeline-content h6 {
+        font-size: 14px;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Project Status Chart
+        const projectStatusCtx = document.getElementById('projectStatusChart');
+        new Chart(projectStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Planned', 'Completed', 'Archived'],
+                datasets: [{
+                    data: [@(ViewBag.ActiveProjects ?? 0), @(ViewBag.PlannedProjects ?? 0), @(ViewBag.CompletedProjects ?? 0), @(ViewBag.ArchivedProjects ?? 0)],
+                    backgroundColor: ['#28a745', '#6c757d', '#17a2b8', '#343a40'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Hours Trend Chart
+        const hoursTrendCtx = document.getElementById('hoursTrendChart');
+        new Chart(hoursTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Hours Logged',
+                    data: [8, 7.5, 8, 6, 8, 0, 0],
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' hrs';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

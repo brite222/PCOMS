@@ -1,52 +1,320 @@
 ﻿@model Microsoft.AspNetCore.Identity.IdentityUser
-
 @{
     ViewData["Title"] = "My Profile";
 }
 
-<h2>My Profile</h2>
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-person-circle"></i> My Profile</h2>
+            <p class="text-muted">Manage your account information and settings</p>
+        </div>
+    </div>
 
-<table class="table table-bordered">
-    <tr>
-        <th>Email</th>
-        <td>@Model.Email</td>
-    </tr>
-    <tr>
-        <th>Role</th>
-        <td>@ViewBag.Role</td>
-    </tr>
-</table>
-
-@if (ViewBag.Role == "Developer")
-{
-    <h4 class="mt-4">Assigned Projects</h4>
-
-    var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
-
-    if (projects != null && projects.Any())
+    @if (TempData["Success"] != null)
     {
-        <ul class="list-group">
-            @foreach (var project in projects)
-            {
-                <li class="list-group-item">
-                    <strong>@project.Name</strong>
-                    <span class="badge bg-secondary ms-2">
-                        @project.Status
-                    </span>
-                </li>
-            }
-        </ul>
-    }
-    else
-    {
-        <div class="alert alert-warning">
-            You are not assigned to any projects yet.
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
-}
 
-<div class="mt-4">
-    <a asp-action="ChangePassword" class="btn btn-warning">
-        Change Password
-    </a>
+    <div class="row">
+        <!-- Left Column - Profile Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <!-- Profile Avatar -->
+                    <div class="mb-4">
+                        <div class="avatar-circle mx-auto" style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: 700;">
+                            @if (!string.IsNullOrEmpty(Model.Email))
+                            {
+                                @Model.Email.Substring(0, 1).ToUpper()
+                            }
+                        </div>
+                    </div>
+
+                    <!-- User Info -->
+                    <h4 class="mb-1">@(Model.UserName ?? Model.Email)</h4>
+                    <p class="text-muted mb-3">
+                        @if (ViewBag.Role == "Admin")
+                        {
+                            <span class="badge bg-danger">
+                                <i class="bi bi-shield-check"></i> Administrator
+                            </span>
+                        }
+                        else if (ViewBag.Role == "ProjectManager")
+                        {
+                            <span class="badge bg-primary">
+                                <i class="bi bi-briefcase"></i> Project Manager
+                            </span>
+                        }
+                        else if (ViewBag.Role == "Developer")
+                        {
+                            <span class="badge bg-success">
+                                <i class="bi bi-code-slash"></i> Developer
+                            </span>
+                        }
+                        else if (ViewBag.Role == "Client")
+                        {
+                            <span class="badge bg-info">
+                                <i class="bi bi-people"></i> Client
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@ViewBag.Role</span>
+                        }
+                    </p>
+
+                    <hr />
+
+                    <!-- Quick Stats for Developers -->
+                    @if (ViewBag.Role == "Developer")
+                    {
+                        var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+                        var projectCount = projects?.Count() ?? 0;
+
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <h3 class="mb-0">@projectCount</h3>
+                                <small class="text-muted">Projects</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="mb-0">@(ViewBag.TotalHours ?? 0)</h3>
+                                <small class="text-muted">Hours Logged</small>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-2">
+                        <a asp-action="ChangePassword" class="btn btn-warning">
+                            <i class="bi bi-key"></i> Change Password
+                        </a>
+                        <a asp-action="Logout" class="btn btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Details -->
+        <div class="col-lg-8">
+            <!-- Account Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Account Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Email Address:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @Model.Email
+                            @if (Model.EmailConfirmed)
+                            {
+                                <span class="badge bg-success ms-2">
+                                    <i class="bi bi-check-circle"></i> Verified
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning ms-2">
+                                    <i class="bi bi-exclamation-circle"></i> Not Verified
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Username:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @(Model.UserName ?? "Not set")
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Role:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @ViewBag.Role
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Phone Number:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @(Model.PhoneNumber ?? "Not provided")
+                            @if (Model.PhoneNumberConfirmed && !string.IsNullOrEmpty(Model.PhoneNumber))
+                            {
+                                <span class="badge bg-success ms-2">
+                                    <i class="bi bi-check-circle"></i> Verified
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Two-Factor Authentication:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @if (Model.TwoFactorEnabled)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-shield-check"></i> Enabled
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-shield"></i> Disabled
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Account Status:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            @if (!Model.LockoutEnabled || Model.LockoutEnd == null || Model.LockoutEnd <= DateTimeOffset.Now)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-lock"></i> Locked
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Projects (for Developers) -->
+            @if (ViewBag.Role == "Developer")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-kanban"></i> Assigned Projects
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+                        }
+
+                        @if (projects != null && projects.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var project in projects)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-folder"></i> @project.Name
+                                                </h6>
+                                                <p class="mb-1 text-muted small">
+                                                    Client: @(project.Client?.Name ?? "N/A")
+                                                </p>
+                                            </div>
+                                            <div>
+                                                @switch (project.Status)
+                                                {
+                                                    case PCOMS.Models.ProjectStatus.Planned:
+                                                        <span class="badge bg-secondary">Planned</span>
+                                                        break;
+                                                    case PCOMS.Models.ProjectStatus.Active:
+                                                        <span class="badge bg-success">Active</span>
+                                                        break;
+                                                    case PCOMS.Models.ProjectStatus.Completed:
+                                                        <span class="badge bg-info">Completed</span>
+                                                        break;
+                                                    case PCOMS.Models.ProjectStatus.Archived:
+                                                        <span class="badge bg-dark">Archived</span>
+                                                        break;
+                                                }
+                                                <a asp-controller="Projects" asp-action="Edit" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary ms-2">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i> You are not currently assigned to any projects.
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Recent Activity (Optional - if you want to add this) -->
+            @if (ViewBag.Role == "Admin" || ViewBag.Role == "ProjectManager")
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-activity"></i> Quick Access
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a asp-controller="Projects" asp-action="Index" class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-kanban"></i> All Projects
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a asp-controller="TimeTracking" asp-action="PendingApprovals" class="btn btn-outline-warning w-100">
+                                    <i class="bi bi-check2-square"></i> Approvals
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a asp-controller="Reports" asp-action="Dashboard" class="btn btn-outline-info w-100">
+                                    <i class="bi bi-graph-up"></i> Reports
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

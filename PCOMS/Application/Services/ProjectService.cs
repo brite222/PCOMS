@@ -104,7 +104,7 @@ namespace PCOMS.Application.Services
                     EntityId = project.Id,
                     OldValue = oldStatus.ToString(),
                     NewValue = dto.Status.ToString(),
-                    PerformedByUserId = dto.ManagerId ?? "SYSTEM"
+                    UserId  = dto.ManagerId ?? "SYSTEM"
                 });
             }
 

@@ -1,0 +1,297 @@
+﻿@model PCOMS.Application.DTOs.CreateInvoiceDto
+
+@{
+    ViewData["Title"] = "Create Invoice";
+    var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-receipt"></i> Create Invoice</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Invoice Details</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Project Selection -->
+                        <div class="mb-3">
+                            <label asp-for="ProjectId" class="form-label">Project *</label>
+                            <select asp-for="ProjectId" class="form-select" required id="projectSelect">
+                                <option value="">-- Select Project --</option>
+                                @if (projects != null)
+                                {
+                                    foreach (var project in projects)
+                                    {
+                                        <option value="@project.Id" data-client-id="@project.ClientId">
+                                            @project.Name (@project.Client.Name)
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="ProjectId" class="text-danger"></span>
+                        </div>
+
+                        <input type="hidden" asp-for="ClientId" id="clientIdInput" />
+
+                        <!-- Dates -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="InvoiceDate" class="form-label">Invoice Date *</label>
+                                <input asp-for="InvoiceDate" type="date" class="form-control" required />
+                                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DueDate" class="form-label">Due Date *</label>
+                                <input asp-for="DueDate" type="date" class="form-control" required />
+                                <span asp-validation-for="DueDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Line Items -->
+                        <div class="mb-3">
+                            <label class="form-label">Invoice Items</label>
+                            <div id="invoiceItems">
+                                <!-- Items will be added here dynamically -->
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addLineItem()">
+                                <i class="bi bi-plus-circle"></i> Add Line Item
+                            </button>
+                        </div>
+
+                        <!-- Tax & Discount -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TaxRate" class="form-label">Tax Rate (%)</label>
+                                <input asp-for="TaxRate" type="number" step="0.01" class="form-control" id="taxRate" />
+                                <span asp-validation-for="TaxRate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DiscountAmount" class="form-label">Discount Amount (₦)</label>
+                                <input asp-for="DiscountAmount" type="number" step="0.01" class="form-control" id="discountAmount" />
+                                <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Notes & Terms -->
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Terms" class="form-label">Terms & Conditions</label>
+                            <textarea asp-for="Terms" class="form-control" rows="2"
+                                      placeholder="Payment due within 30 days. Late payments subject to 5% monthly interest."></textarea>
+                            <span asp-validation-for="Terms" class="text-danger"></span>
+                        </div>
+
+                        <!-- Recurring Invoice -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsRecurring" class="form-check-input" type="checkbox" id="isRecurring" />
+                                <label class="form-check-label" for="isRecurring">
+                                    Make this a recurring invoice
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="recurringFrequencyDiv" style="display: none;">
+                            <label asp-for="RecurringFrequency" class="form-label">Recurring Frequency</label>
+                            <select asp-for="RecurringFrequency" class="form-select">
+                                <option value="">-- Select Frequency --</option>
+                                <option value="0">Weekly</option>
+                                <option value="1">Bi-Weekly</option>
+                                <option value="2">Monthly</option>
+                                <option value="3">Quarterly</option>
+                                <option value="4">Yearly</option>
+                            </select>
+                        </div>
+
+                        <!-- Buttons -->
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Create Invoice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Summary & Quick Actions -->
+        <div class="col-lg-4">
+            <!-- Invoice Summary -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">Invoice Summary</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="mb-0">
+                        <dt>Subtotal:</dt>
+                        <dd id="summarySubtotal">₦0.00</dd>
+
+                        <dt>Tax:</dt>
+                        <dd id="summaryTax">₦0.00</dd>
+
+                        <dt>Discount:</dt>
+                        <dd id="summaryDiscount">₦0.00</dd>
+
+                        <hr />
+
+                        <dt>Total:</dt>
+                        <dd><h4 id="summaryTotal">₦0.00</h4></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Quick Options -->
+            <div class="card">
+                <div class="card-header">
+                    <h6>Quick Options</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <i class="bi bi-lightbulb text-warning"></i>
+                        <strong>Tip:</strong> You can auto-generate invoices from time entries!
+                    </p>
+                    <a asp-action="GenerateFromTime" asp-route-projectId="@(Model.ProjectId > 0 ? Model.ProjectId : null)"
+                       class="btn btn-success w-100 mb-2" id="generateFromTimeBtn" style="display: none;">
+                        <i class="bi bi-clock-history"></i> Generate from Time Entries
+                    </a>
+                    <small class="text-muted">
+                        This will pull all approved billable time entries and expenses for the selected project.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        let itemCounter = 0;
+
+        // Auto-fill client when project is selected
+        document.getElementById('projectSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const clientId = selectedOption.getAttribute('data-client-id');
+            document.getElementById('clientIdInput').value = clientId;
+
+            // Show generate from time button
+            if (this.value) {
+                const btn = document.getElementById('generateFromTimeBtn');
+                btn.style.display = 'block';
+                btn.href = btn.href.replace(/projectId=\d+/, 'projectId=' + this.value);
+            }
+        });
+
+        // Show/hide recurring frequency
+        document.getElementById('isRecurring').addEventListener('change', function() {
+            document.getElementById('recurringFrequencyDiv').style.display =
+                this.checked ? 'block' : 'none';
+        });
+
+        // Add line item
+        function addLineItem() {
+            const container = document.getElementById('invoiceItems');
+            const index = itemCounter++;
+
+            const html = `
+                <div class="card mb-2" id="item-${index}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Description *</label>
+                                <input type="text" name="InvoiceItems[${index}].Description"
+                                       class="form-control" required placeholder="Service or product description" />
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label>Quantity *</label>
+                                <input type="number" name="InvoiceItems[${index}].Quantity"
+                                       class="form-control item-quantity" step="0.25" value="1"
+                                       required onchange="calculateTotals()" />
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label>Unit Price (₦) *</label>
+                                <input type="number" name="InvoiceItems[${index}].UnitPrice"
+                                       class="form-control item-price" step="0.01"
+                                       required onchange="calculateTotals()" />
+                            </div>
+                            <div class="col-md-1 mb-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        onclick="removeLineItem(${index})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="InvoiceItems[${index}].Order" value="${index}" />
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', html);
+            calculateTotals();
+        }
+
+        // Remove line item
+        function removeLineItem(index) {
+            document.getElementById(`item-${index}`).remove();
+            calculateTotals();
+        }
+
+        // Calculate totals
+        function calculateTotals() {
+            let subtotal = 0;
+
+            // Sum all line items
+            document.querySelectorAll('.item-quantity').forEach((qtyInput, idx) => {
+                const quantity = parseFloat(qtyInput.value) || 0;
+                const price = parseFloat(document.querySelectorAll('.item-price')[idx].value) || 0;
+                subtotal += quantity * price;
+            });
+
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+
+            const tax = subtotal * (taxRate / 100);
+            const total = subtotal + tax - discount;
+
+            // Update summary
+            document.getElementById('summarySubtotal').textContent = '₦' + subtotal.toFixed(2);
+            document.getElementById('summaryTax').textContent = '₦' + tax.toFixed(2);
+            document.getElementById('summaryDiscount').textContent = '₦' + discount.toFixed(2);
+            document.getElementById('summaryTotal').textContent = '₦' + total.toFixed(2);
+        }
+
+        // Recalculate on tax/discount change
+        document.getElementById('taxRate').addEventListener('input', calculateTotals);
+        document.getElementById('discountAmount').addEventListener('input', calculateTotals);
+
+        // Add one line item by default
+        window.onload = function() {
+            addLineItem();
+        };
+    </script>
+}

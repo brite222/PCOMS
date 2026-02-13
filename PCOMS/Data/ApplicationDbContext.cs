@@ -37,6 +37,8 @@ namespace PCOMS.Data
         public DbSet<WorkSchedule> WorkSchedules { get; set; } = null!;
         public DbSet<Document> Documents { get; set; } = null!;
 
+        public DbSet<InvoiceItem> InvoiceItems { get; set; } = null!;
+        public DbSet<Payment> Payments { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -193,6 +195,44 @@ namespace PCOMS.Data
                 .WithMany(p => p.TimeEntries)
                 .HasForeignKey(e => e.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<Invoice>()
+    .HasOne(i => i.Project)
+    .WithMany()
+    .HasForeignKey(i => i.ProjectId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Invoice>()
+                .HasOne(i => i.Client)
+                .WithMany()
+                .HasForeignKey(i => i.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<InvoiceItem>()
+                .HasOne(i => i.Invoice)
+                .WithMany(inv => inv.InvoiceItems)
+                .HasForeignKey(i => i.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Payment>()
+                .HasOne(p => p.Invoice)
+                .WithMany(inv => inv.Payments)
+                .HasForeignKey(p => p.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Optional links
+            builder.Entity<InvoiceItem>()
+                .HasOne(i => i.TimeEntry)
+                .WithMany()
+                .HasForeignKey(i => i.TimeEntryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<InvoiceItem>()
+                .HasOne(i => i.Expense)
+                .WithMany()
+                .HasForeignKey(i => i.ExpenseId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

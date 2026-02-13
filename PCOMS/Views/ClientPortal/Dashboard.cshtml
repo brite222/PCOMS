@@ -1,0 +1,235 @@
+﻿@model IEnumerable<PCOMS.Models.Project>
+
+@{
+    ViewData["Title"] = "Client Dashboard";
+    var client = ViewBag.Client as PCOMS.Models.Client;
+    var projectCount = (int?)ViewBag.ProjectCount ?? 0;
+    var activeProjects = (int?)ViewBag.ActiveProjects ?? 0;
+    var invoiceCount = (int?)ViewBag.InvoiceCount ?? 0;
+    var totalOutstanding = (decimal?)ViewBag.TotalOutstanding ?? 0m;
+    var totalOverdue = (decimal?)ViewBag.TotalOverdue ?? 0m;
+    var documentCount = (int?)ViewBag.DocumentCount ?? 0;
+    var recentInvoices = ViewBag.RecentInvoices as IEnumerable<PCOMS.Application.DTOs.InvoiceDto>;
+
+    // Safety checks
+    if (client == null)
+    {
+        client = new PCOMS.Models.Client { Name = "Guest", Id = 0, CreatedAt = DateTime.Now };
+    }
+
+    if (Model == null)
+    {
+        var projects = Model ?? new List<PCOMS.Models.Project>();
+    }
+}
+
+<div class="container-fluid mt-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Welcome, @client.Name!</h2>
+            <p class="text-muted">Here's an overview of your projects and invoices</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-folder text-primary fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Total Projects</h6>
+                            <h2 class="mb-0">@projectCount</h2>
+                            <small class="text-success">@activeProjects active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-receipt text-info fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Invoices</h6>
+                            <h2 class="mb-0">@invoiceCount</h2>
+                            <small><a asp-action="MyInvoices">View all</a></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-cash-stack text-warning fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Outstanding</h6>
+                            <h2 class="mb-0">₦@totalOutstanding.ToString("N0")</h2>
+                            @if (totalOverdue > 0)
+                            {
+                                <small class="text-danger">₦@totalOverdue.ToString("N0") overdue</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-file-earmark text-success fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Documents</h6>
+                            <h2 class="mb-0">@documentCount</h2>
+                            <small><a asp-action="MyDocuments">View files</a></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left: Projects -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-folder"></i> My Projects</h5>
+                    <a asp-action="MyProjects" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var project in Model.Take(5))
+                            {
+                                var statusClass = project.Status switch
+                                {
+                                    PCOMS.Models.ProjectStatus.Active => "bg-success",
+                                    PCOMS.Models.ProjectStatus.Completed => "bg-info",
+                                    PCOMS.Models.ProjectStatus.Planned => "bg-secondary",
+                                    _ => "bg-secondary"
+                                };
+
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@project.Name</h6>
+                                            @if (!string.IsNullOrEmpty(project.Description))
+                                            {
+                                                <small class="text-muted">@project.Description</small>
+                                            }
+                                        </div>
+                                        <span class="badge @statusClass">@project.Status</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p>No projects yet</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Recent Invoices -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Recent Invoices</h5>
+                    <a asp-action="MyInvoices" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (recentInvoices != null && recentInvoices.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var invoice in recentInvoices)
+                            {
+                                var statusClass = invoice.Status switch
+                                {
+                                    "Paid" => "bg-success",
+                                    "PartiallyPaid" => "bg-info",
+                                    "Overdue" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>@invoice.InvoiceNumber</strong><br />
+                                            <small class="text-muted">Due: @invoice.DueDate.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge @statusClass">@invoice.Status</span><br />
+                                            <small><strong>₦@invoice.TotalAmount.ToString("N2")</strong></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p>No invoices yet</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a asp-action="MyProjects" class="list-group-item list-group-item-action">
+                        <i class="bi bi-folder me-2"></i> All Projects
+                    </a>
+                    <a asp-action="MyInvoices" class="list-group-item list-group-item-action">
+                        <i class="bi bi-receipt me-2"></i> All Invoices
+                    </a>
+                    <a asp-action="MyDocuments" class="list-group-item list-group-item-action">
+                        <i class="bi bi-file-earmark me-2"></i> All Documents
+                    </a>
+                    <a asp-action="AccountInfo" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person me-2"></i> Account Info
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+</style>

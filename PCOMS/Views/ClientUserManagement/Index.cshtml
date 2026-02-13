@@ -1,0 +1,71 @@
+﻿@model IEnumerable<PCOMS.Models.ClientUser>
+
+@{
+    ViewData["Title"] = "Client User Management";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-link-45deg"></i> Client User Management</h2>
+            <p class="text-muted">Link user accounts to client companies</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Link New User
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User Email</th>
+                                <th>Client Company</th>
+                                <th>Linked Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cu in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-person-circle"></i>
+                                        @cu.User.Email
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-building"></i>
+                                        @cu.Client.Name
+                                    </td>
+                                    <td>@cu.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <form asp-action="Delete" asp-route-id="@cu.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Unlink this user from client?')">
+                                                <i class="bi bi-trash"></i> Unlink
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No users linked to clients yet. <a asp-action="Create">Link your first user</a>
+        </div>
+    }
+</div>

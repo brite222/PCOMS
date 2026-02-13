@@ -1,0 +1,301 @@
+﻿@model PCOMS.Application.DTOs.AuditLogStatisticsDto
+@{
+    ViewData["Title"] = "Audit Statistics";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-action="Index">Audit Logs</a>
+                    </li>
+                    <li class="breadcrumb-item active">Statistics</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-graph-up text-primary"></i> Audit Statistics
+                    </h2>
+                    <p class="text-muted mb-0">Detailed analytics and insights</p>
+                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Logs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
+                        <i class="bi bi-journal-text text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h6 class="text-muted mb-2">Total Audit Logs</h6>
+                    <h2 class="mb-0 fw-bold">@Model.TotalLogs.ToString("N0")</h2>
+                    <small class="text-muted">All time records</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
+                        <i class="bi bi-calendar-day text-success" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h6 class="text-muted mb-2">Today's Activity</h6>
+                    <h2 class="mb-0 fw-bold text-success">@Model.TodayLogs</h2>
+                    <small class="text-muted">Last 24 hours</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
+                        <i class="bi bi-calendar-week text-info" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h6 class="text-muted mb-2">This Week</h6>
+                    <h2 class="mb-0 fw-bold text-info">@Model.ThisWeekLogs</h2>
+                    <small class="text-muted">Last 7 days</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
+                        <i class="bi bi-people text-warning" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h6 class="text-muted mb-2">Active Users</h6>
+                    <h2 class="mb-0 fw-bold text-warning">@Model.TopUsers.Count</h2>
+                    <small class="text-muted">Unique users</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Actions Chart -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Actions Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="actionsChart" height="250"></canvas>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row text-center">
+                        @foreach (var action in Model.ActionCounts.OrderByDescending(a => a.Value).Take(3))
+                        {
+                            <div class="col">
+                                <strong class="d-block">@action.Value</strong>
+                                <small class="text-muted">@action.Key</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entities Chart -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box me-2"></i>Entities Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="entitiesChart" height="250"></canvas>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row text-center">
+                        @foreach (var entity in Model.EntityCounts.OrderByDescending(e => e.Value).Take(3))
+                        {
+                            <div class="col">
+                                <strong class="d-block">@entity.Value</strong>
+                                <small class="text-muted">@entity.Key</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Users Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>Top 10 Most Active Users
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0 ps-4">#</th>
+                                    <th class="border-0">User</th>
+                                    <th class="border-0">Actions</th>
+                                    <th class="border-0">Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int rank = 1;
+                                    var maxCount = Model.TopUsers.Any() ? Model.TopUsers.Max(u => u.Value) : 1;
+                                }
+                                @foreach (var user in Model.TopUsers.OrderByDescending(u => u.Value))
+                                {
+                                    var percentage = (user.Value * 100.0) / maxCount;
+                                    <tr>
+                                        <td class="ps-4">
+                                            @if (rank <= 3)
+                                            {
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-trophy-fill"></i> @rank
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fw-bold">@rank</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                                    <i class="bi bi-person-fill text-primary"></i>
+                                                </div>
+                                                <strong>@user.Key</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">@user.Value actions</span>
+                                        </td>
+                                        <td style="width: 40%;">
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar @(rank <= 3 ? "bg-warning" : "bg-primary")"
+                                                     role="progressbar"
+                                                     style="width: @percentage%"
+                                                     aria-valuenow="@percentage"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="100">
+                                                    @percentage.ToString("F1")%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    rank++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actions Chart
+        const actionsCtx = document.getElementById('actionsChart').getContext('2d');
+        const actionsChart = new Chart(actionsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.ActionCounts.Keys.Select(k => $"'{k}'")))],
+                datasets: [{
+                    data: [@string.Join(",", Model.ActionCounts.Values)],
+                    backgroundColor: [
+                        '#28a745', // Green - CREATE
+                        '#007bff', // Blue - EDIT
+                        '#dc3545', // Red - DELETE
+                        '#17a2b8', // Cyan - LOGIN
+                        '#6c757d', // Gray - LOGOUT
+                        '#ffc107', // Yellow - Other
+                        '#6f42c1', // Purple
+                        '#e83e8c', // Pink
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Entities Chart
+        const entitiesCtx = document.getElementById('entitiesChart').getContext('2d');
+        const entitiesChart = new Chart(entitiesCtx, {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(string.Join(",", Model.EntityCounts.Keys.Select(k => $"'{k}'")))],
+                datasets: [{
+                    label: 'Logs Count',
+                    data: [@string.Join(",", Model.EntityCounts.Values)],
+                    backgroundColor: '#007bff',
+                    borderColor: '#0056b3',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,87 @@
+﻿@model PCOMS.Application.DTOs.CreateTimeEntryDto
+
+@{
+    ViewData["Title"] = "Edit Time Entry";
+    var entryId = ViewBag.EntryId;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-pencil"></i> Edit Time Entry</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Edit" asp-route-id="@entryId" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="ProjectId" class="form-label">Project *</label>
+                            <select asp-for="ProjectId" class="form-select" required>
+                                <option value="">-- Select Project --</option>
+                                @if (ViewBag.Projects != null)
+                                {
+                                    @foreach (var project in ViewBag.Projects)
+                                    {
+                                        <option value="@project.Value" selected="@(project.Value == Model.ProjectId.ToString())">@project.Text</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="ProjectId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="WorkDate" class="form-label">Work Date *</label>
+                            <input asp-for="WorkDate" type="date" class="form-control" required />
+                            <span asp-validation-for="WorkDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Hours" class="form-label">Hours *</label>
+                            <input asp-for="Hours" type="number" step="0.25" min="0.25" max="24" class="form-control" required placeholder="e.g., 8, 6.5, 4.25" />
+                            <span asp-validation-for="Hours" class="text-danger"></span>
+                            <small class="text-muted">Use 0.25 increments (15 minutes)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description *</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" required placeholder="Describe what you worked on..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="MyEntries" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Update Time Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle"></i> <strong>Note:</strong> You can only edit time entries that haven't been approved yet.
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

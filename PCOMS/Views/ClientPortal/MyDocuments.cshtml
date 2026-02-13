@@ -1,0 +1,158 @@
+﻿@model IEnumerable<PCOMS.Models.Document>
+
+@{
+    ViewData["Title"] = "My Documents";
+    var client = ViewBag.Client as PCOMS.Models.Client;
+    var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+    var selectedProjectId = ViewBag.SelectedProjectId as int?;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-file-earmark"></i> My Documents</h2>
+            <p class="text-muted">@client.Name</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Dashboard" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count()</h3>
+                    <p class="mb-0">Total Documents</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>@(projects?.Count() ?? 0)</h3>
+                    <p class="mb-0">Projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.GroupBy(d => d.Category).Count()</h3>
+                    <p class="mb-0">Categories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get">
+                <div class="row align-items-end">
+                    <div class="col-md-6">
+                        <label>Filter by Project</label>
+                        <select name="projectId" class="form-select">
+                            <option value="">All Projects</option>
+                            @if (projects != null)
+                            {
+                                foreach (var project in projects)
+                                {
+                                    <option value="@project.Id" selected="@(selectedProjectId == project.Id)">
+                                        @project.Name
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filter
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="MyDocuments" class="btn btn-outline-secondary w-100">
+                            Clear Filter
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Documents List -->
+    @if (Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var doc in Model.OrderByDescending(d => d.UploadedAt))
+            {
+                var icon = doc.ContentType switch
+                {
+                    var ct when ct.Contains("pdf") => "bi-file-pdf text-danger",
+                    var ct when ct.Contains("word") || ct.Contains("document") => "bi-file-word text-primary",
+                    var ct when ct.Contains("excel") || ct.Contains("spreadsheet") => "bi-file-excel text-success",
+                    var ct when ct.Contains("image") => "bi-file-image text-info",
+                    var ct when ct.Contains("zip") || ct.Contains("compressed") => "bi-file-zip text-warning",
+                    _ => "bi-file-earmark"
+                };
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="bi @icon fs-1 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">@doc.FileName</h6>
+                                    <small class="text-muted">
+                                        @doc.Project.Name
+                                    </small>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(doc.Description))
+                            {
+                                <p class="small text-muted mb-2">@doc.Description</p>
+                            }
+
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="badge bg-secondary">@doc.Category</span>
+                                <span class="text-muted">
+                                    @doc.UploadedAt.ToString("MMM dd, yyyy")
+                                </span>
+                            </div>
+
+                            @if (doc.Version > 1)
+                            {
+                                <div class="mt-2">
+                                    <small class="text-info">
+                                        <i class="bi bi-arrow-clockwise"></i> Version @doc.Version
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer bg-white d-flex justify-content-between">
+                            <small class="text-muted">
+                                @((doc.FileSize / 1024.0).ToString("N1")) KB
+                            </small>
+                            <a asp-action="DownloadDocument" asp-route-id="@doc.Id"
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            No documents found.
+        </div>
+    }
+</div>

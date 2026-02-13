@@ -1,0 +1,152 @@
+﻿@model PCOMS.Models.Client
+
+@{
+    ViewData["Title"] = "Account Information";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-person-circle"></i> Account Information</h2>
+            <p class="text-muted">Your company details</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Dashboard" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Company Information -->
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5><i class="bi bi-building"></i> Company Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Company Name:</dt>
+                        <dd class="col-sm-9"><strong>@Model.Name</strong></dd>
+
+                        <dt class="col-sm-3">Email:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.Email))
+                            {
+                                <a href="mailto:@Model.Email">@Model.Email</a>
+                            }
+                            else
+                            {
+                                <em class="text-muted">Not provided</em>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Phone:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.Phone))
+                            {
+                                @Model.Phone
+                            }
+                            else
+                            {
+                                <em class="text-muted">Not provided</em>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Address:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.Address))
+                            {
+                                @Model.Address
+                            }
+                            else
+                            {
+                                <em class="text-muted">Not provided</em>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Member Since:</dt>
+                        <dd class="col-sm-9">@Model.CreatedAt.ToString("MMMM dd, yyyy")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-question-circle"></i> Need Help?</h5>
+                </div>
+                <div class="card-body">
+                    <p>If you need to update your account information or have any questions, please contact us:</p>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-envelope fs-4 text-primary me-3"></i>
+                                <div>
+                                    <strong>Email Support</strong><br />
+                                    <a href="mailto:support@yourcompany.com">support@yourcompany.com</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-telephone fs-4 text-success me-3"></i>
+                                <div>
+                                    <strong>Phone Support</strong><br />
+                                    <a href="tel:+1234567890">(123) 456-7890</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links & Info -->
+        <div class="col-lg-4">
+            <!-- Account Summary -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Account Summary</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Company:</strong><br />
+                        @Model.Name
+                    </p>
+                    <p class="mb-2">
+                        <strong>Status:</strong><br />
+                        <span class="badge bg-success">Active</span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Member Since:</strong><br />
+                        @Model.CreatedAt.ToString("MMM yyyy")
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a asp-action="MyProjects" class="list-group-item list-group-item-action">
+                        <i class="bi bi-folder me-2"></i> My Projects
+                    </a>
+                    <a asp-action="MyInvoices" class="list-group-item list-group-item-action">
+                        <i class="bi bi-receipt me-2"></i> My Invoices
+                    </a>
+                    <a asp-action="MyDocuments" class="list-group-item list-group-item-action">
+                        <i class="bi bi-file-earmark me-2"></i> My Documents
+                    </a>
+                    <a asp-action="Dashboard" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

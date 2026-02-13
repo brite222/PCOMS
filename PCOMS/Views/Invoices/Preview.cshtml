@@ -1,0 +1,352 @@
+﻿@model PCOMS.Application.DTOs.InvoiceDto
+
+@{
+    ViewData["Title"] = $"Invoice {Model.InvoiceNumber}";
+    Layout = null; // No layout for printing
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Invoice @Model.InvoiceNumber</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+        }
+
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .invoice-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .invoice-header {
+            border-bottom: 3px solid #0f172a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .invoice-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: right;
+        }
+
+        .invoice-number {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .address-block {
+            margin-bottom: 30px;
+        }
+
+        table.invoice-items {
+            width: 100%;
+            margin: 30px 0;
+        }
+
+            table.invoice-items th {
+                background: #f8f9fa;
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                border-bottom: 2px solid #dee2e6;
+            }
+
+            table.invoice-items td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .totals-section {
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        .totals-table {
+            display: inline-block;
+            min-width: 300px;
+        }
+
+            .totals-table tr td {
+                padding: 8px 15px;
+            }
+
+            .totals-table tr.total-row {
+                font-size: 20px;
+                font-weight: 700;
+                border-top: 2px solid #0f172a;
+            }
+
+        .payment-info {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 4px solid #0f172a;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-draft {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .status-sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-cancelled {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Action Buttons (No Print) -->
+        <div class="no-print mb-4">
+            <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Details
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer"></i> Print Invoice
+            </button>
+        </div>
+
+        <!-- Invoice Header -->
+        <div class="invoice-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="company-name">PCOMS</div>
+                    <div class="mt-2">
+                        <strong>Project & Client Operations</strong><br />
+                        123 Business Street<br />
+                        Lagos, Nigeria<br />
+                        Phone: +234-XXX-XXXX<br />
+                        Email: billing@pcoms.local
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="invoice-title">INVOICE</div>
+                    <div class="invoice-number mt-2">
+                        <strong>Invoice #:</strong> @Model.InvoiceNumber
+                    </div>
+                    <div class="mt-2">
+                        @{
+                            var statusClass = Model.Status switch
+                            {
+                                "Draft" => "status-draft",
+                                "Sent" => "status-sent",
+                                "Paid" => "status-paid",
+                                "Overdue" => "status-overdue",
+                                "Cancelled" => "status-cancelled",
+                                _ => "status-draft"
+                            };
+                        }
+                        <span class="status-badge @statusClass">@Model.Status</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bill To / Invoice Info -->
+        <div class="row">
+            <div class="col-md-6 address-block">
+                <div class="section-title">Bill To:</div>
+                <strong>@Model.ClientName</strong><br />
+                Client ID: @Model.ClientId
+            </div>
+            <div class="col-md-6 address-block">
+                <div class="section-title">Invoice Details:</div>
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td><strong>Invoice Date:</strong></td>
+                        <td>@Model.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Due Date:</strong></td>
+                        <td>@Model.DueDate.ToString("MMM dd, yyyy")</td>
+                    </tr>
+                    @if (!string.IsNullOrEmpty(Model.ProjectName))
+                    {
+                        <tr>
+                            <td><strong>Project:</strong></td>
+                            <td>@Model.ProjectName</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+
+        <!-- Invoice Items -->
+        <table class="invoice-items">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Description</th>
+                    <th class="text-right">Quantity</th>
+                    <th class="text-right">Rate</th>
+                    <th class="text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.InvoiceItems != null && Model.InvoiceItems.Any())
+                {
+                    @foreach (var item in Model.InvoiceItems)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.Description</strong>
+                            </td>
+                            <td class="text-right">@item.Quantity.ToString("0.00")</td>
+                            <td class="text-right">₦@item.UnitPrice.ToString("N2")</td>
+                            <td class="text-right">₦@item.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No items</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td><strong>Subtotal:</strong></td>
+                    <td class="text-right">₦@Model.Subtotal.ToString("N2")</td>
+                </tr>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <tr>
+                        <td><strong>Discount:</strong></td>
+                        <td class="text-right">-₦@Model.DiscountAmount.ToString("N2")</td>
+                    </tr>
+                }
+                @if (Model.TaxAmount > 0)
+                {
+                    <tr>
+                        <td>
+                            <strong>Tax:</strong>
+                            @if (Model.TaxRate > 0)
+                            {
+                                <text>(@Model.TaxRate.ToString("0.00")%)</text>
+                            }
+                        </td>
+                        <td class="text-right">₦@Model.TaxAmount.ToString("N2")</td>
+                    </tr>
+                }
+                <tr class="total-row">
+                    <td><strong>Total:</strong></td>
+                    <td class="text-right">₦@Model.TotalAmount.ToString("N2")</td>
+                </tr>
+                @if (Model.AmountPaid > 0)
+                {
+                    <tr>
+                        <td><strong>Amount Paid:</strong></td>
+                        <td class="text-right">₦@Model.AmountPaid.ToString("N2")</td>
+                    </tr>
+                    <tr style="font-size: 18px; font-weight: 600; color: #dc2626;">
+                        <td><strong>Balance Due:</strong></td>
+                        <td class="text-right">₦@Model.Balance.ToString("N2")</td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+        <!-- Notes -->
+        @if (!string.IsNullOrEmpty(Model.Notes))
+        {
+            <div class="mt-4">
+                <div class="section-title">Notes:</div>
+                <p>@Model.Notes</p>
+            </div>
+        }
+
+        <!-- Payment Info -->
+        <div class="payment-info">
+            <div class="section-title">Payment Information</div>
+            <p class="mb-0">
+                <strong>Bank:</strong> Example Bank<br />
+                <strong>Account Name:</strong> PCOMS Ltd<br />
+                <strong>Account Number:</strong> 1234567890<br />
+                <strong>Payment Terms:</strong> Net @((Model.DueDate - Model.InvoiceDate).Days) Days
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-note text-center">
+            <p class="mb-0">
+                Thank you for your business!<br />
+                For questions about this invoice, please contact billing@pcoms.local
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

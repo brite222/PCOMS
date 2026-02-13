@@ -1,0 +1,230 @@
+﻿@model PCOMS.Application.DTOs.GenerateInvoiceFromTimeDto
+
+@{
+    ViewData["Title"] = "Generate Invoice from Time Entries";
+    var project = ViewBag.Project as PCOMS.Models.Project;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-clock-history"></i> Generate Invoice from Time Entries</h2>
+            @if (project != null)
+            {
+                <p class="text-muted">
+                    Project: <strong>@project.Name</strong> |
+                    Client: <strong>@project.Client.Name</strong>
+                </p>
+            }
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-magic"></i> Auto-Generate Invoice
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="GenerateFromTime" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ProjectId" />
+
+                        <!-- Date Range -->
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>How it works:</strong>
+                            Select a date range and the system will automatically pull all approved
+                            billable time entries and expenses for this project.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FromDate" class="form-label">From Date *</label>
+                                <input asp-for="FromDate" type="date" class="form-control" required />
+                                <span asp-validation-for="FromDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ToDate" class="form-label">To Date *</label>
+                                <input asp-for="ToDate" type="date" class="form-control" required />
+                                <span asp-validation-for="ToDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Quick Date Presets -->
+                        <div class="mb-3">
+                            <label class="form-label">Quick Select:</label>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('last7')">
+                                    Last 7 Days
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('lastMonth')">
+                                    Last Month
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('thisMonth')">
+                                    This Month
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('lastQuarter')">
+                                    Last Quarter
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Include Expenses -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IncludeExpenses" class="form-check-input" type="checkbox" checked />
+                                <label class="form-check-label">
+                                    Include billable expenses
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                This will add approved billable expenses to the invoice
+                            </small>
+                        </div>
+
+                        <hr />
+
+                        <!-- Invoice Settings -->
+                        <h6>Invoice Settings</h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DueDate" class="form-label">Due Date *</label>
+                                <input asp-for="DueDate" type="date" class="form-control" required />
+                                <span asp-validation-for="DueDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TaxRate" class="form-label">Tax Rate (%)</label>
+                                <input asp-for="TaxRate" type="number" step="0.01" class="form-control" />
+                                <span asp-validation-for="TaxRate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DiscountAmount" class="form-label">Discount Amount (₦)</label>
+                            <input asp-for="DiscountAmount" type="number" step="0.01" class="form-control" />
+                            <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Terms" class="form-label">Terms & Conditions</label>
+                            <textarea asp-for="Terms" class="form-control" rows="2"
+                                      placeholder="Payment due within 30 days. Late payments subject to 5% monthly interest."></textarea>
+                            <span asp-validation-for="Terms" class="text-danger"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-magic"></i> Generate Invoice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Info -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6><i class="bi bi-info-circle"></i> What Gets Included</h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-success">✓ Time Entries</h6>
+                    <ul class="small">
+                        <li>Approved billable time entries only</li>
+                        <li>Within selected date range</li>
+                        <li>Each entry becomes a line item</li>
+                        <li>Hours × Hourly Rate = Amount</li>
+                    </ul>
+
+                    <h6 class="text-success mt-3">✓ Expenses (Optional)</h6>
+                    <ul class="small">
+                        <li>Approved billable expenses only</li>
+                        <li>Within selected date range</li>
+                        <li>Added as separate line items</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Important Notes</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li><strong>Only approved items</strong> are included</li>
+                        <li>Draft or rejected items are <strong>skipped</strong></li>
+                        <li>You can review and edit before sending</li>
+                        <li>Invoice will be created in <strong>Draft</strong> status</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function setDateRange(preset) {
+            const today = new Date();
+            let fromDate, toDate;
+
+            switch (preset) {
+                case 'last7':
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - 7);
+                    toDate = today;
+                    break;
+
+                case 'lastMonth':
+                    fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+
+                case 'thisMonth':
+                    fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    toDate = today;
+                    break;
+
+                case 'lastQuarter':
+                    const quarter = Math.floor((today.getMonth()) / 3);
+                    fromDate = new Date(today.getFullYear(), (quarter - 1) * 3, 1);
+                    toDate = new Date(today.getFullYear(), quarter * 3, 0);
+                    break;
+            }
+
+            document.getElementById('FromDate').value = formatDate(fromDate);
+            document.getElementById('ToDate').value = formatDate(toDate);
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    </script>
+}

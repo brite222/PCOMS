@@ -33,7 +33,8 @@ namespace PCOMS.Models
 
         [StringLength(500)]
         public string? Description { get; set; }
-
+        [StringLength(100)]
+        public string ContentType { get; set; } = "application/octet-stream";
         public bool IsDeleted { get; set; } = false;
 
         // Document tags for better categorization

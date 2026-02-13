@@ -300,22 +300,42 @@
                     </a>
                 </li>
             }
+            else if (User.IsInRole("Client"))
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="ClientPortal" asp-action="Dashboard">
+                        <i class="bi bi-speedometer2"></i>
+                        <span class="nav-link-text">Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="ClientPortal" asp-action="MyProjects">
+                        <i class="bi bi-folder2-open"></i>
+                        <span class="nav-link-text">My Projects</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="ClientPortal" asp-action="MyInvoices">
+                        <i class="bi bi-receipt"></i>
+                        <span class="nav-link-text">My Invoices</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="ClientPortal" asp-action="MyDocuments">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span class="nav-link-text">Documents</span>
+                    </a>
+                </li>
+            }
             else
             {
                 <li class="nav-item">
                     <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
                         <i class="bi bi-speedometer2"></i>
                         <span class="nav-link-text">Dashboard</span>
-                    </a>
-                </li>
-            }
-
-            @if (User.IsInRole("Client"))
-            {
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="ClientPortal" asp-action="Index">
-                        <i class="bi bi-folder2-open"></i>
-                        <span class="nav-link-text">My Projects</span>
                     </a>
                 </li>
             }
@@ -337,49 +357,90 @@
                 </li>
             }
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Tasks" asp-action="Index">
-                    <i class="bi bi-check2-square"></i>
-                    <span class="nav-link-text">Tasks</span>
-                </a>
-            </li>
+            @if (!User.IsInRole("Client"))
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Tasks" asp-action="Index">
+                        <i class="bi bi-check2-square"></i>
+                        <span class="nav-link-text">Tasks</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Documents" asp-action="Index">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span class="nav-link-text">Documents</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Documents" asp-action="Index">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span class="nav-link-text">Documents</span>
+                    </a>
+                </li>
+            }
 
             <!-- Time & Billing -->
-            <li class="nav-section-title">Time & Billing</li>
-
-            @if (User.IsInRole("Developer"))
+            @if (!User.IsInRole("Client"))
             {
+                <li class="nav-section-title">Time & Billing</li>
+
+                @if (User.IsInRole("Developer"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TimeEntries" asp-action="MyEntries">
+                            <i class="bi bi-clock-history"></i>
+                            <span class="nav-link-text">My Time (Simple)</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TimeTracking" asp-action="Index">
+                            <i class="bi bi-stopwatch"></i>
+                            <span class="nav-link-text">Time Tracking</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TimeTracking" asp-action="Timesheets">
+                            <i class="bi bi-calendar-week"></i>
+                            <span class="nav-link-text">Timesheets</span>
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TimeEntries" asp-action="All">
+                            <i class="bi bi-clock"></i>
+                            <span class="nav-link-text">All Time Entries (Simple)</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TimeTracking" asp-action="PendingApprovals">
+                            <i class="bi bi-check2-square"></i>
+                            <span class="nav-link-text">Timesheet Approvals</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TimeTracking" asp-action="Index">
+                            <i class="bi bi-stopwatch"></i>
+                            <span class="nav-link-text">Time Tracking</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Invoices" asp-action="Index">
+                            <i class="bi bi-receipt"></i>
+                            <span class="nav-link-text">Invoices</span>
+                        </a>
+                    </li>
+                }
+
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="TimeEntries" asp-action="MyEntries">
-                        <i class="bi bi-clock-history"></i>
-                        <span class="nav-link-text">My Time</span>
+                    <a class="nav-link" asp-controller="Budget" asp-action="Index">
+                        <i class="bi bi-cash-stack"></i>
+                        <span class="nav-link-text">Budgets</span>
                     </a>
                 </li>
             }
-
-            @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
-            {
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="TimeEntries" asp-action="All">
-                        <i class="bi bi-clock"></i>
-                        <span class="nav-link-text">All Time Entries</span>
-                    </a>
-                </li>
-            }
-
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Budget" asp-action="Index">
-                    <i class="bi bi-cash-stack"></i>
-                    <span class="nav-link-text">Budgets</span>
-                </a>
-            </li>
 
             <!-- Communication -->
             <li class="nav-section-title">Communication</li>
@@ -427,6 +488,13 @@
                     <a class="nav-link" asp-controller="AdminUsers" asp-action="Index">
                         <i class="bi bi-person-gear"></i>
                         <span class="nav-link-text">User Management</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="ClientUserManagement" asp-action="Index">
+                        <i class="bi bi-link-45deg"></i>
+                        <span class="nav-link-text">Client Users</span>
                     </a>
                 </li>
             }

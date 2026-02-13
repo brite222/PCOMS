@@ -32,7 +32,13 @@ namespace PCOMS.Models
         [StringLength(50)]
         public string? Tags { get; set; }
 
-        // Relationships
+        // ✅ PROJECT RELATIONSHIP (NEW)
+        public int? ProjectId { get; set; }
+
+        [ForeignKey(nameof(ProjectId))]
+        public Project? Project { get; set; }
+
+        // User Relationships
         [Required]
         public string CreatedById { get; set; } = string.Empty;
 
@@ -44,6 +50,7 @@ namespace PCOMS.Models
         [ForeignKey(nameof(AssignedToId))]
         public IdentityUser? AssignedTo { get; set; }
 
+        // Parent/Child Relationship
         public int? ParentTaskId { get; set; }
 
         [ForeignKey(nameof(ParentTaskId))]
