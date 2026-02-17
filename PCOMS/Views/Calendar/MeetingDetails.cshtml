@@ -1,0 +1,265 @@
+﻿@using System.Security.Claims
+@model PCOMS.Models.Meeting
+
+@{
+    ViewData["Title"] = Model.Title;
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isOrganizer = Model.OrganizerId == currentUserId;
+    var myAttendance = Model.Attendees.FirstOrDefault(a => a.UserId == currentUserId);
+}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <!-- Meeting Details Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-calendar-event"></i> @Model.Title
+                        </h4>
+                        @switch (Model.Status)
+                        {
+                            case PCOMS.Models.MeetingStatus.Scheduled:
+                                <span class="badge bg-primary" style="font-size: 1rem;">Scheduled</span>
+                                break;
+                            case PCOMS.Models.MeetingStatus.InProgress:
+                                <span class="badge bg-success" style="font-size: 1rem;">In Progress</span>
+                                break;
+                            case PCOMS.Models.MeetingStatus.Completed:
+                                <span class="badge bg-info" style="font-size: 1rem;">Completed</span>
+                                break;
+                            case PCOMS.Models.MeetingStatus.Cancelled:
+                                <span class="badge bg-danger" style="font-size: 1rem;">Cancelled</span>
+                                break;
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Meeting Info -->
+                    <div class="mb-4">
+                        <h5><i class="bi bi-info-circle"></i> Meeting Information</h5>
+                        <hr />
+
+                        <div class="row mb-3">
+                            <div class="col-md-3"><strong>Meeting Type:</strong></div>
+                            <div class="col-md-9">
+                                @switch (Model.Type)
+                                {
+                                    case PCOMS.Models.MeetingType.ClientMeeting:
+                                        <span class="badge" style="background-color: #8b5cf6;">Client Meeting</span>
+                                        break;
+                                    case PCOMS.Models.MeetingType.TeamMeeting:
+                                        <span class="badge" style="background-color: #3b82f6;">Team Meeting</span>
+                                        break;
+                                    case PCOMS.Models.MeetingType.OneOnOne:
+                                        <span class="badge" style="background-color: #10b981;">One-on-One</span>
+                                        break;
+                                    case PCOMS.Models.MeetingType.Review:
+                                        <span class="badge" style="background-color: #f59e0b;">Review</span>
+                                        break;
+                                    case PCOMS.Models.MeetingType.Planning:
+                                        <span class="badge" style="background-color: #ec4899;">Planning</span>
+                                        break;
+                                    case PCOMS.Models.MeetingType.StandUp:
+                                        <span class="badge" style="background-color: #06b6d4;">Stand-Up</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@Model.Type</span>
+                                        break;
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-3"><strong>Date & Time:</strong></div>
+                            <div class="col-md-9">
+                                <i class="bi bi-clock"></i> @Model.StartTime.ToString("dddd, MMMM dd, yyyy")
+                                <br />
+                                @Model.StartTime.ToString("h:mm tt") - @Model.EndTime.ToString("h:mm tt")
+                                <span class="text-muted">
+                                    (@((Model.EndTime - Model.StartTime).TotalMinutes) minutes)
+                                </span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Description:</strong></div>
+                                <div class="col-md-9">@Model.Description</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Location))
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Location:</strong></div>
+                                <div class="col-md-9">
+                                    <i class="bi bi-geo-alt"></i> @Model.Location
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.MeetingLink))
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Meeting Link:</strong></div>
+                                <div class="col-md-9">
+                                    <a href="@Model.MeetingLink" target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-camera-video"></i> Join Meeting
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mb-3">
+                            <div class="col-md-3"><strong>Organizer:</strong></div>
+                            <div class="col-md-9">
+                                <i class="bi bi-person-circle"></i> @Model.Organizer.UserName
+                            </div>
+                        </div>
+
+                        @if (Model.ProjectId.HasValue && Model.Project != null)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Related Project:</strong></div>
+                                <div class="col-md-9">
+                                    <a asp-controller="Projects" asp-action="Edit" asp-route-id="@Model.ProjectId">
+                                        @Model.Project.Name
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.ClientId.HasValue && Model.Client != null)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Related Client:</strong></div>
+                                <div class="col-md-9">
+                                    @Model.Client.Name
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Attendees -->
+                    <div class="mb-4">
+                        <h5><i class="bi bi-people"></i> Attendees (@Model.Attendees.Count)</h5>
+                        <hr />
+
+                        <div class="list-group">
+                            @foreach (var attendee in Model.Attendees)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-person"></i>
+                                            <strong>@attendee.User.UserName</strong>
+                                            @if (attendee.UserId == currentUserId)
+                                            {
+                                                <span class="badge bg-secondary ms-2">You</span>
+                                            }
+                                        </div>
+                                        <div>
+                                            @switch (attendee.Status)
+                                            {
+                                                case PCOMS.Models.AttendeeStatus.Accepted:
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle"></i> Accepted
+                                                    </span>
+                                                    break;
+                                                case PCOMS.Models.AttendeeStatus.Declined:
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle"></i> Declined
+                                                    </span>
+                                                    break;
+                                                case PCOMS.Models.AttendeeStatus.Tentative:
+                                                    <span class="badge bg-warning">
+                                                        <i class="bi bi-question-circle"></i> Tentative
+                                                    </span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-clock"></i> Pending
+                                                    </span>
+                                                    break;
+                                            }
+                                            @if (attendee.ResponseDate.HasValue)
+                                            {
+                                                <br />
+                                                <small class="text-muted">@attendee.ResponseDate.Value.ToString("MMM dd, h:mm tt")</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Your Response (if you're an attendee) -->
+                    @if (myAttendance != null && Model.Status == PCOMS.Models.MeetingStatus.Scheduled)
+                    {
+                        <div class="mb-4">
+                            <h5><i class="bi bi-hand-thumbs-up"></i> Your Response</h5>
+                            <hr />
+                            <p>Current status: <strong>@myAttendance.Status</strong></p>
+
+                            <form asp-action="UpdateAttendeeStatus" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="meetingId" value="@Model.Id" />
+
+                                <div class="btn-group">
+                                    <button type="submit" name="status" value="Accepted" class="btn btn-success">
+                                        <i class="bi bi-check-circle"></i> Accept
+                                    </button>
+                                    <button type="submit" name="status" value="Tentative" class="btn btn-warning">
+                                        <i class="bi bi-question-circle"></i> Tentative
+                                    </button>
+                                    <button type="submit" name="status" value="Declined" class="btn btn-danger">
+                                        <i class="bi bi-x-circle"></i> Decline
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+
+                    <!-- Actions -->
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Calendar
+                        </a>
+
+                        @if (isOrganizer && Model.Status == PCOMS.Models.MeetingStatus.Scheduled)
+                        {
+                            <form asp-action="CancelMeeting" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to cancel this meeting?')">
+                                    <i class="bi bi-x-circle"></i> Cancel Meeting
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

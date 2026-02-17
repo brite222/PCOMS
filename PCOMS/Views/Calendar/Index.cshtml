@@ -1,0 +1,227 @@
+﻿@{
+    ViewData["Title"] = "Calendar";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-calendar3"></i> Calendar & Schedule</h2>
+            <p class="text-muted">Manage meetings, milestones, and project timelines</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                {
+                    <a asp-action="CreateMeeting" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> New Meeting
+                    </a>
+                    <a asp-action="CreateMilestone" class="btn btn-success">
+                        <i class="bi bi-flag"></i> New Milestone
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Quick Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <a asp-action="Index" class="btn btn-outline-primary active">
+                    <i class="bi bi-calendar3"></i> Calendar
+                </a>
+                <a asp-action="Timeline" class="btn btn-outline-primary">
+                    <i class="bi bi-graph-up"></i> Timeline
+                </a>
+                <a asp-action="Meetings" class="btn btn-outline-primary">
+                    <i class="bi bi-people"></i> Meetings
+                </a>
+                <a asp-action="Milestones" class="btn btn-outline-primary">
+                    <i class="bi bi-flag"></i> Milestones
+                </a>
+                @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                {
+                    <a asp-action="TeamSchedule" class="btn btn-outline-primary">
+                        <i class="bi bi-calendar-week"></i> Team Schedule
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Legend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <span class="badge" style="background-color: #8b5cf6;">■</span> Client Meetings
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge" style="background-color: #3b82f6;">■</span> Team Meetings
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge" style="background-color: #10b981;">■</span> One-on-One
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge" style="background-color: #f59e0b;">■</span> Milestones
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="eventDetails">
+                <!-- Event details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="eventViewBtn" class="btn btn-primary" style="display:none;">View Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- FullCalendar CSS & JS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                buttonText: {
+                    today: 'Today',
+                    month: 'Month',
+                    week: 'Week',
+                    day: 'Day',
+                    list: 'List'
+                },
+                height: 'auto',
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: 'short'
+                },
+                events: function(info, successCallback, failureCallback) {
+                    fetch(`/Calendar/GetEvents?start=${info.startStr}&end=${info.endStr}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                        })
+                        .catch(error => {
+                            console.error('Error loading events:', error);
+                            failureCallback(error);
+                        });
+                },
+                eventClick: function(info) {
+                    var event = info.event;
+                    var props = event.extendedProps;
+
+                    document.getElementById('eventTitle').textContent = event.title;
+
+                    var details = '<div class="event-details">';
+
+                    if (props.description) {
+                        details += `<p><strong>Description:</strong><br>${props.description}</p>`;
+                    }
+
+                    if (props.location) {
+                        details += `<p><strong>Location:</strong> ${props.location}</p>`;
+                    }
+
+                    if (props.projectName) {
+                        details += `<p><strong>Project:</strong> ${props.projectName}</p>`;
+                    }
+
+                    if (props.clientName) {
+                        details += `<p><strong>Client:</strong> ${props.clientName}</p>`;
+                    }
+
+                    if (props.status) {
+                        details += `<p><strong>Status:</strong> <span class="badge bg-info">${props.status}</span></p>`;
+                    }
+
+                    details += `<p><strong>Time:</strong> ${event.start.toLocaleString()}`;
+                    if (event.end) {
+                        details += ` - ${event.end.toLocaleString()}`;
+                    }
+                    details += '</p>';
+
+                    details += '</div>';
+
+                    document.getElementById('eventDetails').innerHTML = details;
+
+                    // Show view details button for meetings
+                    var viewBtn = document.getElementById('eventViewBtn');
+                    if (props.type === 'meeting') {
+                        var meetingId = event.id.split('-')[1];
+                        viewBtn.href = `/Calendar/MeetingDetails/${meetingId}`;
+                        viewBtn.style.display = 'inline-block';
+                    } else {
+                        viewBtn.style.display = 'none';
+                    }
+
+                    var modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                    modal.show();
+                },
+                eventDidMount: function(info) {
+                    // Add tooltip
+                    info.el.setAttribute('title', info.event.title);
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+}

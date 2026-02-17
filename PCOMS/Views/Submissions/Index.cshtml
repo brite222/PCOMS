@@ -1,0 +1,206 @@
+﻿@model IEnumerable<PCOMS.Application.DTOs.ProjectSubmissionDto>
+
+@{
+    ViewData["Title"] = "Project Submissions";
+    var stats = ViewBag.Stats as PCOMS.Application.DTOs.SubmissionStatsDto;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-send-check"></i> Project Submissions</h2>
+            <p class="text-muted">Submit and track project deliverables for review</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Submission
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    @if (stats != null)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-2">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body py-3">
+                        <h3 class="mb-0 text-primary">@stats.TotalSubmissions</h3>
+                        <small class="text-muted">Total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body py-3">
+                        <h3 class="mb-0 text-secondary">@stats.PendingReview</h3>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body py-3">
+                        <h3 class="mb-0 text-success">@stats.Approved</h3>
+                        <small class="text-muted">Approved</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body py-3">
+                        <h3 class="mb-0 text-warning">@stats.RevisionRequested</h3>
+                        <small class="text-muted">Revision</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="card text-center border-0 shadow-sm">
+                    <div class="card-body py-3">
+                        <h3 class="mb-0 text-danger">@stats.Rejected</h3>
+                        <small class="text-muted">Rejected</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="card text-center border-0 shadow-sm bg-warning bg-opacity-10">
+                    <div class="card-body py-3">
+                        <h3 class="mb-0 text-warning">
+                            @(stats.AverageRating > 0 ? stats.AverageRating.ToString("N1") : "-")
+                        </h3>
+                        <small class="text-muted">Avg Rating</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body py-2">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <select name="projectId" asp-items="ViewBag.Projects" class="form-select form-select-sm">
+                        <option value="">-- All Projects --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">-- All Statuses --</option>
+                        <option value="Pending" selected="@(ViewBag.SelectedStatus == "Pending")">⏳ Pending</option>
+                        <option value="UnderReview" selected="@(ViewBag.SelectedStatus == "UnderReview")">👁 Under Review</option>
+                        <option value="Approved" selected="@(ViewBag.SelectedStatus == "Approved")">✅ Approved</option>
+                        <option value="RevisionRequested" selected="@(ViewBag.SelectedStatus == "RevisionRequested")">🔄 Revision</option>
+                        <option value="Rejected" selected="@(ViewBag.SelectedStatus == "Rejected")">❌ Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary w-100">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Submissions List -->
+    @if (Model.Any())
+    {
+        <div class="row g-3">
+            @foreach (var s in Model)
+            {
+                var statusColor = s.Status switch
+                {
+                    "Approved" => "success",
+                    "Rejected" => "danger",
+                    "RevisionRequested" => "warning",
+                    "UnderReview" => "info",
+                    _ => "secondary"
+                };
+
+                var statusIcon = s.Status switch
+                {
+                    "Approved" => "✅",
+                    "Rejected" => "❌",
+                    "RevisionRequested" => "🔄",
+                    "UnderReview" => "👁",
+                    _ => "⏳"
+                };
+
+                <div class="col-12">
+                    <div class="card shadow-sm border-start border-4 border-@statusColor">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">
+                                        <a asp-action="Details" asp-route-id="@s.Id" class="text-decoration-none">
+                                            @s.Title
+                                        </a>
+                                    </h6>
+                                    <div class="small text-muted">
+                                        <span class="me-2"><i class="bi bi-folder"></i> @s.ProjectName</span>
+                                        <span class="me-2"><i class="bi bi-person"></i> @s.SubmittedByName</span>
+                                        <span><i class="bi bi-calendar"></i> @s.SubmittedAt.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="small">
+                                        <span class="badge bg-primary me-1">@s.SubmissionType</span>
+                                        <span>
+                                            <i class="bi bi-link-45deg"></i> @s.Links.Count links
+                                        </span>
+                                        @if (s.Attachments.Any())
+                                        {
+                                            <span class="ms-2">
+                                                <i class="bi bi-paperclip"></i> @s.Attachments.Count files
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (s.Rating.HasValue)
+                                    {
+                                        <div class="small">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi @(i <= s.Rating.Value ? "bi-star-fill text-warning" : "bi-star text-muted")" style="font-size:12px"></i>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-@statusColor p-2">
+                                        @statusIcon @s.Status
+                                    </span>
+                                    @if (s.ReviewedAt.HasValue)
+                                    {
+                                        <div class="small text-muted mt-1">
+                                            @s.ReviewedAt.Value.ToString("MMM dd")
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <a asp-action="Details" asp-route-id="@s.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+            <h5>No submissions yet</h5>
+            <p class="text-muted">When developers submit their project links, they'll appear here.</p>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Submit Your First Project
+            </a>
+        </div>
+    }
+</div>

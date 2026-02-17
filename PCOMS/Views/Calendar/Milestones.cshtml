@@ -1,0 +1,205 @@
+﻿@model IEnumerable<PCOMS.Models.Milestone>
+
+@{
+    ViewData["Title"] = "Milestones";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-flag"></i> Project Milestones</h2>
+            <p class="text-muted">Track important project milestones and deliverables</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="CreateMilestone" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> New Milestone
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="btn-group" role="group">
+                <a asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar3"></i> Calendar
+                </a>
+                <a asp-action="Timeline" class="btn btn-outline-primary">
+                    <i class="bi bi-graph-up"></i> Timeline
+                </a>
+                <a asp-action="Meetings" class="btn btn-outline-primary">
+                    <i class="bi bi-people"></i> Meetings
+                </a>
+                <a asp-action="Milestones" class="btn btn-outline-primary active">
+                    <i class="bi bi-flag"></i> Milestones
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" onchange="window.location.href='/Calendar/Milestones?projectId=' + this.value">
+                <option value="">All Projects</option>
+                @if (ViewBag.Projects != null)
+                {
+                    @foreach (var p in ViewBag.Projects)
+                    {
+                        <option value="@p.Id" selected="@(ViewBag.SelectedProjectId == p.Id)">
+                            @p.Name
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Milestones List -->
+    @if (Model != null && Model.Any())
+    {
+        var grouped = Model.GroupBy(m => m.Project.Name);
+
+        @foreach (var group in grouped)
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder"></i> @group.Key
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        @foreach (var milestone in group.OrderBy(m => m.Order).ThenBy(m => m.DueDate))
+                        {
+                            var isOverdue = milestone.Status != PCOMS.Models.MilestoneStatus.Completed && 
+                                          milestone.DueDate < DateTime.Today;
+                            var daysUntilDue = (milestone.DueDate - DateTime.Today).Days;
+
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <!-- Milestone Info -->
+                                    <div class="col-md-5">
+                                        <h6 class="mb-1">
+                                            @if (milestone.Status == PCOMS.Models.MilestoneStatus.Completed)
+                                            {
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            }
+                                            else if (isOverdue)
+                                            {
+                                                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-flag"></i>
+                                            }
+                                            @milestone.Title
+                                        </h6>
+                                        @if (!string.IsNullOrEmpty(milestone.Description))
+                                        {
+                                            <p class="text-muted small mb-0">@milestone.Description</p>
+                                        }
+                                    </div>
+
+                                    <!-- Due Date -->
+                                    <div class="col-md-2">
+                                        <small class="text-muted">Due Date</small><br />
+                                        <strong>@milestone.DueDate.ToString("MMM dd, yyyy")</strong>
+                                        @if (milestone.Status != PCOMS.Models.MilestoneStatus.Completed)
+                                        {
+                                            <br />
+                                            @if (isOverdue)
+                                            {
+                                                <span class="badge bg-danger">@Math.Abs(daysUntilDue) days overdue</span>
+                                            }
+                                            else if (daysUntilDue == 0)
+                                            {
+                                                <span class="badge bg-warning">Due today</span>
+                                            }
+                                            else if (daysUntilDue <= 7)
+                                            {
+                                                <span class="badge bg-warning">@daysUntilDue days left</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@daysUntilDue days left</span>
+                                            }
+                                        }
+                                    </div>
+
+                                    <!-- Assigned To -->
+                                    <div class="col-md-2">
+                                        @if (milestone.AssignedTo != null)
+                                        {
+                                            <small class="text-muted">Assigned To</small><br />
+                                            <i class="bi bi-person"></i> @milestone.AssignedTo.UserName
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unassigned</span>
+                                        }
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="col-md-2">
+                                        @switch (milestone.Status)
+                                        {
+                                            case PCOMS.Models.MilestoneStatus.Completed:
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> Completed
+                                                </span>
+                                                @if (milestone.CompletedDate.HasValue)
+                                                {
+                                                    <br />
+                                                    <small class="text-muted">@milestone.CompletedDate.Value.ToString("MMM dd")</small>
+                                                }
+                                                break;
+                                            case PCOMS.Models.MilestoneStatus.InProgress:
+                                                <span class="badge bg-primary">In Progress</span>
+                                                break;
+                                            case PCOMS.Models.MilestoneStatus.Delayed:
+                                                <span class="badge bg-danger">Delayed</span>
+                                                break;
+                                            case PCOMS.Models.MilestoneStatus.Cancelled:
+                                                <span class="badge bg-dark">Cancelled</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">Pending</span>
+                                                break;
+                                        }
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="col-md-1 text-end">
+                                        @if (milestone.Status != PCOMS.Models.MilestoneStatus.Completed)
+                                        {
+                                            <form asp-action="CompleteMilestone" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@milestone.Id" />
+                                                <button type="submit" class="btn btn-sm btn-success" title="Mark as Complete">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No milestones found.
+            <a asp-action="CreateMilestone" class="alert-link">Create your first milestone</a>.
+        </div>
+    }
+</div>

@@ -65,7 +65,9 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 builder.Services.AddScoped<ITimeTrackingService, TimeTrackingService>();
-
+builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
+builder.Services.AddScoped<ICalendarService, CalendarService>();
+builder.Services.AddScoped<SubmissionService>();
 // NEW: Document Management Service
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 

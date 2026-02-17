@@ -60,6 +60,8 @@ namespace PCOMS.Models
         public ICollection<TaskItem> SubTasks { get; set; } = new List<TaskItem>();
         public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
         public ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
+        public ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
+
 
         // Audit fields
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

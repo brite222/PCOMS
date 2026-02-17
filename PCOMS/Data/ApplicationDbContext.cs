@@ -12,40 +12,118 @@ namespace PCOMS.Data
         {
         }
 
-        // =========================
-        // DbSets
-        // =========================
+        // ==========================================
+        // CORE ENTITIES
+        // ==========================================
         public DbSet<Client> Clients { get; set; } = null!;
+        public DbSet<ClientUser> ClientUsers { get; set; } = null!;
         public DbSet<Project> Projects { get; set; } = null!;
         public DbSet<ProjectAssignment> ProjectAssignments { get; set; } = null!;
+
+        // ==========================================
+        // TIME TRACKING & BILLING
+        // ==========================================
         public DbSet<TimeEntry> TimeEntries { get; set; } = null!;
-        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+        public DbSet<Timesheet> Timesheets { get; set; } = null!;
+        public DbSet<WorkSchedule> WorkSchedules { get; set; } = null!;
         public DbSet<Invoice> Invoices { get; set; } = null!;
-        public DbSet<ClientUser> ClientUsers { get; set; } = null!;
-        public DbSet<Report> Reports { get; set; } = null!;
-        public DbSet<TaskItem> Tasks { get; set; }
-        public DbSet<TaskComment> TaskComments { get; set; }
-        public DbSet<TaskAttachment> TaskAttachments { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; } = null!;
+        public DbSet<Payment> Payments { get; set; } = null!;
+
+        // ==========================================
+        // TASKS & MILESTONES
+        // ==========================================
+        public DbSet<TaskItem> Tasks { get; set; } = null!;
+        public DbSet<TaskComment> TaskComments { get; set; } = null!;
+        public DbSet<TaskAttachment> TaskAttachments { get; set; } = null!;
+        public DbSet<Milestone> Milestones { get; set; } = null!;
+
+        // ==========================================
+        // BUDGETS & EXPENSES
+        // ==========================================
         public DbSet<ProjectBudget> ProjectBudgets { get; set; } = null!;
         public DbSet<Expense> Expenses { get; set; } = null!;
         public DbSet<BudgetAlert> BudgetAlerts { get; set; } = null!;
+
+        // ==========================================
+        // DOCUMENTS & REPORTS
+        // ==========================================
+        public DbSet<Document> Documents { get; set; } = null!;
+        public DbSet<Report> Reports { get; set; } = null!;
+
+        // ==========================================
+        // COMMUNICATION
+        // ==========================================
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<TeamMessage> TeamMessages { get; set; } = null!;
         public DbSet<MessageReaction> MessageReactions { get; set; } = null!;
-        public DbSet<ActivityLog> ActivityLogs { get; set; } = null!;
-        public DbSet<Timesheet> Timesheets { get; set; } = null!;
-        public DbSet<WorkSchedule> WorkSchedules { get; set; } = null!;
-        public DbSet<Document> Documents { get; set; } = null!;
 
-        public DbSet<InvoiceItem> InvoiceItems { get; set; } = null!;
-        public DbSet<Payment> Payments { get; set; } = null!;
+        // ==========================================
+        // CALENDAR & SCHEDULING
+        // ==========================================
+        public DbSet<Meeting> Meetings { get; set; } = null!;
+        public DbSet<MeetingAttendee> MeetingAttendees { get; set; } = null!;
+
+        // ==========================================
+        // TEMPLATES
+        // ==========================================
+        public DbSet<ProjectTemplate> ProjectTemplates { get; set; } = null!;
+        public DbSet<TemplateTask> TemplateTasks { get; set; } = null!;
+        public DbSet<TemplateMilestone> TemplateMilestones { get; set; } = null!;
+        public DbSet<TemplateResource> TemplateResources { get; set; } = null!;
+
+        // ==========================================
+        // AUDIT & ACTIVITY
+        // ==========================================
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+        public DbSet<ActivityLog> ActivityLogs { get; set; } = null!;
+
+
+        public DbSet<ProjectSubmission> ProjectSubmissions { get; set; } = null!;
+        public DbSet<SubmissionLink> SubmissionLinks { get; set; } = null!;
+        public DbSet<SubmissionAttachment> SubmissionAttachments { get; set; } = null!;
+        public DbSet<SubmissionComment> SubmissionComments { get; set; } = null!;
+        public DbSet<SubmissionRevision> SubmissionRevisions { get; set; } = null!;
+
+
+
+        // ==========================================
+        // MODEL CONFIGURATION
+        // ==========================================
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // =========================
-            // ProjectAssignment Configuration
-            // =========================
+            // ==========================================
+            // CLIENT RELATIONSHIPS
+            // ==========================================
+            builder.Entity<ClientUser>()
+                .HasOne(cu => cu.Client)
+                .WithMany(c => c.ClientUsers)
+                .HasForeignKey(cu => cu.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ClientUser>()
+                .HasOne(cu => cu.User)
+                .WithMany()
+                .HasForeignKey(cu => cu.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ==========================================
+            // PROJECT RELATIONSHIPS
+            // ==========================================
+            builder.Entity<Project>()
+                .HasOne(p => p.Manager)
+                .WithMany()
+                .HasForeignKey(p => p.ManagerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Project>()
+                .HasOne(p => p.Client)
+                .WithMany(c => c.Projects)
+                .HasForeignKey(p => p.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Prevent duplicate developer assignment
             builder.Entity<ProjectAssignment>()
                 .HasIndex(pa => new { pa.ProjectId, pa.DeveloperId })
@@ -63,40 +141,78 @@ namespace PCOMS.Data
                 .HasForeignKey(pa => pa.DeveloperId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // ==========================================
+            // TIME TRACKING RELATIONSHIPS
+            // ==========================================
+            builder.Entity<TimeEntry>()
+                .HasOne(e => e.Project)
+                .WithMany(p => p.TimeEntries)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // =========================
-            // Project Configuration
-            // =========================
-            builder.Entity<Project>()
-                .HasOne(p => p.Manager)
-                .WithMany()
-                .HasForeignKey(p => p.ManagerId)
+            builder.Entity<Timesheet>()
+                .HasMany(t => t.TimeEntries)
+                .WithOne()
+                .HasForeignKey("TimesheetId")
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Project>()
-                .HasOne(p => p.Client)
-                .WithMany(c => c.Projects)
-                .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // =========================
-            // Client ↔ ClientUser
-            // =========================
-            builder.Entity<ClientUser>()
-                .HasOne(cu => cu.Client)
-                .WithMany(c => c.ClientUsers)
-                .HasForeignKey(cu => cu.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Entity<ClientUser>()
-                .HasOne(cu => cu.User)
+            // ==========================================
+            // INVOICE RELATIONSHIPS
+            // ==========================================
+            builder.Entity<Invoice>()
+                .HasOne(i => i.Project)
                 .WithMany()
-                .HasForeignKey(cu => cu.UserId)
+                .HasForeignKey(i => i.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // =========================
-            // Document Configuration
-            // =========================
+            builder.Entity<Invoice>()
+                .HasOne(i => i.Client)
+                .WithMany()
+                .HasForeignKey(i => i.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<InvoiceItem>()
+                .HasOne(i => i.Invoice)
+                .WithMany(inv => inv.InvoiceItems)
+                .HasForeignKey(i => i.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<InvoiceItem>()
+                .HasOne(i => i.TimeEntry)
+                .WithMany()
+                .HasForeignKey(i => i.TimeEntryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<InvoiceItem>()
+                .HasOne(i => i.Expense)
+                .WithMany()
+                .HasForeignKey(i => i.ExpenseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Payment>()
+                .HasOne(p => p.Invoice)
+                .WithMany(inv => inv.Payments)
+                .HasForeignKey(p => p.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ==========================================
+            // MILESTONE RELATIONSHIPS
+            // ==========================================
+            builder.Entity<Milestone>()
+                .HasOne(m => m.Project)
+                .WithMany()
+                .HasForeignKey(m => m.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Milestone>()
+                .HasOne(m => m.AssignedTo)
+                .WithMany()
+                .HasForeignKey(m => m.AssignedToId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ==========================================
+            // DOCUMENT RELATIONSHIPS
+            // ==========================================
             builder.Entity<Document>()
                 .HasOne(d => d.Project)
                 .WithMany()
@@ -109,6 +225,7 @@ namespace PCOMS.Data
                 .HasForeignKey(d => d.PreviousVersionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Document indexes
             builder.Entity<Document>()
                 .HasIndex(d => d.ProjectId);
 
@@ -118,9 +235,9 @@ namespace PCOMS.Data
             builder.Entity<Document>()
                 .HasIndex(d => d.IsDeleted);
 
-            // =========================
-            // TeamMessage Configuration
-            // =========================
+            // ==========================================
+            // COMMUNICATION RELATIONSHIPS
+            // ==========================================
             builder.Entity<TeamMessage>()
                 .HasOne(m => m.Project)
                 .WithMany()
@@ -139,9 +256,6 @@ namespace PCOMS.Data
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // =========================
-            // MessageReaction Configuration
-            // =========================
             builder.Entity<MessageReaction>()
                 .HasOne(r => r.TeamMessage)
                 .WithMany(m => m.Reactions)
@@ -154,9 +268,58 @@ namespace PCOMS.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // =========================
-            // ActivityLog Configuration
-            // =========================
+            builder.Entity<Notification>()
+                .HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ==========================================
+            // CALENDAR & MEETING RELATIONSHIPS
+            // ==========================================
+            builder.Entity<Meeting>()
+                .HasOne(m => m.Organizer)
+                .WithMany()
+                .HasForeignKey(m => m.OrganizerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Meeting>()
+                .HasOne(m => m.Project)
+                .WithMany()
+                .HasForeignKey(m => m.ProjectId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Meeting>()
+                .HasOne(m => m.Client)
+                .WithMany()
+                .HasForeignKey(m => m.ClientId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Meeting>()
+                .HasMany(m => m.Attendees)
+                .WithOne(a => a.Meeting)
+                .HasForeignKey(a => a.MeetingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<MeetingAttendee>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Meeting indexes
+            builder.Entity<Meeting>()
+                .HasIndex(m => m.StartTime);
+
+            builder.Entity<Meeting>()
+                .HasIndex(m => m.OrganizerId);
+
+            builder.Entity<Meeting>()
+                .HasIndex(m => m.IsDeleted);
+
+            // ==========================================
+            // ACTIVITY LOG RELATIONSHIPS
+            // ==========================================
             builder.Entity<ActivityLog>()
                 .HasOne(a => a.Project)
                 .WithMany()
@@ -169,70 +332,86 @@ namespace PCOMS.Data
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // =========================
-            // Notification Configuration
-            // =========================
-            builder.Entity<Notification>()
-                .HasOne<IdentityUser>()
-                .WithMany()
-                .HasForeignKey(n => n.UserId)
+            // ==========================================
+            // TEMPLATE RELATIONSHIPS
+            // ==========================================
+            builder.Entity<TemplateTask>()
+                .HasOne(t => t.ProjectTemplate)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectTemplateId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // =========================
-            // Timesheet Configuration
-            // =========================
-            builder.Entity<Timesheet>()
-                .HasMany(t => t.TimeEntries)
-                .WithOne()
-                .HasForeignKey("TimesheetId")
+            builder.Entity<TemplateTask>()
+                .HasOne(t => t.DependsOnTask)
+                .WithMany()
+                .HasForeignKey(t => t.DependsOnTaskId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // =========================
-            // TimeEntry Configuration
-            // =========================
-            builder.Entity<TimeEntry>()
-                .HasOne(e => e.Project)
-                .WithMany(p => p.TimeEntries)
-                .HasForeignKey(e => e.ProjectId)
+            builder.Entity<TemplateMilestone>()
+                .HasOne(m => m.ProjectTemplate)
+                .WithMany(p => p.Milestones)
+                .HasForeignKey(m => m.ProjectTemplateId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<TemplateResource>()
+                .HasOne(r => r.ProjectTemplate)
+                .WithMany(p => p.Resources)
+                .HasForeignKey(r => r.ProjectTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ==========================================
+            // INDEXES FOR PERFORMANCE
+            // ==========================================
+            // TimeEntry indexes
+            builder.Entity<TimeEntry>()
+                .HasIndex(t => t.Date);
+
+            builder.Entity<TimeEntry>()
+                .HasIndex(t => t.UserId);
+
+            // Milestone indexes
+            builder.Entity<Milestone>()
+                .HasIndex(m => m.DueDate);
+
+            builder.Entity<Milestone>()
+                .HasIndex(m => m.ProjectId);
+
+            // Invoice indexes
+            builder.Entity<Invoice>()
+                .HasIndex(i => i.InvoiceDate);
 
             builder.Entity<Invoice>()
-    .HasOne(i => i.Project)
-    .WithMany()
-    .HasForeignKey(i => i.ProjectId)
+                .HasIndex(i => i.Status);
+
+            builder.Entity<SubmissionLink>()
+    .HasOne(l => l.ProjectSubmission)
+    .WithMany(s => s.Links)
+    .HasForeignKey(l => l.ProjectSubmissionId)
     .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<Invoice>()
-                .HasOne(i => i.Client)
-                .WithMany()
-                .HasForeignKey(i => i.ClientId)
+            builder.Entity<SubmissionAttachment>()
+                .HasOne(a => a.ProjectSubmission)
+                .WithMany(s => s.Attachments)
+                .HasForeignKey(a => a.ProjectSubmissionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<InvoiceItem>()
-                .HasOne(i => i.Invoice)
-                .WithMany(inv => inv.InvoiceItems)
-                .HasForeignKey(i => i.InvoiceId)
+            builder.Entity<SubmissionComment>()
+                .HasOne(c => c.ProjectSubmission)
+                .WithMany(s => s.Comments)
+                .HasForeignKey(c => c.ProjectSubmissionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<Payment>()
-                .HasOne(p => p.Invoice)
-                .WithMany(inv => inv.Payments)
-                .HasForeignKey(p => p.InvoiceId)
+            builder.Entity<ProjectSubmission>()
+                .HasOne(s => s.Project)
+                .WithMany()
+                .HasForeignKey(s => s.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Optional links
-            builder.Entity<InvoiceItem>()
-                .HasOne(i => i.TimeEntry)
+            builder.Entity<ProjectSubmission>()
+                .HasOne(s => s.Milestone)
                 .WithMany()
-                .HasForeignKey(i => i.TimeEntryId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            builder.Entity<InvoiceItem>()
-                .HasOne(i => i.Expense)
-                .WithMany()
-                .HasForeignKey(i => i.ExpenseId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasForeignKey(s => s.MilestoneId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

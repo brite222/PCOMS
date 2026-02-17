@@ -1,0 +1,411 @@
+﻿@model PCOMS.Application.DTOs.CreateProjectTemplateDto
+
+@{
+    ViewData["Title"] = "Create Project Template";
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center gap-3 mb-1">
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h4 class="mb-0"><i class="bi bi-layout-text-window-reverse me-2 text-primary"></i>Create Project Template</h4>
+                    <small class="text-muted">Define a reusable template with tasks, milestones and resources</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Create" method="post" id="templateForm">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-4">
+
+            <!-- ==========================================
+                 LEFT: Template Details
+            ========================================== -->
+            <div class="col-lg-4">
+
+                <!-- Basic Info Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Template Details</h6>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold">Template Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g. Web Development Project" required />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Category" class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            <select asp-for="Category" class="form-select" required>
+                                <option value="">-- Select Category --</option>
+                                <option value="Web Development">Web Development</option>
+                                <option value="Mobile App">Mobile App</option>
+                                <option value="Design">Design</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Consulting">Consulting</option>
+                                <option value="Data & Analytics">Data & Analytics</option>
+                                <option value="Infrastructure">Infrastructure</option>
+                                <option value="General">General</option>
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Describe when and how to use this template..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EstimatedDurationDays" class="form-label fw-semibold">Estimated Duration (days)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
+                                <input asp-for="EstimatedDurationDays" type="number" class="form-control" min="1" placeholder="30" />
+                            </div>
+                            <span asp-validation-for="EstimatedDurationDays" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EstimatedBudget" class="form-label fw-semibold">Estimated Budget (₦)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₦</span>
+                                <input asp-for="EstimatedBudget" type="number" class="form-control" min="0" step="1000" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="EstimatedBudget" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DefaultHourlyRate" class="form-label fw-semibold">Default Hourly Rate (₦)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₦/hr</span>
+                                <input asp-for="DefaultHourlyRate" type="number" class="form-control" min="0" step="100" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="DefaultHourlyRate" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsPublic" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="IsPublic" class="form-check-label">Public</label>
+                                    <div><small class="text-muted">Visible to all users</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ==========================================
+                 RIGHT: Tasks, Milestones, Resources
+            ========================================== -->
+            <div class="col-lg-8">
+
+                <!-- TASKS CARD -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-check2-square me-2"></i>Tasks</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTask()">
+                            <i class="bi bi-plus"></i> Add Task
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="tasksContainer">
+                            <!-- Tasks added dynamically -->
+                        </div>
+                        <div id="noTasksMsg" class="text-center text-muted py-4">
+                            <i class="bi bi-check2-square fs-3 d-block mb-2 opacity-25"></i>
+                            No tasks yet. Click <strong>Add Task</strong> to begin.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MILESTONES CARD -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-flag me-2"></i>Milestones</h6>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="addMilestone()">
+                            <i class="bi bi-plus"></i> Add Milestone
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="milestonesContainer">
+                            <!-- Milestones added dynamically -->
+                        </div>
+                        <div id="noMilestonesMsg" class="text-center text-muted py-4">
+                            <i class="bi bi-flag fs-3 d-block mb-2 opacity-25"></i>
+                            No milestones yet. Click <strong>Add Milestone</strong> to begin.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESOURCES CARD -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-people me-2"></i>Resources</h6>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="addResource()">
+                            <i class="bi bi-plus"></i> Add Resource
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="resourcesContainer">
+                            <!-- Resources added dynamically -->
+                        </div>
+                        <div id="noResourcesMsg" class="text-center text-muted py-4">
+                            <i class="bi bi-people fs-3 d-block mb-2 opacity-25"></i>
+                            No resources yet. Click <strong>Add Resource</strong> to begin.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBMIT BUTTONS -->
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-check-circle me-1"></i> Create Template
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ==========================================
+     TASK ROW TEMPLATE (hidden)
+========================================== -->
+<template id="taskRowTemplate">
+    <div class="task-row border-bottom p-3" data-index="__IDX__">
+        <div class="row g-2 align-items-start">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Task Name <span class="text-danger">*</span></label>
+                <input type="text" name="Tasks[__IDX__].Name" class="form-control form-control-sm"
+                       placeholder="e.g. Setup project repository" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Day Offset</label>
+                <input type="number" name="Tasks[__IDX__].DayOffset" class="form-control form-control-sm"
+                       min="0" value="0" placeholder="0" />
+                <small class="text-muted">Days from start</small>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Est. Hours</label>
+                <input type="number" name="Tasks[__IDX__].EstimatedHours" class="form-control form-control-sm"
+                       min="0.5" step="0.5" value="8" placeholder="8" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Priority</label>
+                <select name="Tasks[__IDX__].Priority" class="form-select form-select-sm">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold">Order</label>
+                <input type="number" name="Tasks[__IDX__].Order" class="form-control form-control-sm"
+                       min="0" value="__IDX__" />
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeRow(this, 'task')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="col-12">
+                <input type="text" name="Tasks[__IDX__].Description" class="form-control form-control-sm"
+                       placeholder="Description (optional)" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small">Assigned Role</label>
+                <input type="text" name="Tasks[__IDX__].AssignedRole" class="form-control form-control-sm"
+                       placeholder="e.g. Developer, Designer" />
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- ==========================================
+     MILESTONE ROW TEMPLATE (hidden)
+========================================== -->
+<template id="milestoneRowTemplate">
+    <div class="milestone-row border-bottom p-3" data-index="__IDX__">
+        <div class="row g-2 align-items-start">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold">Milestone Name <span class="text-danger">*</span></label>
+                <input type="text" name="Milestones[__IDX__].Name" class="form-control form-control-sm"
+                       placeholder="e.g. MVP Complete" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Day Offset</label>
+                <input type="number" name="Milestones[__IDX__].DayOffset" class="form-control form-control-sm"
+                       min="0" value="0" placeholder="0" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Order</label>
+                <input type="number" name="Milestones[__IDX__].Order" class="form-control form-control-sm"
+                       min="0" value="__IDX__" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">&nbsp;</label>
+                <button type="button" class="btn btn-sm btn-outline-danger d-block w-100" onclick="removeRow(this, 'milestone')">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            <div class="col-12">
+                <input type="text" name="Milestones[__IDX__].Description" class="form-control form-control-sm"
+                       placeholder="Description (optional)" />
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- ==========================================
+     RESOURCE ROW TEMPLATE (hidden)
+========================================== -->
+<template id="resourceRowTemplate">
+    <div class="resource-row border-bottom p-3" data-index="__IDX__">
+        <div class="row g-2 align-items-start">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Role <span class="text-danger">*</span></label>
+                <input type="text" name="Resources[__IDX__].Role" class="form-control form-control-sm"
+                       placeholder="e.g. Developer, Designer" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Quantity</label>
+                <input type="number" name="Resources[__IDX__].Quantity" class="form-control form-control-sm"
+                       min="1" value="1" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Allocation %</label>
+                <input type="number" name="Resources[__IDX__].AllocationPercentage" class="form-control form-control-sm"
+                       min="0" max="100" value="100" placeholder="100" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Duration (days)</label>
+                <input type="number" name="Resources[__IDX__].DurationDays" class="form-control form-control-sm"
+                       min="1" placeholder="30" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">&nbsp;</label>
+                <button type="button" class="btn btn-sm btn-outline-danger d-block w-100" onclick="removeRow(this, 'resource')">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            <div class="col-12">
+                <input type="text" name="Resources[__IDX__].RequiredSkills" class="form-control form-control-sm"
+                       placeholder="Required skills (e.g. React, Node.js, Figma)" />
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        let taskCount = 0;
+        let milestoneCount = 0;
+        let resourceCount = 0;
+
+        // ── Add Task ─────────────────────────────────
+        function addTask() {
+            const template = document.getElementById('taskRowTemplate').innerHTML
+                .replaceAll('__IDX__', taskCount);
+
+            document.getElementById('tasksContainer').insertAdjacentHTML('beforeend', template);
+            document.getElementById('noTasksMsg').style.display = 'none';
+            taskCount++;
+        }
+
+        // ── Add Milestone ─────────────────────────────
+        function addMilestone() {
+            const template = document.getElementById('milestoneRowTemplate').innerHTML
+                .replaceAll('__IDX__', milestoneCount);
+
+            document.getElementById('milestonesContainer').insertAdjacentHTML('beforeend', template);
+            document.getElementById('noMilestonesMsg').style.display = 'none';
+            milestoneCount++;
+        }
+
+        // ── Add Resource ──────────────────────────────
+        function addResource() {
+            const template = document.getElementById('resourceRowTemplate').innerHTML
+                .replaceAll('__IDX__', resourceCount);
+
+            document.getElementById('resourcesContainer').insertAdjacentHTML('beforeend', template);
+            document.getElementById('noResourcesMsg').style.display = 'none';
+            resourceCount++;
+        }
+
+        // ── Remove Row ────────────────────────────────
+        function removeRow(btn, type) {
+            const row = btn.closest(`[class*="${type}-row"]`);
+            row.remove();
+
+            // Show empty message if no rows left
+            const containers = {
+                task:      { container: 'tasksContainer',      msg: 'noTasksMsg' },
+                milestone: { container: 'milestonesContainer', msg: 'noMilestonesMsg' },
+                resource:  { container: 'resourcesContainer',  msg: 'noResourcesMsg' }
+            };
+
+            const c = containers[type];
+            if (c && document.getElementById(c.container).children.length === 0) {
+                document.getElementById(c.msg).style.display = 'block';
+            }
+
+            reindexRows(type);
+        }
+
+        // ── Reindex after removal ─────────────────────
+        // Keeps array indexes sequential so model binding works
+        function reindexRows(type) {
+            const containerIds = {
+                task:      'tasksContainer',
+                milestone: 'milestonesContainer',
+                resource:  'resourcesContainer'
+            };
+
+            const prefix = type.charAt(0).toUpperCase() + type.slice(1) + 's';
+            const rows = document.getElementById(containerIds[type])
+                                  .querySelectorAll(`[class*="${type}-row"]`);
+
+            rows.forEach((row, i) => {
+                row.querySelectorAll('[name]').forEach(input => {
+                    input.name = input.name.replace(/\[\d+\]/, `[${i}]`);
+                });
+            });
+        }
+
+        // ── Auto-add one task on load ─────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            addTask();
+            addMilestone();
+        });
+    </script>
+}

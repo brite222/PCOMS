@@ -1,0 +1,108 @@
+﻿@{
+    ViewData["Title"] = "Team Schedule";
+    var scheduleData = ViewBag.ScheduleData as List<object>;
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h4><i class="bi bi-calendar-week me-2 text-primary"></i>Team Schedule</h4>
+            <p class="text-muted mb-0">Weekly schedule for all developers</p>
+        </div>
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group">
+                <a asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar3 me-1"></i>Calendar
+                </a>
+                <a asp-action="Timeline" class="btn btn-outline-primary">
+                    <i class="bi bi-graph-up me-1"></i>Timeline
+                </a>
+                <a asp-action="Meetings" class="btn btn-outline-primary">
+                    <i class="bi bi-people me-1"></i>Meetings
+                </a>
+                <a asp-action="Milestones" class="btn btn-outline-primary">
+                    <i class="bi bi-flag me-1"></i>Milestones
+                </a>
+                <a asp-action="TeamSchedule" class="btn btn-outline-primary active">
+                    <i class="bi bi-calendar-week me-1"></i>Team Schedule
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Info -->
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Showing team schedule for the next 7 days:
+        <strong>@DateTime.Today.ToString("MMM dd")</strong> -
+        <strong>@DateTime.Today.AddDays(7).ToString("MMM dd, yyyy")</strong>
+    </div>
+
+    <!-- Team Schedule -->
+    @if (ViewBag.ScheduleData != null)
+    {
+        <div class="row g-4">
+            @foreach (dynamic devSchedule in ViewBag.ScheduleData)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">
+                                <i class="bi bi-person-circle me-2"></i>
+                                @devSchedule.user
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            @{
+                                var meetings = devSchedule.meetings as IEnumerable<PCOMS.Application.DTOs.MeetingDto>;
+                            }
+                            @if (meetings != null && meetings.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var meeting in meetings)
+                                    {
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <strong class="small">@meeting.Title</strong>
+                                                <small class="text-muted">
+                                                    @meeting.StartTime.ToString("MMM dd")
+                                                </small>
+                                            </div>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock me-1"></i>
+                                                @meeting.StartTime.ToString("h:mm tt") -
+                                                @meeting.EndTime.ToString("h:mm tt")
+                                            </small>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="p-3 text-center text-muted">
+                                    <i class="bi bi-calendar-check fs-4 d-block mb-2"></i>
+                                    <small>No meetings this week</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-people fs-1 text-muted opacity-25 d-block mb-3"></i>
+                <h5 class="text-muted">No developers found</h5>
+                <p class="text-muted">There are no developers assigned in the system yet.</p>
+            </div>
+        </div>
+    }
+</div>

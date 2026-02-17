@@ -1,0 +1,419 @@
+﻿@model PCOMS.Application.DTOs.ProjectSubmissionDto
+
+@{
+    ViewData["Title"] = "Submission Details";
+
+    var statusColor = Model.Status switch
+    {
+        "Approved" => "success",
+        "Rejected" => "danger",
+        "RevisionRequested" => "warning",
+        "UnderReview" => "info",
+        _ => "secondary"
+    };
+
+    var statusIcon = Model.Status switch
+    {
+        "Approved" => "bi-check-circle-fill",
+        "Rejected" => "bi-x-circle-fill",
+        "RevisionRequested" => "bi-arrow-clockwise",
+        "UnderReview" => "bi-eye-fill",
+        _ => "bi-clock-fill"
+    };
+
+    var linkIcons = new Dictionary<string, string>
+    {
+        { "LiveURL", "bi-globe text-success" },
+        { "GitHub", "bi-github text-dark" },
+        { "Staging", "bi-server text-warning" },
+        { "Figma", "bi-vector-pen text-danger" },
+        { "Documentation", "bi-file-text text-info" },
+        { "Video", "bi-play-circle text-primary" },
+        { "Other", "bi-link-45deg text-secondary" }
+    };
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Submissions</a></li>
+                    <li class="breadcrumb-item active">@Model.Title</li>
+                </ol>
+            </nav>
+            <h3>@Model.Title</h3>
+            <p class="text-muted">
+                <span class="badge bg-primary">@Model.SubmissionType</span>
+                <span class="ms-2">
+                    <i class="bi bi-folder"></i> @Model.ProjectName
+                </span>
+                <span class="ms-2">
+                    <i class="bi bi-person"></i> @Model.SubmittedByName
+                </span>
+                <span class="ms-2">
+                    <i class="bi bi-calendar"></i> @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")
+                </span>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <span class="badge bg-@statusColor fs-6 p-2">
+                <i class="bi @statusIcon"></i> @Model.Status
+            </span>
+
+            @if (Model.Rating.HasValue)
+            {
+                <div class="mt-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="bi @(i <= Model.Rating.Value ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+
+            <!-- Description -->
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-card-text"></i> Description</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.Description</p>
+                    </div>
+                </div>
+            }
+
+            <!-- PROJECT LINKS - THE MAIN SECTION! -->
+            @if (Model.Links.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-link-45deg text-primary"></i> Project Links</h6>
+                        <span class="badge bg-primary">@Model.Links.Count links</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach (var link in Model.Links)
+                            {
+                                var icon = linkIcons.ContainsKey(link.LinkType) ? linkIcons[link.LinkType] : "bi-link-45deg";
+                                var cardBorder = link.LinkType switch
+                                {
+                                    "LiveURL" => "border-success",
+                                    "GitHub" => "border-dark",
+                                    "Staging" => "border-warning",
+                                    "Figma" => "border-danger",
+                                    "Documentation" => "border-info",
+                                    "Video" => "border-primary",
+                                    _ => "border-secondary"
+                                };
+
+                                <div class="col-md-6">
+                                    <div class="card h-100 @cardBorder">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bi @icon fs-4 me-2"></i>
+                                                <div>
+                                                    <strong>@link.Title</strong>
+                                                    <br />
+                                                    <span class="badge bg-secondary">@link.LinkType</span>
+                                                </div>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(link.Description))
+                                            {
+                                                <p class="small text-muted mb-2">@link.Description</p>
+                                            }
+                                            <a href="@link.Url" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="bi bi-box-arrow-up-right"></i> Open Link
+                                            </a>
+                                            <div class="mt-1">
+                                                <small class="text-muted text-truncate d-block" style="font-size:11px">
+                                                    @link.Url
+                                                </small>
+                                            </div>
+                                        </div>
+                                        @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                                        {
+                                            <div class="card-footer bg-transparent">
+                                                <form asp-action="DeleteLink" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="linkId" value="@link.Id" />
+                                                    <input type="hidden" name="submissionId" value="@Model.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Remove this link?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Add Link Form (for developer if pending) -->
+                        @if (Model.Status == "Pending" || Model.Status == "RevisionRequested")
+                        {
+                            <hr />
+                            <h6 class="text-muted">Add Another Link</h6>
+                            <form asp-action="AddLink" method="post" class="row g-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="submissionId" value="@Model.Id" />
+                                <div class="col-md-3">
+                                    <select name="dto.LinkType" class="form-select form-select-sm">
+                                        <option value="LiveURL">🌐 Live URL</option>
+                                        <option value="GitHub">GitHub</option>
+                                        <option value="Staging">🧪 Staging</option>
+                                        <option value="Figma">🎨 Figma</option>
+                                        <option value="Documentation">📄 Docs</option>
+                                        <option value="Video">🎬 Video</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input name="dto.Title" class="form-control form-control-sm" placeholder="Title" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <input name="dto.Url" type="url" class="form-control form-control-sm" placeholder="https://" required />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                                        <i class="bi bi-plus"></i> Add
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Attachments -->
+            @if (Model.Attachments.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-paperclip"></i> Attachments (@Model.Attachments.Count)</h6>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var att in Model.Attachments)
+                        {
+                            <div class="list-group-item d-flex justify-content-between">
+                                <div>
+                                    <i class="bi bi-file-earmark me-2"></i>
+                                    @att.FileName
+                                    <span class="text-muted small ms-2">@att.FileSizeFormatted</span>
+                                </div>
+                                <span class="text-muted small">@att.UploadedAt.ToString("MMM dd")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Comments & Feedback -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-chat-dots"></i> Comments & Feedback (@Model.Comments.Count)</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.Comments.Any())
+                    {
+                        foreach (var comment in Model.Comments.OrderBy(c => c.CreatedAt))
+                        {
+                            var commentColor = comment.CommentType switch
+                            {
+                                "Approval" => "success",
+                                "Rejection" => "danger",
+                                "RevisionRequest" => "warning",
+                                _ => "light"
+                            };
+                            <div class="alert alert-@commentColor mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>@comment.UserName</strong>
+                                    <small>@comment.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                </div>
+                                <p class="mb-0">@comment.Comment</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No comments yet.</p>
+                    }
+
+                    <!-- Add Comment Form -->
+                    <hr />
+                    <form asp-action="AddComment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="SubmissionId" value="@Model.Id" />
+                        <div class="input-group">
+                            <textarea name="Comment" class="form-control" rows="2"
+                                      placeholder="Add a comment or question..."></textarea>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+
+            <!-- REVIEW PANEL - Admin/PM Only -->
+            @if ((User.IsInRole("Admin") || User.IsInRole("ProjectManager")) &&
+                        (Model.Status == "Pending" || Model.Status == "UnderReview"))
+            {
+                <div class="card shadow-sm mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> Review This Submission</h6>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Review" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="SubmissionId" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Decision *</label>
+                                <div class="d-grid gap-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="Decision"
+                                               value="Approved" id="approved" />
+                                        <label class="form-check-label text-success fw-bold" for="approved">
+                                            ✅ Approve
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="Decision"
+                                               value="RevisionRequested" id="revision" />
+                                        <label class="form-check-label text-warning fw-bold" for="revision">
+                                            🔄 Request Revision
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="Decision"
+                                               value="Rejected" id="rejected" />
+                                        <label class="form-check-label text-danger fw-bold" for="rejected">
+                                            ❌ Reject
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Rating (optional)</label>
+                                <div class="star-rating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <input type="radio" name="Rating" value="@i" id="star@i" class="d-none" />
+                                        <label for="star@i" class="fs-4 text-muted" style="cursor:pointer"
+                                               onmouseover="highlightStars(@i)"
+                                               onmouseout="resetStars()"
+                                               onclick="selectStar(@i)">
+                                            ☆
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Review Notes</label>
+                                <textarea name="ReviewNotes" class="form-control" rows="4"
+                                      placeholder="Provide detailed feedback, what to fix, what was good..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning w-100 fw-bold">
+                                <i class="bi bi-send-check"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- Review Result (if reviewed) -->
+            @if (Model.ReviewedAt.HasValue)
+            {
+                <div class="card shadow-sm mb-4 border-@statusColor">
+                    <div class="card-header bg-@statusColor text-white">
+                        <h6 class="mb-0"><i class="bi @statusIcon"></i> Review Result</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Reviewed by:</strong> @Model.ReviewedByName</p>
+                        <p><strong>Date:</strong> @Model.ReviewedAt.Value.ToString("MMM dd, yyyy HH:mm")</p>
+                        @if (Model.Rating.HasValue)
+                        {
+                            <p>
+                                <strong>Rating:</strong>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= Model.Rating.Value ? "bi-star-fill text-warning" : "bi-star")"></i>
+                                }
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ReviewNotes))
+                        {
+                            <p><strong>Notes:</strong></p>
+                            <div class="alert alert-@statusColor">@Model.ReviewNotes</div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Info Card -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Submission Info</h6>
+                </div>
+                <div class="card-body small">
+                    <p><strong>Project:</strong> @Model.ProjectName</p>
+                    <p><strong>Type:</strong> @Model.SubmissionType</p>
+                    @if (!string.IsNullOrEmpty(Model.MilestoneName))
+                    {
+                        <p><strong>Milestone:</strong> @Model.MilestoneName</p>
+                    }
+                    <p><strong>Submitted:</strong> @Model.SubmittedAt.ToString("MMM dd, yyyy")</p>
+                    <p><strong>Links:</strong> @Model.Links.Count</p>
+                    <p><strong>Attachments:</strong> @Model.Attachments.Count</p>
+                    <p class="mb-0">
+                        <strong>Status:</strong>
+                        <span class="badge bg-@statusColor">@Model.Status</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function highlightStars(n) {
+        for (let i = 1; i <= 5; i++) {
+            const label = document.querySelector(`label[for="star${i}"]`);
+            label.textContent = i <= n ? '★' : '☆';
+            label.style.color = i <= n ? '#ffc107' : '#ccc';
+        }
+    }
+
+    function resetStars() {
+        const selected = document.querySelector('input[name="Rating"]:checked');
+        const val = selected ? parseInt(selected.value) : 0;
+        for (let i = 1; i <= 5; i++) {
+            const label = document.querySelector(`label[for="star${i}"]`);
+            label.textContent = i <= val ? '★' : '☆';
+            label.style.color = i <= val ? '#ffc107' : '#ccc';
+        }
+    }
+
+    function selectStar(n) {
+        document.getElementById(`star${n}`).checked = true;
+        highlightStars(n);
+    }
+</script>

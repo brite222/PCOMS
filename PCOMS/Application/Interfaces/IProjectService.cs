@@ -5,6 +5,7 @@ namespace PCOMS.Application.Interfaces
 {
     public interface IProjectService
     {
+       
         List<ProjectDto> GetByClient(int clientId);
         EditProjectDto? GetById(int id);
         void Create(CreateProjectDto dto);
@@ -12,5 +13,10 @@ namespace PCOMS.Application.Interfaces
         List<Project> GetAll();
         List<Project> GetByIds(List<int> ids);
 
+        Task<List<Project>> GetAllAsync();
+        Task<EditProjectDto?> GetByIdAsync(int id);
+        Task<List<ProjectDto>> GetByClientAsync(int clientId);
+        Task CreateAsync(CreateProjectDto dto);
+        Task UpdateAsync(EditProjectDto dto);
     }
 }

@@ -1,0 +1,136 @@
+﻿@model PCOMS.Application.DTOs.CreateMeetingDto
+
+@{
+    ViewData["Title"] = "Schedule Meeting";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-calendar-plus"></i> Schedule New Meeting</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateMeeting" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Meeting Title *</label>
+                            <input asp-for="Title" class="form-control" required />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartTime" class="form-label">Start Time *</label>
+                                <input asp-for="StartTime" type="datetime-local" class="form-control" required />
+                                <span asp-validation-for="StartTime" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndTime" class="form-label">End Time *</label>
+                                <input asp-for="EndTime" type="datetime-local" class="form-control" required />
+                                <span asp-validation-for="EndTime" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Type" class="form-label">Meeting Type *</label>
+                            <select asp-for="Type" class="form-select" required>
+                                <option value="TeamMeeting">Team Meeting</option>
+                                <option value="ClientMeeting">Client Meeting</option>
+                                <option value="OneOnOne">One-on-One</option>
+                                <option value="Review">Review</option>
+                                <option value="Planning">Planning</option>
+                                <option value="StandUp">Stand-Up</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ProjectId" class="form-label">Related Project</label>
+                                <select asp-for="ProjectId" class="form-select">
+                                    <option value="">-- None --</option>
+                                    @if (ViewBag.Projects != null)
+                                    {
+                                        @foreach (var project in ViewBag.Projects)
+                                        {
+                                            <option value="@project.Id">@project.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ClientId" class="form-label">Related Client</label>
+                                <select asp-for="ClientId" class="form-select">
+                                    <option value="">-- None --</option>
+                                    @if (ViewBag.Clients != null)
+                                    {
+                                        @foreach (var client in ViewBag.Clients)
+                                        {
+                                            <option value="@client.Id">@client.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Location" class="form-label">Location</label>
+                            <input asp-for="Location" class="form-control" placeholder="Office, Conference Room, etc." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MeetingLink" class="form-label">Meeting Link</label>
+                            <input asp-for="MeetingLink" type="url" class="form-control" placeholder="Zoom, Teams, Meet link..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Attendees</label>
+                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                @if (ViewBag.Users != null)
+                                {
+                                    @foreach (var user in ViewBag.Users)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="attendeeIds" value="@user.Id" id="user@(user.Id)">
+                                            <label class="form-check-label" for="user@(user.Id)">
+                                                @user.UserName (@user.Email)
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <small class="text-muted">Select team members to invite</small>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Schedule Meeting
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

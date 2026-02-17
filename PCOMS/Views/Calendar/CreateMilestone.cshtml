@@ -1,0 +1,123 @@
+﻿@model PCOMS.Models.Milestone
+
+@{
+    ViewData["Title"] = "Create Milestone";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-flag"></i> Create New Milestone</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateMilestone" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="ProjectId" class="form-label">Project *</label>
+                            <select asp-for="ProjectId" class="form-select" required>
+                                <option value="">-- Select Project --</option>
+                                @if (ViewBag.Projects != null)
+                                {
+                                    @foreach (var project in ViewBag.Projects)
+                                    {
+                                        <option value="@project.Id">@project.Name</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="ProjectId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Milestone Title *</label>
+                            <input asp-for="Title" class="form-control" required
+                                   placeholder="e.g., MVP Launch, Beta Release, Client Approval" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Describe what needs to be achieved for this milestone"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DueDate" class="form-label">Due Date *</label>
+                                <input asp-for="DueDate" type="date" class="form-control" required />
+                                <span asp-validation-for="DueDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Status" class="form-label">Status</label>
+                                <select asp-for="Status" class="form-select">
+                                    <option value="Pending">Pending</option>
+                                    <option value="InProgress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Delayed">Delayed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AssignedToId" class="form-label">Assign To</label>
+                                <select asp-for="AssignedToId" class="form-select">
+                                    <option value="">-- Unassigned --</option>
+                                    @if (ViewBag.Users != null)
+                                    {
+                                        @foreach (var user in ViewBag.Users)
+                                        {
+                                            <option value="@user.Id">@user.UserName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Order" class="form-label">Order</label>
+                                <input asp-for="Order" type="number" class="form-control" min="0"
+                                       placeholder="0 = first, 1 = second, etc." />
+                                <small class="text-muted">Order in which milestones appear</small>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Milestones" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Create Milestone
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb"></i> Tips for Effective Milestones</h6>
+                    <ul class="mb-0">
+                        <li>Make milestones specific and measurable</li>
+                        <li>Set realistic due dates with some buffer time</li>
+                        <li>Align milestones with project phases or sprints</li>
+                        <li>Assign ownership to team members</li>
+                        <li>Use milestones to track major deliverables, not daily tasks</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

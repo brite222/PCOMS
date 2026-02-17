@@ -1,0 +1,253 @@
+﻿@model PCOMS.Application.DTOs.CreateSubmissionDto
+
+@{
+    ViewData["Title"] = "Submit Project";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-send-check"></i> Submit Your Project</h4>
+                    <small>Share your project links and files for review</small>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Project & Submission Type -->
+                        <div class="row mb-3">
+                            <div class="col-md-7">
+                                <label asp-for="ProjectId" class="form-label fw-semibold">Project *</label>
+                                <select asp-for="ProjectId" asp-items="ViewBag.Projects" class="form-select">
+                                    <option value="">-- Select Project --</option>
+                                </select>
+                                <span asp-validation-for="ProjectId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-5">
+                                <label asp-for="SubmissionType" class="form-label fw-semibold">Submission Type *</label>
+                                <select asp-for="SubmissionType" class="form-select">
+                                    <option value="Draft">📝 Draft</option>
+                                    <option value="Milestone">🏁 Milestone</option>
+                                    <option value="Final" selected>🎯 Final Delivery</option>
+                                    <option value="Revision">🔄 Revision</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-semibold">Submission Title *</label>
+                            <input asp-for="Title" class="form-control"
+                                   placeholder="e.g., Final delivery - E-commerce Website v1.0" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Describe what you've delivered, key features, any notes for the reviewer..."></textarea>
+                        </div>
+
+                        <!-- Milestone Link -->
+                        <div class="mb-3">
+                            <label asp-for="MilestoneId" class="form-label fw-semibold">Related Milestone (optional)</label>
+                            <select asp-for="MilestoneId" asp-items="ViewBag.Milestones" class="form-select">
+                                <option value="">-- No Milestone --</option>
+                            </select>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- PROJECT LINKS - The Main Feature! -->
+                        <h5 class="mb-3"><i class="bi bi-link-45deg text-primary"></i> Project Links</h5>
+
+                        <div id="linksContainer">
+
+                            <!-- Live URL -->
+                            <div class="card mb-3 link-card border-success">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-success me-2">🌐 Live URL</span>
+                                        <span class="text-muted small">Your deployed/hosted website</span>
+                                    </div>
+                                    <input type="hidden" name="Links[0].LinkType" value="LiveURL" />
+                                    <input type="hidden" name="Links[0].Title" value="Live Website" />
+                                    <input type="url" name="Links[0].Url" class="form-control"
+                                           placeholder="https://your-project.com" />
+                                    <input type="text" name="Links[0].Description" class="form-control mt-2"
+                                           placeholder="Brief description (optional)" />
+                                </div>
+                            </div>
+
+                            <!-- GitHub -->
+                            <div class="card mb-3 link-card border-dark">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-dark me-2">
+                                            <i class="bi bi-github"></i> GitHub
+                                        </span>
+                                        <span class="text-muted small">Source code repository</span>
+                                    </div>
+                                    <input type="hidden" name="Links[1].LinkType" value="GitHub" />
+                                    <input type="hidden" name="Links[1].Title" value="Source Code" />
+                                    <input type="url" name="Links[1].Url" class="form-control"
+                                           placeholder="https://github.com/username/repo" />
+                                    <input type="text" name="Links[1].Description" class="form-control mt-2"
+                                           placeholder="Branch name or notes (optional)" />
+                                </div>
+                            </div>
+
+                            <!-- Staging -->
+                            <div class="card mb-3 link-card border-warning" id="extraLinksStart">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-warning text-dark me-2">🧪 Staging</span>
+                                        <span class="text-muted small">Staging/test environment</span>
+                                    </div>
+                                    <input type="hidden" name="Links[2].LinkType" value="Staging" />
+                                    <input type="hidden" name="Links[2].Title" value="Staging Environment" />
+                                    <input type="url" name="Links[2].Url" class="form-control"
+                                           placeholder="https://staging.your-project.com (optional)" />
+                                    <input type="text" name="Links[2].Description" class="form-control mt-2"
+                                           placeholder="Login credentials or notes (optional)" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Add Custom Link -->
+                        <div class="mb-4" id="customLinkSection">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addCustomLink()">
+                                <i class="bi bi-plus-circle"></i> Add Another Link (Figma, Docs, Video...)
+                            </button>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- FILE ATTACHMENTS -->
+                        <h5 class="mb-3"><i class="bi bi-paperclip text-primary"></i> Attachments (optional)</h5>
+                        <div class="mb-3">
+                            <input type="file" name="attachments" class="form-control" multiple
+                                   accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.xlsx,.pptx" />
+                            <small class="text-muted">
+                                Upload: documentation, design files, screenshots, reports, etc.
+                                Max 50MB per file.
+                            </small>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- SUBMIT BUTTONS -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-send-check"></i> Submit Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Tips -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Submission Tips</h6>
+                </div>
+                <div class="card-body small">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Live URL</strong> - Make sure it's accessible
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>GitHub</strong> - Ensure repo is public or reviewer has access
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Credentials</strong> - Include test login in description
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Documentation</strong> - Attach README or user guide
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Description</strong> - Mention what's completed & known issues
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> What happens next?</h6>
+                </div>
+                <div class="card-body small">
+                    <ol class="ps-3">
+                        <li class="mb-1">Your submission is received</li>
+                        <li class="mb-1">Project Manager reviews your links</li>
+                        <li class="mb-1">Feedback is provided via comments</li>
+                        <li class="mb-1">Approved ✅ or Revision requested 🔄</li>
+                        <li class="mb-1">Client notified upon approval</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom link counter -->
+<script>
+    var linkIndex = 3;
+
+    function addCustomLink() {
+        const types = [
+            { value: 'Figma', label: '🎨 Figma', color: 'danger' },
+            { value: 'Documentation', label: '📄 Documentation', color: 'info' },
+            { value: 'Video', label: '🎬 Video Demo', color: 'primary' },
+            { value: 'Other', label: '🔗 Other Link', color: 'secondary' }
+        ];
+
+        const typeOptions = types.map(t =>
+            `<option value="${t.value}">${t.label}</option>`
+        ).join('');
+
+        const html = `
+        <div class="card mb-3 link-card border-secondary" id="customLink_${linkIndex}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <select name="Links[${linkIndex}].LinkType" class="form-select form-select-sm w-auto">
+                        ${typeOptions}
+                    </select>
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="document.getElementById('customLink_${linkIndex}').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <input type="text" name="Links[${linkIndex}].Title" class="form-control mb-2"
+                       placeholder="Link title" />
+                <input type="url" name="Links[${linkIndex}].Url" class="form-control mb-2"
+                       placeholder="https://" />
+                <input type="text" name="Links[${linkIndex}].Description" class="form-control"
+                       placeholder="Description (optional)" />
+            </div>
+        </div>`;
+
+        document.getElementById('customLinkSection').insertAdjacentHTML('beforebegin', html);
+        linkIndex++;
+    }
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PCOMS.Data;
 
@@ -10,9 +11,11 @@ using PCOMS.Data;
 namespace PCOMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260217095342_AddTemplatesAndCalendar")]
+    partial class AddTemplatesAndCalendar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.12");
@@ -1072,69 +1075,6 @@ namespace PCOMS.Migrations
                     b.ToTable("ProjectBudgets");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.ProjectSubmission", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("MilestoneId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("Rating")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ReviewNotes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ReviewedById")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SubmissionType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SubmittedById")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MilestoneId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("ProjectSubmissions");
-                });
-
             modelBuilder.Entity("PCOMS.Models.ProjectTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -1250,150 +1190,6 @@ namespace PCOMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Reports");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProjectSubmissionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UploadedById")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectSubmissionId");
-
-                    b.ToTable("SubmissionAttachments");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CommentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProjectSubmissionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectSubmissionId");
-
-                    b.ToTable("SubmissionComments");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionLink", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LinkType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProjectSubmissionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectSubmissionId");
-
-                    b.ToTable("SubmissionLinks");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionRevision", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedById")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("OriginalSubmissionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("RevisionNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RevisionNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OriginalSubmissionId");
-
-                    b.ToTable("SubmissionRevisions");
                 });
 
             modelBuilder.Entity("PCOMS.Models.TaskAttachment", b =>
@@ -2248,68 +2044,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.ProjectSubmission", b =>
-                {
-                    b.HasOne("PCOMS.Models.Milestone", "Milestone")
-                        .WithMany()
-                        .HasForeignKey("MilestoneId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Milestone");
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionAttachment", b =>
-                {
-                    b.HasOne("PCOMS.Models.ProjectSubmission", "ProjectSubmission")
-                        .WithMany("Attachments")
-                        .HasForeignKey("ProjectSubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProjectSubmission");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionComment", b =>
-                {
-                    b.HasOne("PCOMS.Models.ProjectSubmission", "ProjectSubmission")
-                        .WithMany("Comments")
-                        .HasForeignKey("ProjectSubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProjectSubmission");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionLink", b =>
-                {
-                    b.HasOne("PCOMS.Models.ProjectSubmission", "ProjectSubmission")
-                        .WithMany("Links")
-                        .HasForeignKey("ProjectSubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProjectSubmission");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.SubmissionRevision", b =>
-                {
-                    b.HasOne("PCOMS.Models.ProjectSubmission", "OriginalSubmission")
-                        .WithMany()
-                        .HasForeignKey("OriginalSubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("OriginalSubmission");
-                });
-
             modelBuilder.Entity("PCOMS.Models.TaskAttachment", b =>
                 {
                     b.HasOne("PCOMS.Models.TaskItem", "Task")
@@ -2506,15 +2240,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Tasks");
 
                     b.Navigation("TimeEntries");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ProjectSubmission", b =>
-                {
-                    b.Navigation("Attachments");
-
-                    b.Navigation("Comments");
-
-                    b.Navigation("Links");
                 });
 
             modelBuilder.Entity("PCOMS.Models.ProjectTemplate", b =>

@@ -1,0 +1,340 @@
+﻿@model IEnumerable<PCOMS.Application.DTOs.MeetingDto>
+
+@{
+    ViewData["Title"] = "Meetings";
+
+    var upcoming = (Model ?? Enumerable.Empty<PCOMS.Application.DTOs.MeetingDto>())
+        .Where(m => m.StartTime >= DateTime.Now && m.Status != "Cancelled")
+        .OrderBy(m => m.StartTime).ToList();
+
+    var past = (Model ?? Enumerable.Empty<PCOMS.Application.DTOs.MeetingDto>())
+        .Where(m => m.StartTime < DateTime.Now || m.Status == "Cancelled")
+        .OrderByDescending(m => m.StartTime).ToList();
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h4><i class="bi bi-people me-2 text-primary"></i>Meetings</h4>
+            <p class="text-muted mb-0">All scheduled meetings you are organising or attending</p>
+        </div>
+        <div class="col-md-4 text-end">
+            @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+            {
+                <a asp-action="CreateMeeting" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Schedule Meeting
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group">
+                <a asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-calendar3 me-1"></i>Calendar</a>
+                <a asp-action="Timeline" class="btn btn-outline-primary"><i class="bi bi-graph-up me-1"></i>Timeline</a>
+                <a asp-action="Meetings" class="btn btn-outline-primary active"><i class="bi bi-people me-1"></i>Meetings</a>
+                <a asp-action="Milestones" class="btn btn-outline-primary"><i class="bi bi-flag me-1"></i>Milestones</a>
+                @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                {
+                    <a asp-action="TeamSchedule" class="btn btn-outline-primary"><i class="bi bi-calendar-week me-1"></i>Team Schedule</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (upcoming.Any() || past.Any())
+    {
+        <!-- ==========================================
+             UPCOMING MEETINGS
+        ========================================== -->
+        @if (upcoming.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock me-2 text-success"></i>
+                        Upcoming Meetings
+                        <span class="badge bg-success ms-1">@upcoming.Count</span>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Meeting</th>
+                                    <th>Type</th>
+                                    <th>Date & Time</th>
+                                    <th>Duration</th>
+                                    <th>Project / Client</th>
+                                    <th>Attendees</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var meeting in upcoming)
+                                {
+                                    var durationMins = (int)(meeting.EndTime - meeting.StartTime).TotalMinutes;
+
+                                    <tr>
+                                        <td>
+                                            <strong>@meeting.Title</strong>
+                                            @if (!string.IsNullOrEmpty(meeting.Location))
+                                            {
+                                                <br />
+                                                <small class="text-muted">
+                                                    <i class="bi bi-geo-alt"></i> @meeting.Location
+                                                </small>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            @switch (meeting.Type)
+                                            {
+                                                case "ClientMeeting":
+                                                    <span class="badge" style="background:#8b5cf6;">Client</span>
+                                                    break;
+                                                case "TeamMeeting":
+                                                    <span class="badge" style="background:#3b82f6;">Team</span>
+                                                    break;
+                                                case "OneOnOne":
+                                                    <span class="badge" style="background:#10b981;">1-on-1</span>
+                                                    break;
+                                                case "Review":
+                                                    <span class="badge" style="background:#f59e0b;">Review</span>
+                                                    break;
+                                                case "Planning":
+                                                    <span class="badge" style="background:#ec4899;">Planning</span>
+                                                    break;
+                                                case "StandUp":
+                                                    <span class="badge" style="background:#06b6d4;">Stand-Up</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary">@meeting.Type</span>
+                                                    break;
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <span class="fw-semibold">@meeting.StartTime.ToString("MMM dd, yyyy")</span>
+                                            <br />
+                                            <small class="text-muted">
+                                                @meeting.StartTime.ToString("h:mm tt") – @meeting.EndTime.ToString("h:mm tt")
+                                            </small>
+                                        </td>
+
+                                        <td>
+                                            <small class="text-muted">@durationMins min</small>
+                                        </td>
+
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(meeting.ProjectName))
+                                            {
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="bi bi-kanban me-1"></i>@meeting.ProjectName
+                                                </span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(meeting.ClientName))
+                                            {
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="bi bi-person me-1"></i>@meeting.ClientName
+                                                </span>
+                                            }
+                                            @if (string.IsNullOrEmpty(meeting.ProjectName) && string.IsNullOrEmpty(meeting.ClientName))
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-people me-1"></i>@meeting.Attendees.Count
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            @switch (meeting.Status)
+                                            {
+                                                case "Scheduled":
+                                                    <span class="badge bg-primary">Scheduled</span>
+                                                    break;
+                                                case "InProgress":
+                                                    <span class="badge bg-success">In Progress</span>
+                                                    break;
+                                                case "Rescheduled":
+                                                    <span class="badge bg-warning text-dark">Rescheduled</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary">@meeting.Status</span>
+                                                    break;
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a asp-action="MeetingDetails" asp-route-id="@meeting.Id"
+                                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                @if (!string.IsNullOrEmpty(meeting.MeetingLink))
+                                                {
+                                                    <a href="@meeting.MeetingLink" target="_blank"
+                                                       class="btn btn-sm btn-success" title="Join Meeting">
+                                                        <i class="bi bi-camera-video"></i>
+                                                    </a>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- ==========================================
+             PAST & CANCELLED
+        ========================================== -->
+        @if (past.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 text-muted">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Past & Cancelled
+                        <span class="badge bg-secondary ms-1">@past.Count</span>
+                    </h6>
+                    <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#pastMeetings">
+                        <i class="bi bi-chevron-down"></i> Show / Hide
+                    </button>
+                </div>
+                <div class="collapse" id="pastMeetings">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Meeting</th>
+                                        <th>Type</th>
+                                        <th>Date & Time</th>
+                                        <th>Project / Client</th>
+                                        <th>Attendees</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var meeting in past)
+                                    {
+                                        <tr class="text-muted">
+                                            <td>@meeting.Title</td>
+
+                                            <td>
+                                                @switch (meeting.Type)
+                                                {
+                                                    case "ClientMeeting":
+                                                        <span class="badge" style="background:#8b5cf6;opacity:.6">Client</span>
+                                                        break;
+                                                    case "TeamMeeting":
+                                                        <span class="badge" style="background:#3b82f6;opacity:.6">Team</span>
+                                                        break;
+                                                    case "OneOnOne":
+                                                        <span class="badge" style="background:#10b981;opacity:.6">1-on-1</span>
+                                                        break;
+                                                    case "Review":
+                                                        <span class="badge" style="background:#f59e0b;opacity:.6">Review</span>
+                                                        break;
+                                                    case "StandUp":
+                                                        <span class="badge" style="background:#06b6d4;opacity:.6">Stand-Up</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@meeting.Type</span>
+                                                        break;
+                                                }
+                                            </td>
+
+                                            <td>
+                                                @meeting.StartTime.ToString("MMM dd, yyyy")
+                                                <br />
+                                                <small>@meeting.StartTime.ToString("h:mm tt")</small>
+                                            </td>
+
+                                            <td>
+                                                @(meeting.ProjectName ?? meeting.ClientName ?? "—")
+                                            </td>
+
+                                            <td>@meeting.Attendees.Count</td>
+
+                                            <td>
+                                                @switch (meeting.Status)
+                                                {
+                                                    case "Completed":
+                                                        <span class="badge bg-info">Completed</span>
+                                                        break;
+                                                    case "Cancelled":
+                                                        <span class="badge bg-danger">Cancelled</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@meeting.Status</span>
+                                                        break;
+                                                }
+                                            </td>
+
+                                            <td>
+                                                <a asp-action="MeetingDetails" asp-route-id="@meeting.Id"
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-x fs-1 text-muted opacity-25 d-block mb-3"></i>
+                <h5 class="text-muted">No meetings found</h5>
+                <p class="text-muted mb-4">You have no upcoming or past meetings.</p>
+                @if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+                {
+                    <a asp-action="CreateMeeting" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Schedule Your First Meeting
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+</div>

@@ -75,7 +75,7 @@ namespace PCOMS.Application.Services
         }
 
         // =========================
-        // UPDATE PROJECT (SINGLE SOURCE OF TRUTH)
+        // UPDATE PROJECT
         // =========================
         public void Update(EditProjectDto dto)
         {
@@ -90,11 +90,8 @@ namespace PCOMS.Application.Services
             project.HourlyRate = dto.HourlyRate;
 
             if (!string.IsNullOrEmpty(dto.ManagerId))
-            {
                 project.ManagerId = dto.ManagerId;
-            }
 
-            // 🔥 AUDIT LOG – STATUS CHANGE
             if (oldStatus != dto.Status)
             {
                 _context.AuditLogs.Add(new AuditLog
@@ -104,13 +101,12 @@ namespace PCOMS.Application.Services
                     EntityId = project.Id,
                     OldValue = oldStatus.ToString(),
                     NewValue = dto.Status.ToString(),
-                    UserId  = dto.ManagerId ?? "SYSTEM"
+                    UserId = dto.ManagerId ?? "SYSTEM"
                 });
             }
 
             _context.SaveChanges();
         }
-
 
         // =========================
         // CREATE PROJECT
@@ -138,6 +134,113 @@ namespace PCOMS.Application.Services
             _context.SaveChanges();
         }
 
+        // =========================
+        // ASYNC - GET ALL
+        // =========================
+        public async Task<List<Project>> GetAllAsync()
+        {
+            return await _context.Projects
+                .Include(p => p.Client)
+                .ToListAsync();
+        }
+
+        // =========================
+        // ASYNC - GET BY ID
+        // =========================
+        public async Task<EditProjectDto?> GetByIdAsync(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null) return null;
+
+            return new EditProjectDto
+            {
+                Id = project.Id,
+                ClientId = project.ClientId,
+                Name = project.Name,
+                Description = project.Description,
+                HourlyRate = project.HourlyRate,
+                Status = project.Status,
+                ManagerId = project.ManagerId
+            };
+        }
+
+        // =========================
+        // ASYNC - GET BY CLIENT
+        // =========================
+        public async Task<List<ProjectDto>> GetByClientAsync(int clientId)
+        {
+            var projects = await _context.Projects
+                .Where(p => p.ClientId == clientId)
+                .ToListAsync();
+
+            return projects.Select(p => new ProjectDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Status = p.Status.ToString(),
+                ManagerName = GetManagerName(p.ManagerId)
+            }).ToList();
+        }
+
+        // =========================
+        // ASYNC - CREATE
+        // =========================
+        public async Task CreateAsync(CreateProjectDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new Exception("Project name is required");
+
+            var project = new Project
+            {
+                Name = dto.Name.Trim(),
+                Description = dto.Description,
+                ClientId = dto.ClientId,
+                HourlyRate = dto.HourlyRate,
+                Status = ProjectStatus.Active,
+                ManagerId = dto.ManagerId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+        }
+
+        // =========================
+        // ASYNC - UPDATE
+        // =========================
+        public async Task UpdateAsync(EditProjectDto dto)
+        {
+            var project = await _context.Projects.FindAsync(dto.Id);
+            if (project == null) return;
+
+            var oldStatus = project.Status;
+
+            project.Name = dto.Name;
+            project.Description = dto.Description;
+            project.Status = dto.Status;
+            project.HourlyRate = dto.HourlyRate;
+
+            if (!string.IsNullOrEmpty(dto.ManagerId))
+                project.ManagerId = dto.ManagerId;
+
+            if (oldStatus != dto.Status)
+            {
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    Action = "StatusChanged",
+                    Entity = "Project",
+                    EntityId = project.Id,
+                    OldValue = oldStatus.ToString(),
+                    NewValue = dto.Status.ToString(),
+                    UserId = dto.ManagerId ?? "SYSTEM"
+                });
+            }
+
+            await _context.SaveChangesAsync();
+        }
 
         // =========================
         // PRIVATE HELPERS

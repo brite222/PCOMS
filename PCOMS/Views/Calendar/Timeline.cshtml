@@ -1,0 +1,208 @@
+﻿@model IEnumerable<PCOMS.Models.Project>
+
+@{
+    ViewData["Title"] = "Project Timeline";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-graph-up"></i> Project Timeline</h2>
+            <p class="text-muted">Visual timeline of all project schedules</p>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" onchange="window.location.href='/Calendar/Timeline?projectId=' + this.value">
+                <option value="">All Projects</option>
+                @if (ViewBag.Projects != null)
+                {
+                    @foreach (var p in ViewBag.Projects)
+                    {
+                        <option value="@p.Id" selected="@(ViewBag.SelectedProjectId == p.Id)">
+                            @p.Name
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <a asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar3"></i> Calendar
+                </a>
+                <a asp-action="Timeline" class="btn btn-outline-primary active">
+                    <i class="bi bi-graph-up"></i> Timeline
+                </a>
+                <a asp-action="Meetings" class="btn btn-outline-primary">
+                    <i class="bi bi-people"></i> Meetings
+                </a>
+                <a asp-action="Milestones" class="btn btn-outline-primary">
+                    <i class="bi bi-flag"></i> Milestones
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body" style="overflow-x: auto;">
+                    <div id="timeline"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project List -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Details</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Client</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var project in Model)
+                                    {
+                                        var duration = (project.EndDate - project.StartDate).Days;
+                                        var elapsed = (DateTime.Today - project.StartDate).Days;
+                                        var progress = duration > 0 ? Math.Min(100, (int)((decimal)elapsed / duration * 100)) : 0;
+
+                                        <tr>
+                                            <td><strong>@project.Name</strong></td>
+                                            <td>@project.Client?.Name</td>
+                                            <td>@project.StartDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@project.EndDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@duration days</td>
+                                            <td>
+                                                @switch (project.Status)
+                                                {
+                                                    case PCOMS.Models.ProjectStatus.Planned:
+                                                        <span class="badge bg-secondary">Planned</span>
+                                                        break;
+                                                    case PCOMS.Models.ProjectStatus.Active:
+                                                        <span class="badge bg-success">Active</span>
+                                                        break;
+                                                    case PCOMS.Models.ProjectStatus.Completed:
+                                                        <span class="badge bg-info">Completed</span>
+                                                        break;
+                                                    case PCOMS.Models.ProjectStatus.Archived:
+                                                        <span class="badge bg-dark">Archived</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: @progress%"
+                                                         aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100">
+                                                        @progress%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No projects to display
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Create timeline visualization
+        var projects = @Html.Raw(Json.Serialize(Model.Select(p => new {
+            name = p.Name,
+            start = p.StartDate.ToString("yyyy-MM-dd"),
+            end = p.EndDate.ToString("yyyy-MM-dd"),
+            status = p.Status.ToString(),
+            client = p.Client != null ? p.Client.Name : ""
+        })));
+
+        if (projects.length > 0) {
+            // Simple timeline bars
+            var container = document.getElementById('timeline');
+            var html = '<div style="min-width: 1000px;">';
+            
+            // Calculate date range
+            var allDates = [];
+            projects.forEach(p => {
+                allDates.push(new Date(p.start));
+                allDates.push(new Date(p.end));
+            });
+            var minDate = new Date(Math.min(...allDates));
+            var maxDate = new Date(Math.max(...allDates));
+            var totalDays = (maxDate - minDate) / (1000 * 60 * 60 * 24);
+            
+            // Draw each project
+            projects.forEach((project, index) => {
+                var startDate = new Date(project.start);
+                var endDate = new Date(project.end);
+                var projectDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                var offsetDays = (startDate - minDate) / (1000 * 60 * 60 * 24);
+                
+                var offsetPercent = (offsetDays / totalDays) * 100;
+                var widthPercent = (projectDays / totalDays) * 100;
+                
+                var color = project.status === 'Active' ? '#10b981' : 
+                           project.status === 'Completed' ? '#3b82f6' : '#6b7280';
+                
+                html += `
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-3">
+                                <strong>${project.name}</strong><br>
+                                <small class="text-muted">${project.client}</small>
+                            </div>
+                            <div class="col-9">
+                                <div style="position: relative; height: 40px; background: #f3f4f6; border-radius: 5px;">
+                                    <div style="position: absolute; left: ${offsetPercent}%; width: ${widthPercent}%; 
+                                               height: 100%; background: ${color}; border-radius: 5px; 
+                                               display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+                                        ${project.start} → ${project.end}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        } else {
+            document.getElementById('timeline').innerHTML = '<p class="text-muted">No projects to display</p>';
+        }
+    </script>
+}
