@@ -14,12 +14,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // =========================
-// Database (SQLite)
+// Database (SQLite — EB safe)
 // =========================
+var dbDir = Path.Combine(AppContext.BaseDirectory, "app_data");
+Directory.CreateDirectory(dbDir);
+
+var dbPath = Path.Combine(dbDir, "PCOMS.db");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
+    options.UseSqlite($"Data Source={dbPath}")
 );
 
 // =========================
@@ -68,7 +71,6 @@ builder.Services.AddScoped<ITimeTrackingService, TimeTrackingService>();
 builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<SubmissionService>();
-// NEW: Document Management Service
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
@@ -78,6 +80,19 @@ builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
 // Build app
 // =========================
 var app = builder.Build();
+
+// =========================
+// Ensure DB + Migrations (AWS fix)
+// =========================
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+// =========================
+// Create roles if missing
+// =========================
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider
@@ -93,10 +108,13 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+
+// =========================
+// Ensure upload folder exists
+// =========================
 var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 Directory.CreateDirectory(
     Path.Combine(env.WebRootPath, "uploads", "documents"));
-
 
 // =========================
 // Seed Roles & Admin
