@@ -35,6 +35,7 @@ namespace PCOMS.Models
         // Payment tracking
         public decimal AmountPaid { get; set; } = 0m;
         public decimal Balance => TotalAmount - AmountPaid;
+        public DateTime? PaymentDate { get; set; }
 
         [StringLength(1000)]
         public string? Notes { get; set; }

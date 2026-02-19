@@ -1,0 +1,83 @@
+﻿@model PCOMS.Application.DTOs.SendSurveyDto
+
+@{
+    ViewData["Title"] = "Send Survey";
+}
+
+<div class="container mt-4" style="max-width:700px">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-send"></i> Send Survey to Client</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="SendSurvey" method="post">
+                @Html.AntiForgeryToken()
+
+                <!-- Survey Template -->
+                <div class="mb-3">
+                    <label asp-for="SurveyTemplateId" class="form-label fw-semibold">Survey Template *</label>
+                    <select asp-for="SurveyTemplateId" asp-items="ViewBag.Templates" class="form-select">
+                        <option value="">-- Select Survey Template --</option>
+                    </select>
+                    <span asp-validation-for="SurveyTemplateId" class="text-danger small"></span>
+                </div>
+
+                <!-- Client -->
+                <div class="mb-3">
+                    <label asp-for="ClientId" class="form-label fw-semibold">Client *</label>
+                    <select asp-for="ClientId" asp-items="ViewBag.Clients" class="form-select">
+                        <option value="">-- Select Client --</option>
+                    </select>
+                    <span asp-validation-for="ClientId" class="text-danger small"></span>
+                </div>
+
+                <!-- Project (Optional) -->
+                <div class="mb-3">
+                    <label asp-for="ProjectId" class="form-label fw-semibold">Project (optional)</label>
+                    <select asp-for="ProjectId" asp-items="ViewBag.Projects" class="form-select">
+                        <option value="">-- No specific project --</option>
+                    </select>
+                    <small class="text-muted">Link survey to a specific project if applicable</small>
+                </div>
+
+                <!-- Due Date -->
+                <div class="mb-3">
+                    <label asp-for="DueDate" class="form-label fw-semibold">Due Date (optional)</label>
+                    <input asp-for="DueDate" type="date" class="form-control" />
+                    <small class="text-muted">Set a deadline for survey completion</small>
+                </div>
+
+                <!-- Send Email -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input asp-for="SendEmail" class="form-check-input" type="checkbox" checked />
+                        <label asp-for="SendEmail" class="form-check-label">
+                            Send email notification to client
+                        </label>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>How it works:</strong> The client will receive an email with a unique survey link. No login required!
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Surveys" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="bi bi-send"></i> Send Survey
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,230 @@
+﻿@model IEnumerable<PCOMS.Application.DTOs.TeamMemberDto>
+
+@{
+    ViewData["Title"] = "Team Members";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-people-fill"></i> Team Members</h2>
+            <p class="text-muted">Manage your team, skills & allocations</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="CreateTeamMember" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Add Team Member
+            </a>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Stats -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <span class="text-muted">Total: <strong>@Model.Count()</strong></span>
+                            <span class="ms-3 text-muted">Active: <strong>@Model.Count(m => m.IsActive)</strong></span>
+                            <span class="ms-3 text-muted">Overallocated: <strong class="text-danger">@Model.Count(m => m.CurrentUtilization > 100)</strong></span>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-secondary active" onclick="filterMembers('all')">All</button>
+                                <button type="button" class="btn btn-outline-success" onclick="filterMembers('available')">Available</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="filterMembers('overallocated')">Overallocated</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Members Grid -->
+    @if (Model.Any())
+    {
+        <div class="row g-3" id="teamGrid">
+            @foreach (var member in Model.OrderBy(m => m.FullName))
+            {
+                var statusColor = member.CurrentUtilization > 100 ? "danger" :
+                member.CurrentUtilization >= 70 ? "success" : "warning";
+                var statusText = member.CurrentUtilization > 100 ? "Overallocated" :
+                member.CurrentUtilization >= 70 ? "Optimal" : "Available";
+
+                <div class="col-lg-4 col-md-6 team-member-card"
+                     data-status="@statusText.ToLower()"
+                     data-utilization="@member.CurrentUtilization">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <!-- Header -->
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-0">
+                                        <a asp-action="TeamMemberDetails" asp-route-id="@member.Id" class="text-decoration-none">
+                                            @member.FullName
+                                        </a>
+                                    </h5>
+                                    <small class="text-muted">@member.JobTitle</small>
+                                </div>
+                                <span class="badge bg-@statusColor-subtle text-@statusColor">
+                                    @statusText
+                                </span>
+                            </div>
+
+                            <!-- Details -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Department</small>
+                                    <strong class="small">@member.Department</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Type</small>
+                                    <strong class="small">@member.EmploymentType</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Capacity</small>
+                                    <strong class="small">@member.WeeklyCapacityHours h/week</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Rate</small>
+                                    <strong class="small">$@member.HourlyRate/hr</strong>
+                                </div>
+                            </div>
+
+                            <!-- Utilization Bar -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Utilization</small>
+                                    <strong class="text-@statusColor">@member.CurrentUtilization.ToString("N0")%</strong>
+                                </div>
+                                <div class="progress" style="height:10px">
+                                    <div class="progress-bar bg-@statusColor"
+                                         style="width:@(Math.Min(member.CurrentUtilization, 100))%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Skills & Projects -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-star text-warning me-2"></i>
+                                        <span class="small">@member.SkillCount skills</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-kanban text-primary me-2"></i>
+                                        <span class="small">@member.ActiveProjectsCount projects</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Top Skills -->
+                            @if (member.Skills.Any())
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted d-block mb-1">Top Skills</small>
+                                    <div>
+                                        @foreach (var skill in member.Skills.Take(3))
+                                        {
+                                            var profColor = skill.ProficiencyLevel switch
+                                            {
+                                                "Expert" => "success",
+                                                "Advanced" => "primary",
+                                                "Intermediate" => "info",
+                                                _ => "secondary"
+                                            };
+                                            <span class="badge bg-@profColor-subtle text-@profColor me-1 mb-1">
+                                                @skill.SkillName
+                                            </span>
+                                        }
+                                        @if (member.SkillCount > 3)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary">+@(member.SkillCount - 3)</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Current Allocations -->
+                            @if (member.CurrentAllocations.Any())
+                            {
+                                <div class="mb-2">
+                                    <small class="text-muted d-block mb-1">Current Projects</small>
+                                    @foreach (var allocation in member.CurrentAllocations.Take(2))
+                                    {
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="text-truncate" style="max-width:70%">
+                                                <i class="bi bi-circle-fill text-@statusColor" style="font-size:.5rem"></i>
+                                                @allocation.ProjectName
+                                            </span>
+                                            <span class="text-muted">@allocation.AllocationPercentage%</span>
+                                        </div>
+                                    }
+                                    @if (member.ActiveProjectsCount > 2)
+                                    {
+                                        <small class="text-muted">+@(member.ActiveProjectsCount - 2) more</small>
+                                    }
+                                </div>
+                            }
+
+                            <!-- Actions -->
+                            <div class="d-flex gap-2 mt-3">
+                                <a asp-action="TeamMemberDetails" asp-route-id="@member.Id" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a asp-action="CreateAllocation" asp-route-memberId="@member.Id" class="btn btn-sm btn-outline-success flex-grow-1">
+                                    <i class="bi bi-plus-circle"></i> Allocate
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-people display-1 text-muted mb-3"></i>
+                <h5>No Team Members Yet</h5>
+                <p class="text-muted">Add your first team member to get started with resource management.</p>
+                <a asp-action="CreateTeamMember" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Add Team Member
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterMembers(status) {
+            const cards = document.querySelectorAll('.team-member-card');
+            const buttons = document.querySelectorAll('.btn-group button');
+
+            // Update button states
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Filter cards
+            cards.forEach(card => {
+                if (status === 'all') {
+                    card.style.display = 'block';
+                } else if (status === 'available') {
+                    const util = parseFloat(card.dataset.utilization);
+                    card.style.display = util < 70 ? 'block' : 'none';
+                } else if (status === 'overallocated') {
+                    const util = parseFloat(card.dataset.utilization);
+                    card.style.display = util > 100 ? 'block' : 'none';
+                }
+            });
+        }
+    </script>
+}

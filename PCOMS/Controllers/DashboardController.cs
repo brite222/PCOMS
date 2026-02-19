@@ -1,48 +1,69 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using PCOMS.Application.Interfaces;
+using PCOMS.Application.Services;
 
 namespace PCOMS.Controllers
 {
     [Authorize]
     public class DashboardController : Controller
     {
-        private readonly IDashboardService _dashboardService;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly DashboardService _dashboardService;
+        private readonly ILogger<DashboardController> _logger;
 
         public DashboardController(
-            IDashboardService dashboardService,
-            UserManager<IdentityUser> userManager)
+            DashboardService dashboardService,
+            ILogger<DashboardController> logger)
         {
             _dashboardService = dashboardService;
-            _userManager = userManager;
+            _logger = logger;
         }
 
-        // =========================
-        // ADMIN & PROJECT MANAGER
-        // =========================
+        // Executive Dashboard (Admin/PM only)
+        [HttpGet]
         [Authorize(Roles = "Admin,ProjectManager")]
+        public async Task<IActionResult> Executive()
+        {
+            try
+            {
+                var dashboard = await _dashboardService.GetExecutiveDashboardAsync();
+                return View(dashboard);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading executive dashboard");
+                TempData["Error"] = "Error loading dashboard data";
+                return View("Error");
+            }
+        }
+
+        // Keep existing Index action for backward compatibility
+        [HttpGet]
         public IActionResult Index()
         {
-            var dashboard = _dashboardService.GetAdminDashboard();
-            return View(dashboard);
+            // Redirect based on role
+            if (User.IsInRole("Admin") || User.IsInRole("ProjectManager"))
+            {
+                return RedirectToAction("Executive");
+            }
+            else if (User.IsInRole("Developer"))
+            {
+                return RedirectToAction("DeveloperDashboard");
+            }
+            else if (User.IsInRole("Client"))
+            {
+                return RedirectToAction("Dashboard", "ClientPortal");
+            }
+
+            return RedirectToAction("Executive");
         }
 
-        // =========================
-        // DEVELOPER DASHBOARD
-        // =========================
+        // Developer-specific dashboard
+        [HttpGet]
         [Authorize(Roles = "Developer")]
-        public async Task<IActionResult> My()
+        public async Task<IActionResult> DeveloperDashboard()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return RedirectToAction("Login", "Account");
-
-            var dashboard =
-                _dashboardService.GetDeveloperDashboard(user.Id);
-
-            return View(dashboard);
+            // Simpler dashboard for developers - just their tasks and projects
+            return View();
         }
     }
 }

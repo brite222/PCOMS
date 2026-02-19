@@ -1,0 +1,233 @@
+﻿@model IEnumerable<PCOMS.Application.DTOs.ClientSurveyDto>
+
+@{
+    ViewData["Title"] = "Surveys";
+    var selectedClientId = ViewBag.SelectedClientId;
+    var selectedStatus = ViewBag.SelectedStatus;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-clipboard2-check"></i> Sent Surveys</h2>
+            <p class="text-muted">Track survey responses and completion</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="SendSurvey" class="btn btn-primary">
+                <i class="bi bi-send"></i> Send Survey
+            </a>
+            <a asp-action="Templates" class="btn btn-outline-secondary">
+                <i class="bi bi-file-text"></i> Templates
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small">Client</label>
+                    <select name="clientId" asp-items="ViewBag.Clients" class="form-select form-select-sm">
+                        <option value="">All Clients</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All Status</option>
+                        <option value="Sent" selected="@(selectedStatus == "Sent")">Sent</option>
+                        <option value="Completed" selected="@(selectedStatus == "Completed")">Completed</option>
+                        <option value="Expired" selected="@(selectedStatus == "Expired")">Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <!-- Stats Summary -->
+        var total = Model.Count();
+        var completed = Model.Count(s => s.Status == "Completed");
+        var pending = Model.Count(s => s.Status == "Sent");
+        var completionRate = total > 0 ? (decimal)completed / total * 100 : 0;
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">@total</h3>
+                        <small class="text-muted">Total Sent</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0 text-success">@completed</h3>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0 text-warning">@pending</h3>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0 text-primary">@completionRate.ToString("N0")%</h3>
+                        <small class="text-muted">Completion Rate</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Surveys List -->
+        <div class="row">
+            @foreach (var survey in Model.OrderByDescending(s => s.SentAt))
+            {
+                var statusColor = survey.Status switch
+                {
+                    "Completed" => "success",
+                    "Sent" => "warning",
+                    "Expired" => "danger",
+                    _ => "secondary"
+                };
+
+                var progressPercent = survey.TotalQuestions > 0
+                ? (decimal)survey.ResponseCount / survey.TotalQuestions * 100
+                : 0;
+
+                <div class="col-lg-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@survey.Title</h6>
+                            <span class="badge bg-@statusColor">@survey.Status</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Client & Project -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Client</small>
+                                    <strong class="small">@survey.ClientName</strong>
+                                </div>
+                                @if (!string.IsNullOrEmpty(survey.ProjectName))
+                                {
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Project</small>
+                                        <strong class="small">@survey.ProjectName</strong>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Sent</small>
+                                    <small>@survey.SentAt.ToString("MMM d, yyyy")</small>
+                                </div>
+                                @if (survey.CompletedAt.HasValue)
+                                {
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Completed</small>
+                                        <small>@survey.CompletedAt.Value.ToString("MMM d, yyyy")</small>
+                                    </div>
+                                }
+                                else if (survey.DueDate.HasValue)
+                                {
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Due</small>
+                                        <small>@survey.DueDate.Value.ToString("MMM d, yyyy")</small>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Response Progress -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Responses</small>
+                                    <small><strong>@survey.ResponseCount/@survey.TotalQuestions</strong></small>
+                                </div>
+                                <div class="progress" style="height:8px">
+                                    <div class="progress-bar bg-@statusColor" style="width:@progressPercent%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Rating (if completed) -->
+                            @if (survey.OverallRating.HasValue)
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Overall Rating</small>
+                                    <div>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="bi @(i <= survey.OverallRating ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                                        }
+                                        <strong class="ms-1">@survey.OverallRating.Value.ToString("N1")/5</strong>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Actions -->
+                            <div class="d-flex gap-2">
+                                @if (survey.Status == "Completed")
+                                {
+                                    <a asp-action="SurveyResults" asp-route-id="@survey.Id" class="btn btn-sm btn-primary flex-grow-1">
+                                        <i class="bi bi-eye"></i> View Results
+                                    </a>
+                                }
+                                else
+                                {
+                                    var surveyLink = Url.Action("Take", "Feedback", new { token = survey.AccessToken }, Context.Request.Scheme);
+                                    <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1"
+                                            onclick="copyToClipboard('@surveyLink')">
+                                        <i class="bi bi-link-45deg"></i> Copy Link
+                                    </button>
+                                }
+                                <a asp-action="SurveyResults" asp-route-id="@survey.Id" class="btn btn-sm btn-outline-info" title="Survey Details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-clipboard2-check display-1 text-muted mb-3"></i>
+                <h5>No Surveys Sent Yet</h5>
+                <p class="text-muted">Start collecting feedback by sending your first survey to a client.</p>
+                <a asp-action="SendSurvey" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Send Survey
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Survey link copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+    </script>
+}

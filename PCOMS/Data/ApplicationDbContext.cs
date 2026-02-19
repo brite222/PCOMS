@@ -86,6 +86,29 @@ namespace PCOMS.Data
         public DbSet<SubmissionRevision> SubmissionRevisions { get; set; } = null!;
 
 
+        // Client Feedback & Surveys
+        public DbSet<SurveyTemplate> SurveyTemplates { get; set; } = null!;
+        public DbSet<SurveyQuestion> SurveyQuestions { get; set; } = null!;
+        public DbSet<ClientSurvey> ClientSurveys { get; set; } = null!;
+        public DbSet<SurveyResponse> SurveyResponses { get; set; } = null!;
+        public DbSet<ClientFeedback> ClientFeedbacks { get; set; } = null!;
+        public DbSet<NpsScore> NpsScores { get; set; } = null!;
+
+        // Resource Management
+        public DbSet<TeamMember> TeamMembers { get; set; } = null!;
+        public DbSet<Skill> Skills { get; set; } = null!;
+        public DbSet<TeamMemberSkill> TeamMemberSkills { get; set; } = null!;
+        public DbSet<ResourceAllocation> ResourceAllocations { get; set; } = null!;
+        public DbSet<ResourceAvailability> ResourceAvailabilities { get; set; } = null!;
+        public DbSet<Certification> Certifications { get; set; } = null!;
+        public DbSet<ResourceRequest> ResourceRequests { get; set; } = null!;
+
+
+
+        public DbSet<DashboardWidget> DashboardWidgets { get; set; }
+        public DbSet<KpiMetric> KpiMetrics { get; set; }
+        public DbSet<DashboardPreset> DashboardPresets { get; set; }
+
 
         // ==========================================
         // MODEL CONFIGURATION
@@ -412,6 +435,174 @@ namespace PCOMS.Data
                 .WithMany()
                 .HasForeignKey(s => s.MilestoneId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ==========================================
+            // FEEDBACK & SURVEYS RELATIONSHIPS
+            // ==========================================
+
+            // SurveyQuestion -> SurveyTemplate
+            builder.Entity<SurveyQuestion>()
+                .HasOne(q => q.SurveyTemplate)
+                .WithMany(t => t.Questions)
+                .HasForeignKey(q => q.SurveyTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ClientSurvey -> SurveyTemplate
+            builder.Entity<ClientSurvey>()
+                .HasOne(s => s.SurveyTemplate)
+                .WithMany()
+                .HasForeignKey(s => s.SurveyTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ClientSurvey -> Client
+            builder.Entity<ClientSurvey>()
+                .HasOne(s => s.Client)
+                .WithMany()
+                .HasForeignKey(s => s.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ClientSurvey -> Project (optional)
+            builder.Entity<ClientSurvey>()
+                .HasOne(s => s.Project)
+                .WithMany()
+                .HasForeignKey(s => s.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SurveyResponse -> ClientSurvey
+            builder.Entity<SurveyResponse>()
+                .HasOne(r => r.ClientSurvey)
+                .WithMany(s => s.Responses)
+                .HasForeignKey(r => r.ClientSurveyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // SurveyResponse -> SurveyQuestion
+            builder.Entity<SurveyResponse>()
+                .HasOne(r => r.SurveyQuestion)
+                .WithMany()
+                .HasForeignKey(r => r.SurveyQuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ClientFeedback -> Client
+            builder.Entity<ClientFeedback>()
+                .HasOne(f => f.Client)
+                .WithMany()
+                .HasForeignKey(f => f.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ClientFeedback -> Project (optional)
+            builder.Entity<ClientFeedback>()
+                .HasOne(f => f.Project)
+                .WithMany()
+                .HasForeignKey(f => f.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // NpsScore -> Client
+            builder.Entity<NpsScore>()
+                .HasOne(n => n.Client)
+                .WithMany()
+                .HasForeignKey(n => n.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // NpsScore -> Project (optional)
+            builder.Entity<NpsScore>()
+                .HasOne(n => n.Project)
+                .WithMany()
+                .HasForeignKey(n => n.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes for performance
+            builder.Entity<ClientSurvey>()
+                .HasIndex(s => s.AccessToken)
+                .IsUnique();
+
+            builder.Entity<ClientSurvey>()
+                .HasIndex(s => new { s.ClientId, s.Status });
+
+            builder.Entity<ClientFeedback>()
+                .HasIndex(f => new { f.ClientId, f.Status });
+
+            // ==========================================
+            // RESOURCE MANAGEMENT RELATIONSHIPS
+            // ==========================================
+
+            // TeamMemberSkill -> TeamMember
+            builder.Entity<TeamMemberSkill>()
+                .HasOne(s => s.TeamMember)
+                .WithMany(m => m.Skills)
+                .HasForeignKey(s => s.TeamMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // TeamMemberSkill -> Skill
+            builder.Entity<TeamMemberSkill>()
+                .HasOne(s => s.Skill)
+                .WithMany()
+                .HasForeignKey(s => s.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ResourceAllocation -> TeamMember
+            builder.Entity<ResourceAllocation>()
+                .HasOne(a => a.TeamMember)
+                .WithMany(m => m.Allocations)
+                .HasForeignKey(a => a.TeamMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ResourceAllocation -> Project
+            builder.Entity<ResourceAllocation>()
+                .HasOne(a => a.Project)
+                .WithMany()
+                .HasForeignKey(a => a.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ResourceAvailability -> TeamMember
+            builder.Entity<ResourceAvailability>()
+                .HasOne(a => a.TeamMember)
+                .WithMany(m => m.Availability)
+                .HasForeignKey(a => a.TeamMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Certification -> TeamMember
+            builder.Entity<Certification>()
+                .HasOne(c => c.TeamMember)
+                .WithMany()
+                .HasForeignKey(c => c.TeamMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ResourceRequest -> Project
+            builder.Entity<ResourceRequest>()
+                .HasOne(r => r.Project)
+                .WithMany()
+                .HasForeignKey(r => r.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ResourceRequest -> Skill (optional)
+            builder.Entity<ResourceRequest>()
+                .HasOne(r => r.RequiredSkill)
+                .WithMany()
+                .HasForeignKey(r => r.RequiredSkillId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ResourceRequest -> AssignedTeamMember (optional)
+            builder.Entity<ResourceRequest>()
+                .HasOne(r => r.AssignedTeamMember)
+                .WithMany()
+                .HasForeignKey(r => r.AssignedTeamMemberId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Indexes for performance
+            builder.Entity<TeamMember>()
+                .HasIndex(m => m.IsActive);
+
+            builder.Entity<TeamMember>()
+                .HasIndex(m => m.Department);
+
+            builder.Entity<ResourceAllocation>()
+                .HasIndex(a => new { a.TeamMemberId, a.Status });
+
+            builder.Entity<ResourceAllocation>()
+                .HasIndex(a => new { a.ProjectId, a.Status });
+
+            builder.Entity<ResourceRequest>()
+                .HasIndex(r => r.Status);
         }
     }
 }

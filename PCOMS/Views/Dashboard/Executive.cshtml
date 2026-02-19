@@ -1,0 +1,462 @@
+﻿@model PCOMS.Application.DTOs.ExecutiveDashboardDto
+
+@{
+    ViewData["Title"] = "Executive Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <h2><i class="bi bi-speedometer2"></i> Executive Dashboard</h2>
+            <p class="text-muted">Real-time business intelligence at a glance</p>
+        </div>
+        <div class="col-md-3 text-end">
+            <small class="text-muted">Last updated: @DateTime.Now.ToString("h:mm tt")</small>
+            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <!-- Active Projects -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Active Projects</h6>
+                            <h2 class="mb-0">@Model.ActiveProjects</h2>
+                            @if (Model.AtRiskProjects > 0)
+                            {
+                                <small class="text-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> @Model.AtRiskProjects at risk
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle"></i> All on track
+                                </small>
+                            }
+                        </div>
+                        <div class="text-primary" style="font-size:2.5rem">
+                            <i class="bi bi-kanban"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Monthly Revenue</h6>
+                            <h2 class="mb-0">$@Model.MonthlyRevenue.ToString("N0")</h2>
+                            <small class="@(Model.RevenueGrowth >= 0 ? "text-success" : "text-danger")">
+                                <i class="bi bi-@(Model.RevenueGrowth >= 0 ? "arrow-up" : "arrow-down")"></i>
+                                @Math.Abs(Model.RevenueGrowth).ToString("N1")% vs last month
+                            </small>
+                        </div>
+                        <div class="text-success" style="font-size:2.5rem">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Utilization -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Team Utilization</h6>
+                            <h2 class="mb-0">@Model.AverageUtilization.ToString("N0")%</h2>
+                            @if (Model.OverallocatedMembers > 0)
+                            {
+                                <small class="text-danger">
+                                    <i class="bi bi-exclamation-circle"></i> @Model.OverallocatedMembers overallocated
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle"></i> Balanced
+                                </small>
+                            }
+                        </div>
+                        <div class="text-info" style="font-size:2.5rem">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Active Tasks</h6>
+                            <h2 class="mb-0">@Model.TotalActiveTasks</h2>
+                            @if (Model.OverdueTasks > 0)
+                            {
+                                <small class="text-danger">
+                                    <i class="bi bi-clock"></i> @Model.OverdueTasks overdue
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle"></i> None overdue
+                                </small>
+                            }
+                        </div>
+                        <div class="text-warning" style="font-size:2.5rem">
+                            <i class="bi bi-check2-square"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIDDLE ROW: Project Health + Financial Overview -->
+    <div class="row g-3 mb-4">
+        <!-- Project Health -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-heart-pulse"></i> Project Health Status</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProjectHealth.Any())
+                    {
+                        <div class="row g-2 mb-3">
+                            <div class="col-4 text-center">
+                                <div class="p-2 bg-success bg-opacity-10 rounded">
+                                    <h4 class="text-success mb-0">@Model.ProjectsOnTrack</h4>
+                                    <small class="text-muted">On Track</small>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="p-2 bg-warning bg-opacity-10 rounded">
+                                    <h4 class="text-warning mb-0">@Model.ProjectsAtRisk</h4>
+                                    <small class="text-muted">At Risk</small>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="p-2 bg-info bg-opacity-10 rounded">
+                                    <h4 class="text-info mb-0">@Model.ProjectsCompleted</h4>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Progress</th>
+                                        <th>Budget</th>
+                                        <th>Health</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var project in Model.ProjectHealth.Take(5))
+                                    {
+                                        var healthColor = project.HealthScore switch
+                                        {
+                                            "Green" => "success",
+                                            "Yellow" => "warning",
+                                            "Red" => "danger",
+                                            _ => "secondary"
+                                        };
+
+                                        <tr>
+                                            <td><strong>@project.ProjectName</strong></td>
+                                            <td>
+                                                <div class="progress" style="height:8px;width:80px">
+                                                    <div class="progress-bar" style="width:@(project.ProgressPercent)%"></div>
+                                                </div>
+                                                <small>@project.ProgressPercent%</small>
+                                            </td>
+                                            <td>
+                                                <small>@project.BudgetUsedPercent%</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@healthColor">
+                                                    <i class="bi bi-circle-fill"></i>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted py-4">No active projects</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Overview -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Financial Overview</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="border-start border-primary border-4 ps-3">
+                                <small class="text-muted">Monthly Revenue</small>
+                                <h4 class="mb-0 text-primary">$@Model.MonthlyRevenue.ToString("N0")</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border-start border-success border-4 ps-3">
+                                <small class="text-muted">Paid This Month</small>
+                                <h4 class="mb-0 text-success">$@Model.PaidInvoicesThisMonth.ToString("N0")</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border-start border-warning border-4 ps-3">
+                                <small class="text-muted">Pending Invoices</small>
+                                <h4 class="mb-0 text-warning">$@Model.PendingInvoicesValue.ToString("N0")</h4>
+                                <small class="text-muted">@Model.PendingInvoicesCount invoices</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border-start border-info border-4 ps-3">
+                                <small class="text-muted">Budget Remaining</small>
+                                <h4 class="mb-0 text-info">$@Model.BudgetRemaining.ToString("N0")</h4>
+                                <small class="text-muted">of $@Model.TotalBudget.ToString("N0")</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <small class="text-muted">Budget Utilization</small>
+                        <div class="progress" style="height:20px">
+                            @{
+                                var budgetPercent = Model.TotalBudget > 0 ? (Model.BudgetUsed / Model.TotalBudget) * 100 : 0;
+                                var budgetColor = budgetPercent > 90 ? "danger" : budgetPercent > 75 ? "warning" : "success";
+                            }
+                            <div class="progress-bar bg-@budgetColor" style="width:@budgetPercent%">
+                                @budgetPercent.ToString("N0")%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Revenue Growth:
+                            <strong class="@(Model.RevenueGrowth >= 0 ? "text-success" : "text-danger")">
+                                @(Model.RevenueGrowth >= 0 ? "+" : "")@Model.RevenueGrowth.ToString("N1")%
+                            </strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="row g-3 mb-4">
+        <!-- Revenue Trend -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Revenue Trend (6 Months)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Distribution -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Project Status</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="projectChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="row g-3">
+        <!-- Team Utilization -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-people-fill"></i> Team Utilization</h6>
+                </div>
+                <div class="card-body" style="max-height:300px;overflow-y:auto">
+                    @if (Model.TeamUtilization.Any())
+                    {
+                        @foreach (var member in Model.TeamUtilization.Take(8))
+                        {
+                            var statusColor = member.Status switch
+                            {
+                                "Over" => "danger",
+                                "Optimal" => "success",
+                                _ => "warning"
+                            };
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small><strong>@member.MemberName</strong></small>
+                                    <small class="text-@statusColor fw-bold">@member.Utilization.ToString("N0")%</small>
+                                </div>
+                                <div class="progress" style="height:8px">
+                                    <div class="progress-bar bg-@statusColor" style="width:@(Math.Min(member.Utilization, 100))%"></div>
+                                </div>
+                                <small class="text-muted">@member.ProjectCount projects</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No team data available</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Clients -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-trophy"></i> Top Clients</h6>
+                </div>
+                <div class="card-body" style="max-height:300px;overflow-y:auto">
+                    @if (Model.TopClients.Any())
+                    {
+                        @foreach (var client in Model.TopClients)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <strong>@client.ClientName</strong>
+                                    <br>
+                                    <small class="text-muted">@client.ProjectCount projects</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-success">$@client.TotalRevenue.ToString("N0")</strong>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No client data</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-activity"></i> Recent Activity</h6>
+                </div>
+                <div class="card-body" style="max-height:300px;overflow-y:auto">
+                    @if (Model.RecentActivities.Any())
+                    {
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="bi bi-@activity.Icon text-primary me-2"></i>
+                                <div class="flex-grow-1">
+                                    <small>@activity.Activity</small>
+                                    <br>
+                                    <small class="text-muted">@activity.Timestamp.ToString("MMM d, h:mm tt")</small>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No recent activity</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Trend Chart
+        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueByMonth));
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: Object.keys(revenueData),
+                datasets: [{
+                    label: 'Revenue',
+                    data: Object.values(revenueData),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '$' + value.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+
+        // Project Status Pie Chart
+        const projectData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ProjectsByStatus));
+        new Chart(document.getElementById('projectChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(projectData),
+                datasets: [{
+                    data: Object.values(projectData),
+                    backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+}

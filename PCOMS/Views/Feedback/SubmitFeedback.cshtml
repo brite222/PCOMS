@@ -1,0 +1,162 @@
+﻿@model PCOMS.Application.DTOs.CreateFeedbackDto
+
+@{
+    ViewData["Title"] = "Submit Feedback";
+}
+
+<div class="container mt-4" style="max-width:700px">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-chat-heart"></i> Share Your Feedback</h4>
+            <small>We value your input and want to hear from you</small>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="SubmitFeedback" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ClientId" />
+
+                <!-- Feedback Type -->
+                <div class="mb-4">
+                    <label asp-for="FeedbackType" class="form-label fw-semibold">What type of feedback is this? *</label>
+                    <div class="row g-2">
+                        <div class="col-6 col-md-3">
+                            <input type="radio" class="btn-check" name="FeedbackType" value="Praise"
+                                   id="type_praise" checked />
+                            <label class="btn btn-outline-success w-100 py-3" for="type_praise">
+                                <i class="bi bi-hand-thumbs-up d-block fs-3"></i>
+                                Praise
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <input type="radio" class="btn-check" name="FeedbackType" value="Suggestion"
+                                   id="type_suggestion" />
+                            <label class="btn btn-outline-info w-100 py-3" for="type_suggestion">
+                                <i class="bi bi-lightbulb d-block fs-3"></i>
+                                Suggestion
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <input type="radio" class="btn-check" name="FeedbackType" value="Complaint"
+                                   id="type_complaint" />
+                            <label class="btn btn-outline-danger w-100 py-3" for="type_complaint">
+                                <i class="bi bi-exclamation-circle d-block fs-3"></i>
+                                Complaint
+                            </label>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <input type="radio" class="btn-check" name="FeedbackType" value="General"
+                                   id="type_general" />
+                            <label class="btn btn-outline-secondary w-100 py-3" for="type_general">
+                                <i class="bi bi-chat-dots d-block fs-3"></i>
+                                General
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project (Optional) -->
+                <div class="mb-3">
+                    <label asp-for="ProjectId" class="form-label">Related to a specific project? (optional)</label>
+                    <select asp-for="ProjectId" asp-items="ViewBag.Projects" class="form-select">
+                        <option value="">-- No specific project --</option>
+                    </select>
+                </div>
+
+                <!-- Subject -->
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label fw-semibold">Subject *</label>
+                    <input asp-for="Subject" class="form-control" placeholder="Brief subject line" />
+                    <span asp-validation-for="Subject" class="text-danger small"></span>
+                </div>
+
+                <!-- Feedback Text -->
+                <div class="mb-3">
+                    <label asp-for="FeedbackText" class="form-label fw-semibold">Your Feedback *</label>
+                    <textarea asp-for="FeedbackText" class="form-control" rows="6"
+                              placeholder="Please share your thoughts in detail..."></textarea>
+                    <span asp-validation-for="FeedbackText" class="text-danger small"></span>
+                </div>
+
+                <!-- Rating (Optional) -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Overall Rating (optional)</label>
+                    <div class="rating-stars">
+                        @for (int star = 1; star <= 5; star++)
+                        {
+                            <input type="radio" name="Rating" value="@star" id="rating@star" class="d-none star-input" />
+                            <label for="rating@star" class="star-label" style="font-size:2.5rem;cursor:pointer;color:#ddd">
+                                ★
+                            </label>
+                        }
+                        <span class="ms-3 text-muted" id="ratingText"></span>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-flex justify-content-between">
+                    <a asp-action="MyFeedback" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="bi bi-send"></i> Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle"></i>
+        <strong>What happens next?</strong> Our team will review your feedback and respond within 2 business days.
+    </div>
+</div>
+
+<style>
+    .star-label {
+        transition: color 0.2s;
+    }
+    .star-input:checked ~ .star-label,
+    .star-label:hover,
+    .star-label:hover ~ .star-label {
+        color: #ffc107 !important;
+    }
+</style>
+
+<script>
+    const starLabels = document.querySelectorAll('.star-label');
+    const starInputs = document.querySelectorAll('.star-input');
+    const ratingText = document.getElementById('ratingText');
+    const ratingTexts = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+
+    starLabels.forEach((star, index) => {
+        star.addEventListener('click', () => {
+            starInputs[index].checked = true;
+            updateStars(index);
+            ratingText.textContent = ratingTexts[index];
+        });
+
+        star.addEventListener('mouseover', () => {
+            updateStars(index);
+            ratingText.textContent = ratingTexts[index];
+        });
+    });
+
+    document.querySelector('.rating-stars').addEventListener('mouseleave', () => {
+        const checkedIndex = Array.from(starInputs).findIndex(input => input.checked);
+        updateStars(checkedIndex);
+        ratingText.textContent = checkedIndex >= 0 ? ratingTexts[checkedIndex] : '';
+    });
+
+    function updateStars(selectedIndex) {
+        starLabels.forEach((star, index) => {
+            star.style.color = index <= selectedIndex ? '#ffc107' : '#ddd';
+        });
+    }
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

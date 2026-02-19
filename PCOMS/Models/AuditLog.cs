@@ -39,5 +39,6 @@ namespace PCOMS.Models
 
         [Required]
         public DateTime PerformedAt { get; set; } = DateTime.UtcNow;
+        public DateTime  CreatedAt { get; set; } = DateTime.UtcNow; 
     }
 }

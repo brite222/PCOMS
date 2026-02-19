@@ -57,7 +57,7 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IProjectAssignmentService, ProjectAssignmentService>();
 builder.Services.AddScoped<ITimeEntryService, TimeEntryService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddScoped<InvoiceNumberGenerator>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
@@ -72,7 +72,8 @@ builder.Services.AddScoped<IProjectTemplateService, ProjectTemplateService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
-
+builder.Services.AddScoped<FeedbackService>();
+builder.Services.AddScoped<ResourceService>();
 builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
     builder.Configuration.GetSection("Email"));
 

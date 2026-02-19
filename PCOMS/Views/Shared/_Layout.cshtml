@@ -540,6 +540,18 @@
                         <span class="nav-link-text">Documents</span>
                     </a>
                 </li>
+                <li class="nav-item" data-label="Give Feedback">
+                    <a class="nav-link" asp-controller="Feedback" asp-action="SubmitFeedback">
+                        <i class="bi bi-chat-dots"></i>
+                        <span class="nav-link-text">Give Feedback</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-label="My Feedback">
+                    <a class="nav-link" asp-controller="Feedback" asp-action="MyFeedback">
+                        <i class="bi bi-clock-history"></i>
+                        <span class="nav-link-text">My Feedback</span>
+                    </a>
+                </li>
             }
             else if (User.IsInRole("Developer"))
             {
@@ -589,7 +601,7 @@
             {
                 <!-- Admin / PM Navigation -->
                 <li class="nav-item" data-label="Dashboard">
-                    <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
+                    <a class="nav-link" asp-controller="Dashboard" asp-action="Executive">
                         <i class="bi bi-speedometer2"></i>
                         <span class="nav-link-text">Dashboard</span>
                     </a>
@@ -616,6 +628,12 @@
                     <a class="nav-link" asp-controller="Documents" asp-action="Index">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="nav-link-text">Documents</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-label="Feedback">
+                    <a class="nav-link" asp-controller="Feedback" asp-action="Dashboard">
+                        <i class="bi bi-chat-heart"></i>
+                        <span class="nav-link-text">Feedback</span>
                     </a>
                 </li>
             }
@@ -721,7 +739,12 @@
                     <span class="nav-link-text">Calendar</span>
                 </a>
             </li>
-
+            <li class="nav-item" data-label="Resources">
+                <a class="nav-link" asp-controller="Resources" asp-action="Dashboard">
+                    <i class="bi bi-people"></i>
+                    <span class="nav-link-text">Resources</span>
+                </a>
+            </li>
             <!-- ===== ANALYTICS ===== -->
             <li class="nav-divider"></li>
             <li class="nav-section-title">Analytics</li>

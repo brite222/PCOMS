@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PCOMS.Data;
 
@@ -10,9 +11,11 @@ using PCOMS.Data;
 namespace PCOMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260219110856_AddClientFeedbackSurveys")]
+    partial class AddClientFeedbackSurveys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.12");
@@ -306,9 +309,6 @@ namespace PCOMS.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Details")
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
@@ -395,50 +395,6 @@ namespace PCOMS.Migrations
                     b.HasIndex("ProjectBudgetId");
 
                     b.ToTable("BudgetAlerts");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.Certification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CertificationName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CredentialId")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CredentialUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ExpiryDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("IssueDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("IssuingOrganization")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TeamMemberId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeamMemberId");
-
-                    b.ToTable("Certifications");
                 });
 
             modelBuilder.Entity("PCOMS.Models.Client", b =>
@@ -616,91 +572,6 @@ namespace PCOMS.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ClientUsers");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.DashboardPreset", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Configuration")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DashboardPresets");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.DashboardWidget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Settings")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WidgetType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Width")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("DashboardWidgets");
                 });
 
             modelBuilder.Entity("PCOMS.Models.Document", b =>
@@ -907,9 +778,6 @@ namespace PCOMS.Migrations
                     b.Property<int?>("ParentInvoiceId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("PaymentDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("PeriodFrom")
                         .HasColumnType("TEXT");
 
@@ -955,54 +823,6 @@ namespace PCOMS.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Invoices");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.KpiMetric", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Color")
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("CurrentValue")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("PreviousValue")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("TargetValue")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Unit")
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("KpiMetrics");
                 });
 
             modelBuilder.Entity("PCOMS.Models.Meeting", b =>
@@ -1585,196 +1405,6 @@ namespace PCOMS.Migrations
                     b.ToTable("Reports");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.ResourceAllocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("AllocationPercentage")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("EstimatedHours")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TeamMemberId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId", "Status");
-
-                    b.HasIndex("TeamMemberId", "Status");
-
-                    b.ToTable("ResourceAllocations");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ResourceAvailability", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AvailabilityType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsApproved")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TeamMemberId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeamMemberId");
-
-                    b.ToTable("ResourceAvailabilities");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ResourceRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("AllocationPercentage")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("AssignedTeamMemberId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("EstimatedHours")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Justification")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProficiencyRequired")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("RequestedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RequestedBy")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RequestedRole")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("RequiredSkillId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedTeamMemberId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("RequiredSkillId");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("ResourceRequests");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.Skill", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Skills");
-                });
-
             modelBuilder.Entity("PCOMS.Models.SubmissionAttachment", b =>
                 {
                     b.Property<int>("Id")
@@ -2178,107 +1808,6 @@ namespace PCOMS.Migrations
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("Tasks");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.TeamMember", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EmploymentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("HourlyRate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("JobTitle")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("WeeklyCapacityHours")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Department");
-
-                    b.HasIndex("IsActive");
-
-                    b.ToTable("TeamMembers");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.TeamMemberSkill", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProficiencyLevel")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SkillId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TeamMemberId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("YearsOfExperience")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SkillId");
-
-                    b.HasIndex("TeamMemberId");
-
-                    b.ToTable("TeamMemberSkills");
                 });
 
             modelBuilder.Entity("PCOMS.Models.TeamMessage", b =>
@@ -2777,17 +2306,6 @@ namespace PCOMS.Migrations
                     b.Navigation("ProjectBudget");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.Certification", b =>
-                {
-                    b.HasOne("PCOMS.Models.TeamMember", "TeamMember")
-                        .WithMany()
-                        .HasForeignKey("TeamMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TeamMember");
-                });
-
             modelBuilder.Entity("PCOMS.Models.ClientFeedback", b =>
                 {
                     b.HasOne("PCOMS.Models.Client", "Client")
@@ -2847,17 +2365,6 @@ namespace PCOMS.Migrations
                         .IsRequired();
 
                     b.Navigation("Client");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.DashboardWidget", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -3086,61 +2593,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("PCOMS.Models.ResourceAllocation", b =>
-                {
-                    b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("PCOMS.Models.TeamMember", "TeamMember")
-                        .WithMany("Allocations")
-                        .HasForeignKey("TeamMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("TeamMember");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ResourceAvailability", b =>
-                {
-                    b.HasOne("PCOMS.Models.TeamMember", "TeamMember")
-                        .WithMany("Availability")
-                        .HasForeignKey("TeamMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TeamMember");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.ResourceRequest", b =>
-                {
-                    b.HasOne("PCOMS.Models.TeamMember", "AssignedTeamMember")
-                        .WithMany()
-                        .HasForeignKey("AssignedTeamMemberId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("PCOMS.Models.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("PCOMS.Models.Skill", "RequiredSkill")
-                        .WithMany()
-                        .HasForeignKey("RequiredSkillId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("AssignedTeamMember");
-
-                    b.Navigation("Project");
-
-                    b.Navigation("RequiredSkill");
-                });
-
             modelBuilder.Entity("PCOMS.Models.SubmissionAttachment", b =>
                 {
                     b.HasOne("PCOMS.Models.ProjectSubmission", "ProjectSubmission")
@@ -3286,25 +2738,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("UpdatedBy");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.TeamMemberSkill", b =>
-                {
-                    b.HasOne("PCOMS.Models.Skill", "Skill")
-                        .WithMany()
-                        .HasForeignKey("SkillId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("PCOMS.Models.TeamMember", "TeamMember")
-                        .WithMany("Skills")
-                        .HasForeignKey("TeamMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Skill");
-
-                    b.Navigation("TeamMember");
                 });
 
             modelBuilder.Entity("PCOMS.Models.TeamMessage", b =>
@@ -3469,15 +2902,6 @@ namespace PCOMS.Migrations
                     b.Navigation("Milestones");
 
                     b.Navigation("SubTasks");
-                });
-
-            modelBuilder.Entity("PCOMS.Models.TeamMember", b =>
-                {
-                    b.Navigation("Allocations");
-
-                    b.Navigation("Availability");
-
-                    b.Navigation("Skills");
                 });
 
             modelBuilder.Entity("PCOMS.Models.TeamMessage", b =>

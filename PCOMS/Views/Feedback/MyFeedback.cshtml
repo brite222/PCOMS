@@ -1,0 +1,144 @@
+﻿@model IEnumerable<PCOMS.Application.DTOs.ClientFeedbackDto>
+
+@{
+    ViewData["Title"] = "My Feedback";
+}
+
+<div class="container mt-4" style="max-width:900px">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-chat-heart"></i> My Feedback</h2>
+            <p class="text-muted">Your submitted feedback and responses</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="SubmitFeedback" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Submit New Feedback
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        @foreach (var feedback in Model.OrderByDescending(f => f.SubmittedAt))
+        {
+            var typeColor = feedback.FeedbackType switch
+            {
+                "Praise" => "success",
+                "Complaint" => "danger",
+                "Suggestion" => "info",
+                _ => "secondary"
+            };
+
+            var statusColor = feedback.Status switch
+            {
+                "New" => "warning",
+                "Acknowledged" => "info",
+                "Resolved" => "success",
+                _ => "secondary"
+            };
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-@typeColor me-2">
+                            @if (feedback.FeedbackType == "Praise")
+                            {
+                                <i class="bi bi-hand-thumbs-up"></i>
+                            }
+                            else if (feedback.FeedbackType == "Complaint")
+                            {
+
+                                <i class="bi bi-exclamation-circle"></i>
+                            }
+                            else if (feedback.FeedbackType == "Suggestion")
+                            {
+
+                                <i class="bi bi-lightbulb"></i>
+                            }
+                            else
+                            {
+
+                                <i class="bi bi-chat-dots"></i>
+                            }
+                            @feedback.FeedbackType
+                        </span>
+                        <strong>@feedback.Subject</strong>
+                    </div>
+                    <span class="badge bg-@statusColor">@feedback.Status</span>
+                </div>
+                <div class="card-body">
+                    <!-- Feedback Text -->
+                    <p class="mb-3">@feedback.FeedbackText</p>
+
+                    <!-- Metadata -->
+                    <div class="row g-2 mb-3">
+                        @if (!string.IsNullOrEmpty(feedback.ProjectName))
+                        {
+                            <div class="col-md-6">
+                                <small class="text-muted">Project:</small>
+                                <div><strong>@feedback.ProjectName</strong></div>
+                            </div>
+                        }
+                        @if (feedback.Rating.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <small class="text-muted">Your Rating:</small>
+                                <div>
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= feedback.Rating ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <div class="col-12">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> Submitted on @feedback.SubmittedAt.ToString("MMMM d, yyyy 'at' h:mm tt")
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Response (if any) -->
+                    @if (!string.IsNullOrEmpty(feedback.ResponseText))
+                    {
+                        <div class="border-top pt-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-reply text-primary me-2"></i>
+                                <strong>Response from our team</strong>
+                            </div>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-2">@feedback.ResponseText</p>
+                                @if (feedback.RespondedAt.HasValue)
+                                {
+                                    <small class="text-muted">
+                                        Responded by @feedback.RespondedByName on @feedback.RespondedAt.Value.ToString("MMM d, yyyy")
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (feedback.Status == "New")
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-hourglass-split"></i>
+                            <strong>Pending Review:</strong> Our team will respond within 2 business days.
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-chat-heart display-1 text-muted mb-3"></i>
+                <h5>No Feedback Yet</h5>
+                <p class="text-muted">You haven't submitted any feedback. Share your thoughts with us!</p>
+                <a asp-action="SubmitFeedback" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Submit Feedback
+                </a>
+            </div>
+        </div>
+    }
+</div>

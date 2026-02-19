@@ -1,0 +1,128 @@
+﻿@model IEnumerable<PCOMS.Application.DTOs.SurveyTemplateDto>
+
+@{
+    ViewData["Title"] = "Survey Templates";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-file-text"></i> Survey Templates</h2>
+            <p class="text-muted">Manage reusable survey templates</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="CreateTemplate" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Template
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var template in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@template.Title</h6>
+                            @if (template.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(template.Description))
+                            {
+                                <p class="card-text text-muted small">
+                                    @(template.Description.Length > 100 ? template.Description.Substring(0, 100) + "..." : template.Description)
+                                </p>
+                            }
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Type</small>
+                                    <strong class="small">@template.SurveyType</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Questions</small>
+                                    <strong class="small">@template.QuestionCount</strong>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted">Used @template.TimesSent times</small>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a asp-action="TemplateDetails" asp-route-id="@template.Id" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a asp-action="SendSurvey" asp-route-templateId="@template.Id" class="btn btn-sm btn-success flex-grow-1">
+                                    <i class="bi bi-send"></i> Send
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-footer small text-muted">
+                            Created @template.CreatedAt.ToString("MMM d, yyyy")
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-file-text display-1 text-muted mb-3"></i>
+                <h5>No Survey Templates Yet</h5>
+                <p class="text-muted">Create your first survey template to start collecting client feedback.</p>
+                <a asp-action="CreateTemplate" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Template
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Quick Templates Section -->
+<div class="container-fluid mt-4">
+    <div class="card border-info">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Suggested Templates</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Project Completion Survey</h6>
+                    <ul class="small">
+                        <li>Satisfaction rating (1-5)</li>
+                        <li>Delivery on time? (Yes/No)</li>
+                        <li>Communication rating</li>
+                        <li>Open feedback</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6>NPS Survey</h6>
+                    <ul class="small">
+                        <li>Likelihood to recommend (0-10)</li>
+                        <li>Reason for score</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6>Milestone Feedback</h6>
+                    <ul class="small">
+                        <li>Milestone satisfaction</li>
+                        <li>Quality rating</li>
+                        <li>Concerns/feedback</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,269 @@
+﻿@model PCOMS.Application.DTOs.FeedbackAnalyticsDto
+
+@{
+    ViewData["Title"] = "Feedback & Surveys Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-chat-heart"></i> Feedback & Surveys</h2>
+            <p class="text-muted">Track client satisfaction and gather insights</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="SendSurvey" class="btn btn-primary">
+                <i class="bi bi-send"></i> Send Survey
+            </a>
+            <a asp-action="Templates" class="btn btn-outline-secondary">
+                <i class="bi bi-file-text"></i> Templates
+            </a>
+        </div>
+    </div>
+
+    <!-- KEY METRICS -->
+    <div class="row g-3 mb-4">
+        <!-- Surveys -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Surveys Sent</h6>
+                            <h2 class="mb-0">@Model.TotalSurveysSent</h2>
+                            <small class="text-success">
+                                @Model.SurveysCompleted completed
+                            </small>
+                        </div>
+                        <div class="text-primary fs-1">
+                            <i class="bi bi-clipboard2-check"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height:6px">
+                        <div class="progress-bar bg-success" style="width:@(Model.CompletionRate)%"></div>
+                    </div>
+                    <small class="text-muted">@Model.CompletionRate.ToString("N1")% completion rate</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Rating -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Average Rating</h6>
+                            <h2 class="mb-0">@Model.AverageRating.ToString("N1")<small class="text-muted fs-6">/5.0</small></h2>
+                            <div>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi @(i <= Model.AverageRating ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                                }
+                            </div>
+                        </div>
+                        <div class="text-warning fs-1">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NPS Score -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">NPS Score</h6>
+                            <h2 class="mb-0 @(Model.NpsScore >= 50 ? "text-success" : Model.NpsScore >= 0 ? "text-warning" : "text-danger")">
+                                @Model.NpsScore.ToString("N0")
+                            </h2>
+                            <small class="text-muted">
+                                @if (Model.NpsScore >= 50)
+                                {
+                                    <span class="text-success">Excellent</span>
+                                }
+                                else if (Model.NpsScore >= 0)
+                                {
+
+                                    <span class="text-warning">Good</span>
+                                }
+                                else
+                                {
+
+                                    <span class="text-danger">Needs Improvement</span>
+                                }
+                            </small>
+                        </div>
+                        <div class="text-info fs-1">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Direct Feedback</h6>
+                            <h2 class="mb-0">@Model.TotalFeedback</h2>
+                            <small class="text-danger">
+                                @Model.PendingFeedback pending response
+                            </small>
+                        </div>
+                        <div class="text-secondary fs-1">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NPS BREAKDOWN -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-pie-chart"></i> NPS Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-success mb-0">@Model.Promoters</h3>
+                                <small class="text-muted">Promoters</small>
+                                <div class="text-muted small">Score 9-10</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-warning mb-0">@Model.Passives</h3>
+                                <small class="text-muted">Passives</small>
+                                <div class="text-muted small">Score 7-8</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <h3 class="text-danger mb-0">@Model.Detractors</h3>
+                                <small class="text-muted">Detractors</small>
+                                <div class="text-muted small">Score 0-6</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>NPS Formula:</span>
+                            <span class="text-muted">% Promoters - % Detractors</span>
+                        </div>
+                        <div class="alert alert-info small mb-0">
+                            <strong>Benchmark:</strong> NPS above 50 is excellent, 0-50 is good, below 0 needs improvement.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Feedback by Type</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.FeedbackByType.Any())
+                    {
+                        foreach (var item in Model.FeedbackByType.OrderByDescending(x => x.Value))
+                        {
+                            var percentage = Model.TotalFeedback > 0 ? (decimal)item.Value / Model.TotalFeedback * 100 : 0;
+                            var colorClass = item.Key switch
+                            {
+                                "Praise" => "success",
+                                "Suggestion" => "info",
+                                "Complaint" => "danger",
+                                _ => "secondary"
+                            };
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>
+                                        @if (item.Key == "Praise")
+                                        {
+                                            <i class="bi bi-hand-thumbs-up text-success"></i>
+                                        }
+                                        else if (item.Key == "Complaint")
+                                        {
+
+                                            <i class="bi bi-exclamation-circle text-danger"></i>
+                                        }
+                                        else if (item.Key == "Suggestion")
+                                        {
+
+                                            <i class="bi bi-lightbulb text-info"></i>
+                                        }
+                                        else
+                                        {
+
+                                            <i class="bi bi-chat-dots text-secondary"></i>
+                                        }
+                                        @item.Key
+                                    </span>
+                                    <span><strong>@item.Value</strong> (@percentage.ToString("N0")%)</span>
+                                </div>
+                                <div class="progress" style="height:8px">
+                                    <div class="progress-bar bg-@colorClass" style="width:@percentage%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No feedback received yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-send-check fs-1 text-primary mb-3"></i>
+                    <h5>Send Survey</h5>
+                    <p class="text-muted">Send satisfaction survey to clients</p>
+                    <a asp-action="SendSurvey" class="btn btn-primary">Send Now</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-chat-square-dots fs-1 text-warning mb-3"></i>
+                    <h5>View Feedback</h5>
+                    <p class="text-muted">Review and respond to client feedback</p>
+                    <a asp-action="AllFeedback" class="btn btn-warning">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-secondary">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-file-earmark-text fs-1 text-secondary mb-3"></i>
+                    <h5>Manage Templates</h5>
+                    <p class="text-muted">Create and edit survey templates</p>
+                    <a asp-action="Templates" class="btn btn-secondary">Manage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

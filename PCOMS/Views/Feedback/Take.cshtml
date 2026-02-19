@@ -1,0 +1,182 @@
+﻿@model PCOMS.Application.DTOs.SurveyDetailDto
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_LayoutMinimal.cshtml"; // Minimal layout for external users
+}
+
+<div class="container mt-5" style="max-width:800px">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <div class="mb-3">
+            <i class="bi bi-clipboard2-check text-primary" style="font-size:4rem"></i>
+        </div>
+        <h2>@Model.Title</h2>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted">@Model.Description</p>
+        }
+        <div class="badge bg-info">@Model.ClientName</div>
+        @if (!string.IsNullOrEmpty(Model.ProjectName))
+        {
+            <div class="badge bg-secondary ms-2">@Model.ProjectName</div>
+        }
+    </div>
+
+    <!-- Survey Form -->
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form asp-action="SubmitSurvey" method="post" id="surveyForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="AccessToken" value="@ViewContext.RouteData.Values["token"]" />
+
+                @for (int i = 0; i < Model.Questions.Count; i++)
+                {
+                    var question = Model.Questions[i];
+                    var qNumber = i + 1;
+
+                    <div class="mb-4 pb-4 border-bottom">
+                        <label class="form-label fw-semibold fs-5">
+                            @qNumber. @question.QuestionText
+                            @if (question.IsRequired)
+                            {
+                                <span class="text-danger">*</span>
+                            }
+                        </label>
+
+                        <input type="hidden" name="Answers[@i].QuestionId" value="@question.QuestionId" />
+
+                        @if (question.QuestionType == "Rating")
+                        {
+                            <!-- 5-Star Rating -->
+                            <div class="rating-stars mt-2">
+                                @for (int star = 1; star <= 5; star++)
+                                {
+                                    var starId = $"q{question.QuestionId}_star{star}";
+                                    <input type="radio" name="Answers[@i].ResponseRating" value="@star"
+                                           id="@starId" class="d-none star-input" required="@question.IsRequired" />
+                                    <label for="@starId" class="star-label" style="font-size:2rem;cursor:pointer;color:#ddd">
+                                        ★
+                                    </label>
+                                }
+                            </div>
+                        }
+                        else if (question.QuestionType == "Scale")
+                        {
+                            <!-- 1-10 Scale -->
+                            <div class="btn-group w-100 mt-2" role="group">
+                                @for (int scale = 0; scale <= 10; scale++)
+                                {
+                                    var scaleId = $"q{question.QuestionId}_scale{scale}";
+                                    <input type="radio" class="btn-check" name="Answers[@i].ResponseRating"
+                                           value="@scale" id="@scaleId" required="@question.IsRequired" />
+                                    <label class="btn btn-outline-primary" for="@scaleId">@scale</label>
+                                }
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mt-1">
+                                <span>Not likely</span>
+                                <span>Very likely</span>
+                            </div>
+                        }
+                        else if (question.QuestionType == "YesNo")
+                        {
+                            <!-- Yes/No -->
+                            <div class="mt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="Answers[@i].ResponseChoice"
+                                           value="Yes" id="q@(question.QuestionId)_yes" required="@question.IsRequired" />
+                                    <label class="form-check-label" for="q@(question.QuestionId)_yes">
+                                        <i class="bi bi-check-circle text-success"></i> Yes
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="Answers[@i].ResponseChoice"
+                                           value="No" id="q@(question.QuestionId)_no" required="@question.IsRequired" />
+                                    <label class="form-check-label" for="q@(question.QuestionId)_no">
+                                        <i class="bi bi-x-circle text-danger"></i> No
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                        else if (question.QuestionType == "MultipleChoice" && question.ChoiceOptions.Any())
+                        {
+                            <!-- Multiple Choice -->
+                            <div class="mt-2">
+                                @foreach (var choice in question.ChoiceOptions)
+                                {
+                                    var choiceId = $"q{question.QuestionId}_{choice.Replace(" ", "")}";
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="Answers[@i].ResponseChoice"
+                                               value="@choice" id="@choiceId" required="@question.IsRequired" />
+                                        <label class="form-check-label" for="@choiceId">
+                                            @choice
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else if (question.QuestionType == "Text")
+                        {
+                            <!-- Text Response -->
+                            <textarea name="Answers[@i].ResponseText" class="form-control mt-2" rows="4"
+                              placeholder="Your answer..." required="@question.IsRequired"></textarea>
+                        }
+                    </div>
+                }
+
+                <!-- Submit Button -->
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-send"></i> Submit Survey
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-muted mt-4 mb-5">
+        <small>Your feedback helps us improve our services. Thank you! 🙏</small>
+    </div>
+</div>
+
+<style>
+    .star-label {
+        transition: color 0.2s;
+    }
+    .star-input:checked ~ .star-label,
+    .star-label:hover,
+    .star-label:hover ~ .star-label {
+        color: #ffc107 !important;
+    }
+</style>
+
+<script>
+    // Star rating interaction
+    document.querySelectorAll('.rating-stars').forEach(container => {
+        const stars = container.querySelectorAll('.star-label');
+        const inputs = container.querySelectorAll('.star-input');
+
+        stars.forEach((star, index) => {
+            star.addEventListener('click', () => {
+                inputs[index].checked = true;
+                updateStars(stars, index);
+            });
+
+            star.addEventListener('mouseover', () => {
+                updateStars(stars, index);
+            });
+        });
+
+        container.addEventListener('mouseleave', () => {
+            const checkedIndex = Array.from(inputs).findIndex(input => input.checked);
+            updateStars(stars, checkedIndex);
+        });
+    });
+
+    function updateStars(stars, selectedIndex) {
+        stars.forEach((star, index) => {
+            star.style.color = index <= selectedIndex ? '#ffc107' : '#ddd';
+        });
+    }
+</script>
