@@ -25,15 +25,37 @@ var dbPath = Path.Combine(dbDir, "PCOMS.db");
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //    options.UseSqlite($"Data Source={dbPath}")
 //);
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString =
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? builder.Configuration["DATABASE_URL"];
+    var databaseUrl = builder.Configuration["DATABASE_URL"];
 
-    options.UseNpgsql(connectionString);
+    if (!string.IsNullOrEmpty(databaseUrl))
+    {
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+
+        var cs = new Npgsql.NpgsqlConnectionStringBuilder
+        {
+            Host = uri.Host,
+            Port = uri.Port,
+            Database = uri.AbsolutePath.TrimStart('/'),
+            Username = userInfo[0],
+            Password = userInfo[1],
+            SslMode = Npgsql.SslMode.Require,
+            TrustServerCertificate = true
+        };
+
+        options.UseNpgsql(cs.ConnectionString);
+    }
 });
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//{
+//    var connectionString =
+//        builder.Configuration.GetConnectionString("DefaultConnection")
+//        ?? builder.Configuration["DATABASE_URL"];
+
+//    options.UseNpgsql(connectionString);
+//});
 
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
