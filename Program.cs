@@ -26,10 +26,17 @@ var dbPath = Path.Combine(dbDir, "PCOMS.db");
 //    options.UseSqlite($"Data Source={dbPath}")
 //);
 
-
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString =
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? builder.Configuration["DATABASE_URL"];
+
+    options.UseNpgsql(connectionString);
+});
+
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // =========================
 // Identity
