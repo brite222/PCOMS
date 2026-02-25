@@ -5,6 +5,7 @@ using PCOMS.Data.Seed;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Services;
 using QuestPDF.Infrastructure;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,9 +22,14 @@ Directory.CreateDirectory(dbDir);
 
 var dbPath = Path.Combine(dbDir, "PCOMS.db");
 
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlite($"Data Source={dbPath}")
+//);
+
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}")
-);
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // =========================
 // Identity
@@ -82,6 +88,11 @@ builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
 // =========================
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 // =========================
 // Ensure DB + Migrations (AWS fix)
 // =========================
