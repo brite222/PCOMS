@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // =========================
 builder.Services.AddControllersWithViews();
 
-// Fix PostgreSQL DateTime issue
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 
