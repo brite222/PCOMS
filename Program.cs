@@ -14,13 +14,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // =========================
-// Database (PostgreSQL)
+// Database (PostgreSQL) - WITH RETRY LOGIC
 // =========================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    ));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions =>
+        {
+            // Enable retry on transient failures (PostgreSQL requires errorCodesToAdd parameter)
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorCodesToAdd: null); // null means use default error codes
 
+            // Increase command timeout for slow connections
+            npgsqlOptions.CommandTimeout(60);
+        }
+    ));
 // =========================
 // Identity
 // =========================
@@ -80,12 +90,43 @@ builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
 var app = builder.Build();
 
 // =========================
-// Apply Migrations
+// Apply Migrations (WITH ERROR HANDLING)
 // =========================
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.MigrateAsync();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Starting database migration...");
+        var db = services.GetRequiredService<ApplicationDbContext>();
+
+        // Test connection first
+        var canConnect = await db.Database.CanConnectAsync();
+        logger.LogInformation("Database connection test: {CanConnect}", canConnect);
+
+        if (canConnect)
+        {
+            await db.Database.MigrateAsync();
+            logger.LogInformation("✅ Database migration completed successfully");
+        }
+        else
+        {
+            logger.LogError("❌ Cannot connect to database. Check connection string.");
+            logger.LogError("Connection string (masked): {ConnectionString}",
+                MaskConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Error during database migration");
+        logger.LogError("Connection string (masked): {ConnectionString}",
+            MaskConnectionString(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        // Don't crash - let the app start so we can see errors in logs
+        // throw; // Uncomment to crash on DB errors
+    }
 }
 
 // =========================
@@ -93,17 +134,28 @@ using (var scope = app.Services.CreateScope())
 // =========================
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider
-        .GetRequiredService<RoleManager<IdentityRole>>();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
 
-    string[] roles = { "Admin", "ProjectManager", "Developer", "Client" };
-
-    foreach (var role in roles)
+    try
     {
-        if (!await roleManager.RoleExistsAsync(role))
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        string[] roles = { "Admin", "ProjectManager", "Developer", "Client" };
+
+        foreach (var role in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole(role));
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+                logger.LogInformation("✅ Created role: {Role}", role);
+            }
         }
+
+        logger.LogInformation("✅ Role check completed");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Error creating roles");
     }
 }
 
@@ -113,8 +165,18 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await RoleSeeder.SeedRolesAsync(services);
-    await UserSeeder.SeedAdminAsync(services);
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        await RoleSeeder.SeedRolesAsync(services);
+        await UserSeeder.SeedAdminAsync(services);
+        logger.LogInformation("✅ Seeding completed successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Error during seeding");
+    }
 }
 
 // =========================
@@ -140,4 +202,30 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Clients}/{action=Index}/{id?}");
 
+// Final log before starting
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+startupLogger.LogInformation("🚀 PCOMS Application started successfully");
+
 app.Run();
+
+// =========================
+// HELPER METHOD
+// =========================
+static string? MaskConnectionString(string? connectionString)
+{
+    if (string.IsNullOrEmpty(connectionString))
+        return "NULL";
+
+    // Hide password in logs
+    var masked = connectionString;
+    if (masked.Contains("Password=", StringComparison.OrdinalIgnoreCase))
+    {
+        var parts = masked.Split(';');
+        masked = string.Join(";", parts.Select(p =>
+            p.Trim().StartsWith("Password=", StringComparison.OrdinalIgnoreCase)
+                ? "Password=***HIDDEN***"
+                : p));
+    }
+
+    return masked;
+}
