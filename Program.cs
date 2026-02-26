@@ -34,18 +34,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         var uri = new Uri(databaseUrl);
         var userInfo = uri.UserInfo.Split(':');
 
-        var cs = new Npgsql.NpgsqlConnectionStringBuilder
+        var cs = new NpgsqlConnectionStringBuilder
         {
             Host = uri.Host,
-            Port = uri.Port,
+            Port = uri.Port > 0 ? uri.Port : 5432,
             Database = uri.AbsolutePath.TrimStart('/'),
             Username = userInfo[0],
             Password = userInfo[1],
-            SslMode = Npgsql.SslMode.Require,
+            SslMode = SslMode.Require,
             TrustServerCertificate = true
         };
 
         options.UseNpgsql(cs.ConnectionString);
+    }
+    else
+    {
+        // Fallback for local development
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
     }
 });
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -117,11 +122,11 @@ builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
 // =========================
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    db.Database.Migrate();
+//}
 // =========================
 // Ensure DB + Migrations (AWS fix)
 // =========================
