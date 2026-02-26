@@ -5,7 +5,6 @@ using PCOMS.Data.Seed;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Services;
 using QuestPDF.Infrastructure;
-using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,55 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // =========================
-// Database (SQLite — EB safe)
+// Database (PostgreSQL)
 // =========================
-var dbDir = Path.Combine(AppContext.BaseDirectory, "app_data");
-Directory.CreateDirectory(dbDir);
-
-var dbPath = Path.Combine(dbDir, "PCOMS.db");
-
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseSqlite($"Data Source={dbPath}")
-//);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    var databaseUrl = builder.Configuration["DATABASE_URL"];
-
-    if (!string.IsNullOrEmpty(databaseUrl))
-    {
-        var uri = new Uri(databaseUrl);
-        var userInfo = uri.UserInfo.Split(':');
-
-        var cs = new NpgsqlConnectionStringBuilder
-        {
-            Host = uri.Host,
-            Port = uri.Port > 0 ? uri.Port : 5432,
-            Database = uri.AbsolutePath.TrimStart('/'),
-            Username = userInfo[0],
-            Password = userInfo[1],
-            SslMode = SslMode.Require,
-            TrustServerCertificate = true
-        };
-
-        options.UseNpgsql(cs.ConnectionString);
-    }
-    else
-    {
-        // Fallback for local development
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-    }
-});
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//{
-//    var connectionString =
-//        builder.Configuration.GetConnectionString("DefaultConnection")
-//        ?? builder.Configuration["DATABASE_URL"];
-
-//    options.UseNpgsql(connectionString);
-//});
-
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 
 // =========================
 // Identity
@@ -114,6 +70,7 @@ builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<ResourceService>();
+
 builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
     builder.Configuration.GetSection("Email"));
 
@@ -122,13 +79,8 @@ builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
 // =========================
 var app = builder.Build();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    db.Database.Migrate();
-//}
 // =========================
-// Ensure DB + Migrations (AWS fix)
+// Apply Migrations
 // =========================
 using (var scope = app.Services.CreateScope())
 {
@@ -137,7 +89,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // =========================
-// Create roles if missing
+// Create Roles if Missing
 // =========================
 using (var scope = app.Services.CreateScope())
 {
@@ -154,13 +106,6 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
-
-// =========================
-// Ensure upload folder exists
-// =========================
-var env = app.Services.GetRequiredService<IWebHostEnvironment>();
-Directory.CreateDirectory(
-    Path.Combine(env.WebRootPath, "uploads", "documents"));
 
 // =========================
 // Seed Roles & Admin
