@@ -4,6 +4,8 @@ namespace PCOMS.Models
 {
     public class Document
     {
+        internal readonly object UploadedDate;
+
         public int Id { get; set; }
 
         [Required]

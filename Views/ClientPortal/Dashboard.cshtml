@@ -1,67 +1,35 @@
-﻿@model IEnumerable<PCOMS.Models.Project>
+﻿@model PCOMS.ViewModels.ClientPortalDashboardViewModel
 
 @{
-    ViewData["Title"] = "Client Dashboard";
-    var client = ViewBag.Client as PCOMS.Models.Client;
-    var projectCount = (int?)ViewBag.ProjectCount ?? 0;
-    var activeProjects = (int?)ViewBag.ActiveProjects ?? 0;
-    var invoiceCount = (int?)ViewBag.InvoiceCount ?? 0;
-    var totalOutstanding = (decimal?)ViewBag.TotalOutstanding ?? 0m;
-    var totalOverdue = (decimal?)ViewBag.TotalOverdue ?? 0m;
-    var documentCount = (int?)ViewBag.DocumentCount ?? 0;
-    var recentInvoices = ViewBag.RecentInvoices as IEnumerable<PCOMS.Application.DTOs.InvoiceDto>;
-
-    // Safety checks
-    if (client == null)
-    {
-        client = new PCOMS.Models.Client { Name = "Guest", Id = 0, CreatedAt = DateTime.Now };
-    }
-
-    if (Model == null)
-    {
-        var projects = Model ?? new List<PCOMS.Models.Project>();
-    }
+    ViewData["Title"] = "My Dashboard";
 }
 
 <div class="container-fluid mt-4">
     <!-- Welcome Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2>Welcome, @client.Name!</h2>
-            <p class="text-muted">Here's an overview of your projects and invoices</p>
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-hand-wave text-primary"></i>
+                Hello, @Model.ClientName!
+            </h1>
+            <p class="text-muted fs-5">Welcome back to your portal</p>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- Quick Stats Row -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="bi bi-folder text-primary fs-3"></i>
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-folder2-open text-primary fs-2"></i>
+                            </div>
                         </div>
-                        <div>
-                            <h6 class="text-muted mb-0">Total Projects</h6>
-                            <h2 class="mb-0">@projectCount</h2>
-                            <small class="text-success">@activeProjects active</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="bi bi-receipt text-info fs-3"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-0">Invoices</h6>
-                            <h2 class="mb-0">@invoiceCount</h2>
-                            <small><a asp-action="MyInvoices">View all</a></small>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Active Projects</h6>
+                            <h2 class="mb-0">@Model.ActiveProjects</h2>
                         </div>
                     </div>
                 </div>
@@ -72,16 +40,14 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="bi bi-cash-stack text-warning fs-3"></i>
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-receipt text-warning fs-2"></i>
+                            </div>
                         </div>
-                        <div>
-                            <h6 class="text-muted mb-0">Outstanding</h6>
-                            <h2 class="mb-0">₦@totalOutstanding.ToString("N0")</h2>
-                            @if (totalOverdue > 0)
-                            {
-                                <small class="text-danger">₦@totalOverdue.ToString("N0") overdue</small>
-                            }
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Pending Invoices</h6>
+                            <h2 class="mb-0">@Model.PendingInvoices</h2>
                         </div>
                     </div>
                 </div>
@@ -92,13 +58,32 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="bi bi-file-earmark text-success fs-3"></i>
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-file-earmark-text text-success fs-2"></i>
+                            </div>
                         </div>
-                        <div>
-                            <h6 class="text-muted mb-0">Documents</h6>
-                            <h2 class="mb-0">@documentCount</h2>
-                            <small><a asp-action="MyDocuments">View files</a></small>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Documents</h6>
+                            <h2 class="mb-0">@Model.TotalDocuments</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="bi bi-trophy text-info fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Completed</h6>
+                            <h2 class="mb-0">@Model.CompletedProjects</h2>
                         </div>
                     </div>
                 </div>
@@ -106,38 +91,72 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Left: Projects -->
+    <!-- Main Content Row -->
+    <div class="row g-4">
+        <!-- Left Column: Projects -->
         <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-folder"></i> My Projects</h5>
-                    <a asp-action="MyProjects" class="btn btn-sm btn-outline-primary">View All</a>
+            <!-- My Projects -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-kanban me-2"></i>My Projects
+                        </h5>
+                        <a href="@Url.Action("MyProjects", "ClientPortal")" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    @if (Model != null && Model.Any())
+                    @if (Model.Projects.Any())
                     {
-                        <div class="list-group list-group-flush">
-                            @foreach (var project in Model.Take(5))
+                        <div class="row g-3">
+                            @foreach (var project in Model.Projects.Take(4))
                             {
-                                var statusClass = project.Status switch
-                                {
-                                    PCOMS.Models.ProjectStatus.Active => "bg-success",
-                                    PCOMS.Models.ProjectStatus.Completed => "bg-info",
-                                    PCOMS.Models.ProjectStatus.Planned => "bg-secondary",
-                                    _ => "bg-secondary"
-                                };
+                                <div class="col-md-6">
+                                    <div class="card h-100 border shadow-sm hover-lift">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <span class="badge @GetStatusClass(project.Status) px-2 py-1">
+                                                    @project.Status
+                                                </span>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-calendar3"></i>
+                                                    @project.StartDate.ToString("MMM dd")
+                                                </small>
+                                            </div>
 
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">@project.Name</h6>
+                                            <h6 class="card-title mb-2">
+                                                <a href="@Url.Action("ProjectDetails", "ClientPortal", new { id = project.Id })"
+                                                   class="text-decoration-none text-dark fw-bold">
+                                                    @project.Name
+                                                </a>
+                                            </h6>
+
                                             @if (!string.IsNullOrEmpty(project.Description))
                                             {
-                                                <small class="text-muted">@project.Description</small>
+                                                <p class="card-text text-muted small mb-2">
+                                                    @(project.Description.Length > 80
+                                                                                            ? project.Description.Substring(0, 80) + "..."
+                                                                                            : project.Description)
+                                    </p>
+                                                                        }
+
+                                            @if (project.Status == ProjectStatus.Active || project.Status == ProjectStatus.InProgress)
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <small class="text-muted">Progress</small>
+                                                        <small class="fw-bold">@project.CompletionPercentage%</small>
+                                                    </div>
+                                                    <div class="progress" style="height: 6px;">
+                                                        <div class="progress-bar bg-primary"
+                                                             style="width: @project.CompletionPercentage%">
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             }
                                         </div>
-                                        <span class="badge @statusClass">@project.Status</span>
                                     </div>
                                 </div>
                             }
@@ -145,79 +164,150 @@
                     }
                     else
                     {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-1"></i>
-                            <p>No projects yet</p>
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox display-4 text-muted mb-2"></i>
+                            <p class="text-muted">No active projects</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Recent Documents -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-earmark-text me-2"></i>Recent Documents
+                        </h5>
+                        <a href="@Url.Action("MyDocuments", "ClientPortal")" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentDocuments.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var doc in Model.RecentDocuments.Take(5))
+                            {
+                                <a href="@Url.Action("DownloadDocument", "ClientPortal", new { id = doc.Id })"
+                                   class="list-group-item list-group-item-action border-0 px-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="bi @GetFileIcon(doc.FileName) fs-4 text-primary"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-0">@doc.FileName</h6>
+                                            <small class="text-muted">
+                                                @doc.Category • @doc.UploadedDate.ToString("MMM dd, yyyy")
+                                            </small>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <i class="bi bi-download text-muted"></i>
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-file-earmark display-4 text-muted mb-2"></i>
+                            <p class="text-muted">No documents available</p>
                         </div>
                     }
                 </div>
             </div>
         </div>
 
-        <!-- Right: Recent Invoices -->
+        <!-- Right Column: Invoices & Quick Actions -->
         <div class="col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Recent Invoices</h5>
-                    <a asp-action="MyInvoices" class="btn btn-sm btn-outline-primary">View All</a>
+            <!-- Recent Invoices -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-receipt me-2"></i>Invoices
+                        </h5>
+                        <a href="@Url.Action("MyInvoices", "ClientPortal")" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    @if (recentInvoices != null && recentInvoices.Any())
+                    @if (Model.RecentInvoices.Any())
                     {
-                        <div class="list-group list-group-flush">
-                            @foreach (var invoice in recentInvoices)
-                            {
-                                var statusClass = invoice.Status switch
-                                {
-                                    "Paid" => "bg-success",
-                                    "PartiallyPaid" => "bg-info",
-                                    "Overdue" => "bg-danger",
-                                    _ => "bg-secondary"
-                                };
-
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <strong>@invoice.InvoiceNumber</strong><br />
-                                            <small class="text-muted">Due: @invoice.DueDate.ToString("MMM dd, yyyy")</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="badge @statusClass">@invoice.Status</span><br />
-                                            <small><strong>₦@invoice.TotalAmount.ToString("N2")</strong></small>
-                                        </div>
-                                    </div>
+                        @foreach (var invoice in Model.RecentInvoices.Take(5))
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div>
+                                    <h6 class="mb-1">@invoice.InvoiceNumber</h6>
+                                    <small class="text-muted">@invoice.InvoiceDate.ToString("MMM dd, yyyy")</small>
                                 </div>
-                            }
-                        </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">$@invoice.TotalAmount.ToString("N2")</div>
+                                    <span class="badge @GetInvoiceStatusClass(invoice.Status)">
+                                        @invoice.Status
+                                    </span>
+                                </div>
+                            </div>
+                        }
                     }
                     else
                     {
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-1"></i>
-                            <p>No invoices yet</p>
+                        <div class="text-center py-4">
+                            <i class="bi bi-receipt display-4 text-muted mb-2"></i>
+                            <p class="text-muted">No invoices yet</p>
                         </div>
                     }
                 </div>
             </div>
 
-            <!-- Quick Links -->
-            <div class="card shadow-sm mt-3">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h6>
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+                    </h5>
                 </div>
-                <div class="list-group list-group-flush">
-                    <a asp-action="MyProjects" class="list-group-item list-group-item-action">
-                        <i class="bi bi-folder me-2"></i> All Projects
-                    </a>
-                    <a asp-action="MyInvoices" class="list-group-item list-group-item-action">
-                        <i class="bi bi-receipt me-2"></i> All Invoices
-                    </a>
-                    <a asp-action="MyDocuments" class="list-group-item list-group-item-action">
-                        <i class="bi bi-file-earmark me-2"></i> All Documents
-                    </a>
-                    <a asp-action="AccountInfo" class="list-group-item list-group-item-action">
-                        <i class="bi bi-person me-2"></i> Account Info
-                    </a>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("SubmitFeedback", "Feedback")" class="btn btn-outline-primary">
+                            <i class="bi bi-chat-dots me-2"></i>Give Feedback
+                        </a>
+                        <a href="@Url.Action("MyInvoices", "ClientPortal")" class="btn btn-outline-success">
+                            <i class="bi bi-credit-card me-2"></i>Pay Invoice
+                        </a>
+                        <a href="@Url.Action("MyDocuments", "ClientPortal")" class="btn btn-outline-info">
+                            <i class="bi bi-download me-2"></i>Download Documents
+                        </a>
+                        <a href="@Url.Action("MyFeedback", "Feedback")" class="btn btn-outline-secondary">
+                            <i class="bi bi-clock-history me-2"></i>My Feedback History
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Summary -->
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="bi bi-wallet2 me-2"></i>Account Summary
+                    </h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Billed:</span>
+                        <strong class="text-dark">$@Model.TotalBilled.ToString("N2")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Paid:</span>
+                        <strong class="text-success">$@Model.TotalPaid.ToString("N2")</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Outstanding:</span>
+                        <strong class="text-warning">$@Model.OutstandingBalance.ToString("N2")</strong>
+                    </div>
                 </div>
             </div>
         </div>
@@ -225,11 +315,54 @@
 </div>
 
 <style>
-    .card {
-        transition: transform 0.2s;
+    .hover-lift {
+        transition: all 0.3s ease;
     }
 
-        .card:hover {
-            transform: translateY(-2px);
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
         }
 </style>
+
+@functions {
+    string GetStatusClass(ProjectStatus status)
+    {
+        return status switch
+        {
+            ProjectStatus.Active => "bg-success",
+            ProjectStatus.InProgress => "bg-primary",
+            ProjectStatus.Completed => "bg-info",
+            ProjectStatus.OnHold => "bg-warning",
+            ProjectStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetInvoiceStatusClass(InvoiceStatus status)
+    {
+        return status switch
+        {
+            InvoiceStatus.Draft => "bg-secondary",
+            InvoiceStatus.Sent => "bg-warning",
+            InvoiceStatus.Paid => "bg-success",
+            InvoiceStatus.Overdue => "bg-danger",
+            InvoiceStatus.Cancelled => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetFileIcon(string fileName)
+    {
+        var extension = System.IO.Path.GetExtension(fileName)?.ToLower();
+        return extension switch
+        {
+            ".pdf" => "bi-file-earmark-pdf",
+            ".doc" or ".docx" => "bi-file-earmark-word",
+            ".xls" or ".xlsx" => "bi-file-earmark-excel",
+            ".jpg" or ".jpeg" or ".png" or ".gif" => "bi-file-earmark-image",
+            ".zip" or ".rar" => "bi-file-earmark-zip",
+            _ => "bi-file-earmark-text"
+        };
+    }
+}

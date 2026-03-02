@@ -6,6 +6,9 @@
         Active = 1,
         Completed = 2,
         Archived = 3,
-       Cancelled = 4
+       Cancelled = 4,
+       InProgress = 5,
+       OnHold = 6
+
     }
 }

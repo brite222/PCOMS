@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
 using PCOMS.Data;
-using Microsoft.EntityFrameworkCore;
 using PCOMS.Models;
-
+using PCOMS.ViewModels;
+using System.Security.Claims;
+using TaskStatus = PCOMS.Models.TaskStatus;
 namespace PCOMS.Controllers
 {
     //[Authorize(Roles = "Client")]
@@ -29,79 +31,102 @@ namespace PCOMS.Controllers
         // ==========================================
         // DASHBOARD - Client overview
         // ==========================================
+       
+       
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
-            try
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var clientUser = await _context.ClientUsers
+                .Include(cu => cu.Client)
+                .FirstOrDefaultAsync(cu => cu.UserId == userId);
+
+            if (clientUser == null)
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null)
-                {
-                    // For testing - create dummy data
-                    ViewBag.Client = new Client { Name = "Test Client", Id = 1 };
-                    ViewBag.ProjectCount = 0;
-                    ViewBag.ActiveProjects = 0;
-                    ViewBag.InvoiceCount = 0;
-                    ViewBag.TotalOutstanding = 0m;
-                    ViewBag.TotalOverdue = 0m;
-                    ViewBag.DocumentCount = 0;
-                    ViewBag.RecentInvoices = new List<InvoiceDto>();
-
-                    return View(new List<Project>());
-                }
-
-                // Get client record
-                var clientUser = await _context.ClientUsers
-                    .Include(cu => cu.Client)
-                    .FirstOrDefaultAsync(cu => cu.UserId == user.Id);
-
-                if (clientUser == null)
-                {
-                    TempData["Error"] = "No client profile found";
-                    return RedirectToAction("Index", "Home");
-                }
-
-                var clientId = clientUser.ClientId;
-
-                // Get statistics
-                var projects = await _context.Projects
-                    .Where(p => p.ClientId == clientId)
-                    .ToListAsync();
-
-                var invoices = _invoiceService != null
-                    ? await _invoiceService.GetClientInvoicesAsync(clientId)
-                    : new List<InvoiceDto>();
-
-                var totalOutstanding = _invoiceService != null
-                    ? await _invoiceService.GetTotalOutstandingAsync(clientId)
-                    : 0m;
-
-                var totalOverdue = _invoiceService != null
-                    ? await _invoiceService.GetTotalOverdueAsync(clientId)
-                    : 0m;
-
-                var documents = await _context.Documents
-                    .Where(d => projects.Select(p => p.Id).Contains(d.ProjectId) && !d.IsDeleted)
-                    .CountAsync();
-
-                ViewBag.Client = clientUser.Client;
-                ViewBag.ProjectCount = projects.Count;
-                ViewBag.ActiveProjects = projects.Count(p => p.Status == ProjectStatus.Active);
-                ViewBag.InvoiceCount = invoices.Count();
-                ViewBag.TotalOutstanding = totalOutstanding;
-                ViewBag.TotalOverdue = totalOverdue;
-                ViewBag.DocumentCount = documents;
-                ViewBag.RecentInvoices = invoices.Take(5);
-
-                return View(projects);
+                return RedirectToAction("AccessDenied", "Account");
             }
-            catch (Exception ex)
+
+            var client = clientUser.Client;
+
+            // Get Projects
+            var projects = await _context.Projects
+                .Where(p => p.ClientId == client.Id)
+                .OrderByDescending(p => p.StartDate)
+                .ToListAsync();
+
+            var projectViewModels = new List<ClientProjectViewModel>();
+            foreach (var project in projects)
             {
-                TempData["Error"] = $"Error loading dashboard: {ex.Message}";
-                return View(new List<Project>());
+                var totalTasks = await _context.Tasks.CountAsync(t => t.ProjectId == project.Id);
+                var completedTasks = await _context.Tasks
+                    .CountAsync(t => t.ProjectId == project.Id && t.Status == TaskStatus.Completed);
+                var completionPercentage = totalTasks > 0 ? (int)((decimal)completedTasks / totalTasks * 100) : 0;
+
+                projectViewModels.Add(new ClientProjectViewModel
+                {
+                    Id = project.Id,
+                    Name = project.Name,
+                    Description = project.Description,
+                    Status = project.Status,
+                    StartDate = project.StartDate,
+                    EndDate = project.EndDate,
+                    CompletionPercentage = completionPercentage
+                });
             }
+
+            // Get Invoices
+            var invoices = await _context.Invoices
+                .Where(i => i.ClientId == client.Id)
+                .OrderByDescending(i => i.InvoiceDate)
+                .ToListAsync();
+
+            var invoiceViewModels = invoices.Select(i => new ClientInvoiceViewModel
+            {
+                Id = i.Id,
+                InvoiceNumber = i.InvoiceNumber,
+                InvoiceDate = i.InvoiceDate,
+                TotalAmount = i.TotalAmount,
+                Status = i.Status
+            }).ToList();
+
+            var totalBilled = invoices.Sum(i => i.TotalAmount);
+            var totalPaid = invoices.Where(i => i.Status == InvoiceStatus.Paid).Sum(i => i.TotalAmount);
+            var pendingInvoices = invoices.Count(i => i.Status == InvoiceStatus.Sent || i.Status == InvoiceStatus.Overdue);
+
+            // Get Documents
+            var documents = await _context.Documents
+                .Where(d => projects.Select(p => p.Id).Contains(d.ProjectId) && !d.IsDeleted)
+                .OrderByDescending(d => d.UploadedDate)
+                .ToListAsync();
+
+            var documentViewModels = documents.Select(d => new ClientDocumentViewModel
+            {
+                Id = d.Id,
+                FileName = d.FileName,
+                Category = d.Category,
+                UploadedDate = (DateTime)d.UploadedDate
+            }).ToList();
+
+            // Build ViewModel
+            var viewModel = new ClientPortalDashboardViewModel
+            {
+                ClientName = client.Name,
+                TotalProjects = projects.Count,
+                ActiveProjects = projects.Count(p => p.Status == ProjectStatus.Active || p.Status == ProjectStatus.InProgress),
+                CompletedProjects = projects.Count(p => p.Status == ProjectStatus.Completed),
+                Projects = projectViewModels,
+                PendingInvoices = pendingInvoices,
+                TotalBilled = totalBilled,
+                TotalPaid = totalPaid,
+                OutstandingBalance = totalBilled - totalPaid,
+                RecentInvoices = invoiceViewModels,
+                TotalDocuments = documents.Count,
+                RecentDocuments = documentViewModels
+            };
+
+            return View(viewModel);
         }
-
         // ==========================================
         // MY PROJECTS - List all client projects
         // ==========================================
