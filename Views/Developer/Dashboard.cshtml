@@ -1,8 +1,11 @@
-﻿@{
+﻿@using TaskStatus = PCOMS.Models.TaskStatus
+@using PCOMS.Models
+
+@{
     ViewData["Title"] = "My Dashboard";
     var developerName = ViewBag.DeveloperName as string ?? "Developer";
-    var projects = ViewBag.Projects as List<PCOMS.Models.Project> ?? new List<PCOMS.Models.Project>();
-    var tasks = ViewBag.Tasks as List<PCOMS.Models.TaskItem> ?? new List<PCOMS.Models.TaskItem>();
+    var projects = ViewBag.Projects as List<Project> ?? new List<Project>();
+    var tasks = ViewBag.Tasks as List<TaskItem> ?? new List<TaskItem>();
 }
 
 <div class="container-fluid mt-4">
@@ -16,6 +19,8 @@
             <p class="text-muted fs-5">Welcome to your workspace</p>
         </div>
     </div>
+
+    
 
     <!-- Quick Stats -->
     <div class="row g-3 mb-4">
