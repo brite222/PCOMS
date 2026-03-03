@@ -1,0 +1,79 @@
+﻿@model List<PCOMS.Models.TaskItem>
+@using TaskStatus = PCOMS.Models.TaskStatus
+
+@{
+    ViewData["Title"] = "My Tasks";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-list-task me-2"></i>My Tasks</h2>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Project</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var task in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@task.Title</strong>
+                                        @if (!string.IsNullOrEmpty(task.Description))
+                                        {
+                                            <br>
+                                            <small class="text-muted">
+                                                @(task.Description.Length > 50 ? task.Description.Substring(0, 50) + "..." : task.Description)
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>@task.Project?.Name</td>
+                                    <td>
+                                        <span class="badge bg-@(task.Priority == TaskPriority.High ? "danger" : task.Priority == TaskPriority.Medium ? "warning" : "secondary")">
+                                            @task.Priority
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(task.Status == TaskStatus.Completed ? "success" : "primary")">
+                                            @task.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (task.DueDate.HasValue)
+                                        {
+                                            <span class="@(task.DueDate.Value < DateTime.Today && task.Status != TaskStatus.Completed ? "text-danger" : "")">
+                                                @task.DueDate.Value.ToString("MMM dd, yyyy")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No due date</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>No tasks assigned to you yet.
+        </div>
+    }
+</div>
