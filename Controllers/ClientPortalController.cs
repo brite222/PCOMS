@@ -31,8 +31,7 @@ namespace PCOMS.Controllers
         // ==========================================
         // DASHBOARD - Client overview
         // ==========================================
-       
-       
+
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
@@ -94,10 +93,10 @@ namespace PCOMS.Controllers
             var totalPaid = invoices.Where(i => i.Status == InvoiceStatus.Paid).Sum(i => i.TotalAmount);
             var pendingInvoices = invoices.Count(i => i.Status == InvoiceStatus.Sent || i.Status == InvoiceStatus.Overdue);
 
-            // Get Documents
+            // Get Documents - FIXED
             var documents = await _context.Documents
                 .Where(d => projects.Select(p => p.Id).Contains(d.ProjectId) && !d.IsDeleted)
-                .OrderByDescending(d => d.UploadedDate)
+                .OrderByDescending(d => d.UploadedAt)  
                 .ToListAsync();
 
             var documentViewModels = documents.Select(d => new ClientDocumentViewModel
@@ -105,15 +104,15 @@ namespace PCOMS.Controllers
                 Id = d.Id,
                 FileName = d.FileName,
                 Category = d.Category,
-                UploadedDate = (DateTime)d.UploadedDate
+                UploadedDate = d.UploadedAt 
             }).ToList();
 
-            // Build ViewModel
+            // Build ViewModel - FIXED
             var viewModel = new ClientPortalDashboardViewModel
             {
                 ClientName = client.Name,
                 TotalProjects = projects.Count,
-                ActiveProjects = projects.Count(p => p.Status == ProjectStatus.Active || p.Status == ProjectStatus.InProgress),
+                ActiveProjects = projects.Count(p => p.Status == ProjectStatus.Active),  
                 CompletedProjects = projects.Count(p => p.Status == ProjectStatus.Completed),
                 Projects = projectViewModels,
                 PendingInvoices = pendingInvoices,

@@ -142,7 +142,7 @@
                                     </p>
                                                                         }
 
-                                            @if (project.Status == ProjectStatus.Active || project.Status == ProjectStatus.InProgress)
+                                            ActiveProjects = projects.Count(p => p.Status == ProjectStatus.Active),
                                             {
                                                 <div class="mt-2">
                                                     <div class="d-flex justify-content-between mb-1">
@@ -333,7 +333,6 @@
             ProjectStatus.Active => "bg-success",
             ProjectStatus.InProgress => "bg-primary",
             ProjectStatus.Completed => "bg-info",
-            ProjectStatus.OnHold => "bg-warning",
             ProjectStatus.Cancelled => "bg-danger",
             _ => "bg-secondary"
         };
