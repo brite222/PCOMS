@@ -1,0 +1,439 @@
+﻿/* ================================================
+   MOBILE RESPONSIVE STYLES FOR PCOMS
+   Add this to wwwroot/css/mobile.css
+   ================================================ */
+
+/* ===== MOBILE BREAKPOINTS ===== */
+@media (max-width: 768px) {
+
+    /* HEADER ADJUSTMENTS */
+    .top-header {
+        padding: 0 1rem;
+    }
+
+    .header-brand .brand-text {
+        font-size: 0.9rem;
+    }
+
+    .user-chip span.d-none {
+        display: none !important;
+    }
+
+    /* SIDEBAR - SLIDE IN FROM LEFT */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        width: 280px !important;
+        transition: left 0.3s ease;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+        z-index: 2000;
+    }
+
+        .sidebar.show {
+            left: 0;
+        }
+
+    /* SIDEBAR OVERLAY */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1999;
+    }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+    /* MAIN CONTENT - FULL WIDTH ON MOBILE */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 1rem;
+        margin-top: var(--header-height);
+    }
+
+    /* FOOTER - FULL WIDTH */
+    footer {
+        margin-left: 0 !important;
+        padding: 1rem;
+        font-size: 0.75rem;
+    }
+
+    /* CARDS - STACK ON MOBILE */
+    .row > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    /* TABLES - HORIZONTAL SCROLL */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+
+        table th,
+        table td {
+            padding: 0.5rem !important;
+            white-space: nowrap;
+        }
+
+    /* BUTTONS - LARGER TOUCH TARGETS */
+    .btn {
+        min-height: 44px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        padding: 0.4rem 0.75rem;
+    }
+
+    /* FORMS - MOBILE FRIENDLY */
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+        padding: 0.6rem 0.75rem;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+    }
+
+    /* MODALS - FULL SCREEN ON MOBILE */
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100vh;
+    }
+
+    .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+
+    /* DROPDOWNS - BETTER MOBILE UX */
+    .dropdown-menu {
+        font-size: 0.9rem;
+    }
+
+    .dropdown-item {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+
+    /* PAGINATION - STACK ON MOBILE */
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* BREADCRUMBS - SCROLL ON MOBILE */
+    .breadcrumb {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ALERTS - FULL WIDTH */
+    .alert {
+        border-radius: 0;
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* GRID ADJUSTMENTS */
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* STATISTICS CARDS */
+    .stat-card,
+    .kpi-card {
+        text-align: center;
+        padding: 1.5rem 1rem;
+    }
+
+    /* CHARTS - RESPONSIVE */
+    canvas {
+        max-width: 100%;
+        height: auto !important;
+    }
+
+    /* HEADERS */
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+    }
+
+    h4 {
+        font-size: 1.1rem;
+    }
+
+    h5 {
+        font-size: 1rem;
+    }
+
+    h6 {
+        font-size: 0.9rem;
+    }
+
+    /* PAGE HEADERS */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+
+        .page-header .btn-group,
+        .page-header .actions {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .page-header .btn {
+            width: 100%;
+        }
+
+    /* SEARCH BARS */
+    .search-bar {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    /* FILTERS - STACK ON MOBILE */
+    .filters {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+        .filters .form-control,
+        .filters .form-select {
+            width: 100%;
+        }
+
+    /* TABS - SCROLL ON MOBILE */
+    .nav-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .nav-tabs .nav-link {
+            white-space: nowrap;
+        }
+
+    /* DASHBOARD WIDGETS */
+    .widget {
+        margin-bottom: 1rem;
+    }
+
+    /* DATA LISTS */
+    .list-group-item {
+        padding: 1rem;
+    }
+
+    /* BADGES AND TAGS */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.6em;
+    }
+}
+
+/* ===== EXTRA SMALL DEVICES (< 576px) ===== */
+@media (max-width: 576px) {
+
+    /* EVEN SMALLER ADJUSTMENTS */
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    /* COMPACT CARDS */
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+
+    /* SMALLER BUTTONS */
+    .btn {
+        font-size: 0.875rem;
+    }
+
+    /* TABLES - EVEN MORE COMPACT */
+    table {
+        font-size: 0.8rem;
+    }
+
+        table th,
+        table td {
+            padding: 0.4rem !important;
+        }
+
+    /* HIDE NON-ESSENTIAL COLUMNS ON VERY SMALL SCREENS */
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+/* ===== TABLET (577px - 768px) ===== */
+@media (min-width: 577px) and (max-width: 768px) {
+
+    /* TABLET SPECIFIC ADJUSTMENTS */
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    /* TWO COLUMN LAYOUT FOR CARDS */
+    .col-sm-6 {
+        width: 50%;
+        float: left;
+    }
+}
+
+/* ===== LANDSCAPE MODE ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+
+    /* REDUCE HEADER HEIGHT */
+    .top-header {
+        height: 50px;
+    }
+
+    :root {
+        --header-height: 50px;
+    }
+
+    /* COMPACT SIDEBAR */
+    .sidebar {
+        width: 240px !important;
+    }
+}
+
+/* ===== TOUCH IMPROVEMENTS ===== */
+@media (hover: none) and (pointer: coarse) {
+
+    /* LARGER TOUCH TARGETS */
+    a, button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* REMOVE HOVER EFFECTS ON TOUCH */
+    .nav-link:hover {
+        background: transparent;
+    }
+
+    /* ACTIVE STATE FOR TOUCH */
+    .nav-link:active {
+        background: var(--border-soft);
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+}
+
+/* ===== UTILITIES ===== */
+
+/* Hide on mobile */
+.d-mobile-none {
+    display: none !important;
+}
+
+@media (min-width: 769px) {
+    .d-mobile-none {
+        display: block !important;
+    }
+}
+
+/* Show only on mobile */
+.d-mobile-only {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .d-mobile-only {
+        display: block !important;
+    }
+}
+
+/* Mobile text alignment */
+@media (max-width: 768px) {
+    .text-mobile-center {
+        text-align: center !important;
+    }
+
+    .text-mobile-left {
+        text-align: left !important;
+    }
+}
+
+/* Stack columns on mobile */
+@media (max-width: 768px) {
+    .stack-mobile {
+        flex-direction: column !important;
+    }
+
+        .stack-mobile > * {
+            width: 100% !important;
+            margin-bottom: 0.5rem;
+        }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .sidebar,
+    .top-header,
+    footer,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
