@@ -11,7 +11,7 @@ using System.Security.Claims;
 using TaskStatus = PCOMS.Models.TaskStatus;
 namespace PCOMS.Controllers
 {
-    //[Authorize(Roles = "Client")]
+    [Authorize(Roles = "Client")]
     public class ClientPortalController : Controller
     {
         private readonly ApplicationDbContext _context;

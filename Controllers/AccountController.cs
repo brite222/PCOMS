@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
+using PCOMS.ViewModels;
 using System.Security.Claims;
 
 namespace PCOMS.Controllers
@@ -48,36 +49,48 @@ namespace PCOMS.Controllers
         // LOGIN (POST)
         // =========================
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginDto dto)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
-                return View(dto);
-
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null)
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Invalid login attempt.");
-                return View(dto);
+                var result = await _signInManager.PasswordSignInAsync(
+                    model.Email,
+                    model.Password,
+                    model.RememberMe,
+                    lockoutOnFailure: false);
+
+                if (result.Succeeded)
+                {
+                    // ✅ ADD THIS SECTION
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    if (user != null)
+                    {
+                        var roles = await _userManager.GetRolesAsync(user);
+
+                        if (roles.Contains("Client"))
+                        {
+                            return RedirectToAction("Dashboard", "ClientPortal");
+                        }
+                        else if (roles.Contains("Admin") || roles.Contains("ProjectManager"))
+                        {
+                            return RedirectToAction("Index", "Clients");
+                        }
+                        else if (roles.Contains("Developer"))
+                        {
+                            return RedirectToAction("MyProjects", "Projects");
+                        }
+                    }
+                    // ✅ END OF NEW SECTION
+
+                    return RedirectToLocal(returnUrl);
+                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             }
 
-            var result = await _signInManager.PasswordSignInAsync(
-                user.UserName!,
-                dto.Password,
-                dto.RememberMe,
-                lockoutOnFailure: false
-            );
-
-            if (!result.Succeeded)
-            {
-                ModelState.AddModelError("", "Invalid login attempt.");
-                return View(dto);
-            }
-
-            // ✅ LOGIN SUCCESS
-            return RedirectToAction("Index", "Clients");
+            return View(model);
         }
-
 
         // =========================
         // PROFILE
@@ -186,6 +199,20 @@ namespace PCOMS.Controllers
             );
 
             return RedirectToAction("Index", "Clients");
+
+
+        }
+
+        private IActionResult RedirectToLocal(string? returnUrl)
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction("Index", "Home");
+            }
         }
     }
 }
