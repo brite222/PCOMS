@@ -2,10 +2,12 @@
 {
     public class EmailSettings
     {
-        public string Host { get; set; } = null!;
-        public int Port { get; set; }
-        public string Username { get; set; } = null!;
-        public string Password { get; set; } = null!;
-        public string From { get; set; } = null!;
+        // Gmail SMTP Configuration
+        public string SmtpServer { get; set; } = string.Empty;
+        public int SmtpPort { get; set; }
+        public string SenderName { get; set; } = string.Empty;
+        public string SenderEmail { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }
