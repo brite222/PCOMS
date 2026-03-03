@@ -572,25 +572,37 @@
                 }
                 else if (User.IsInRole("Developer"))
                 {
-                    <!-- Developer Navigation -->
-                    <li class="nav-item" data-label="My Dashboard">
-                        <a class="nav-link" asp-controller="Dashboard" asp-action="My">
+                    <!-- MAIN -->
+                    <li class="nav-section-title">MAIN</li>
+
+                    <li class="nav-item" data-label="Dashboard">
+                        <a class="nav-link" asp-controller="Developer" asp-action="Dashboard">
                             <i class="bi bi-speedometer2"></i>
-                            <span class="nav-link-text">My Dashboard</span>
+                            <span class="nav-link-text">Dashboard</span>
                         </a>
                     </li>
+
                     <li class="nav-item" data-label="My Projects">
-                        <a class="nav-link" asp-controller="Projects" asp-action="My">
+                        <a class="nav-link" asp-controller="Developer" asp-action="MyProjects">
                             <i class="bi bi-kanban"></i>
                             <span class="nav-link-text">My Projects</span>
                         </a>
                     </li>
-                    <li class="nav-item" data-label="Tasks">
-                        <a class="nav-link" asp-controller="Tasks" asp-action="Index">
-                            <i class="bi bi-check2-square"></i>
-                            <span class="nav-link-text">Tasks</span>
+
+                    <li class="nav-item" data-label="My Tasks">
+                        <a class="nav-link" asp-controller="Developer" asp-action="MyTasks">
+                            <i class="bi bi-list-task"></i>
+                            <span class="nav-link-text">My Tasks</span>
                         </a>
                     </li>
+
+                    <li class="nav-item" data-label="Time Tracking">
+                        <a class="nav-link" asp-controller="TimeTracking" asp-action="Index">
+                            <i class="bi bi-clock-history"></i>
+                            <span class="nav-link-text">Time Tracking</span>
+                        </a>
+                    </li>
+
                     <li class="nav-item" data-label="Documents">
                         <a class="nav-link" asp-controller="Documents" asp-action="Index">
                             <i class="bi bi-file-earmark-text"></i>
@@ -598,19 +610,39 @@
                         </a>
                     </li>
 
-                    <!-- DEVELOPER: Submissions section in MAIN nav -->
+                    <!-- SUBMISSIONS -->
                     <li class="nav-divider"></li>
-                    <li class="nav-section-title">Submissions</li>
-                    <li class="nav-item" data-label="Submit Project">
+                    <li class="nav-section-title">SUBMISSIONS</li>
+
+                    <li class="nav-item" data-label="Submit Work">
                         <a class="nav-link" asp-controller="Submissions" asp-action="Create">
                             <i class="bi bi-send-check"></i>
-                            <span class="nav-link-text">Submit Project</span>
+                            <span class="nav-link-text">Submit Work</span>
                         </a>
                     </li>
+
                     <li class="nav-item" data-label="My Submissions">
                         <a class="nav-link" asp-controller="Submissions" asp-action="Index">
-                            <i class="bi bi-clock-history"></i>
+                            <i class="bi bi-inbox"></i>
                             <span class="nav-link-text">My Submissions</span>
+                        </a>
+                    </li>
+
+                    <!-- COMMUNICATION -->
+                    <li class="nav-divider"></li>
+                    <li class="nav-section-title">COMMUNICATION</li>
+
+                    <li class="nav-item" data-label="Team Chat">
+                        <a class="nav-link" asp-controller="Communication" asp-action="Chat">
+                            <i class="bi bi-chat-dots"></i>
+                            <span class="nav-link-text">Team Chat</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" data-label="Calendar">
+                        <a class="nav-link" asp-controller="Calendar" asp-action="Index">
+                            <i class="bi bi-calendar3"></i>
+                            <span class="nav-link-text">Calendar</span>
                         </a>
                     </li>
                 }

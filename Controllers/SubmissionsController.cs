@@ -376,5 +376,20 @@ namespace PCOMS.Controllers
                            (s.Status == "Pending" || s.Status == "UnderReview"));
             return Json(new { count });
         }
+
+        [Authorize(Roles = "Developer,Admin,ProjectManager")]
+        public async Task<IActionResult> MySubmissions()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var submissions = await _context.ProjectSubmissions
+                .Where(s => s.SubmittedById == userId)
+                .Include(s => s.Project)
+                .Include(s => s.Milestone)
+                .OrderByDescending(s => s.SubmittedAt)
+                .ToListAsync();
+
+            return View(submissions);
+        }
     }
 }

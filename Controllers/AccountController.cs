@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PCOMS.Application.DTOs;
@@ -35,13 +34,10 @@ namespace PCOMS.Controllers
         // LOGIN (GET)
         // =========================
         [HttpGet]
-        public IActionResult Login()
+        [AllowAnonymous]
+        public IActionResult Login(string? returnUrl = null)
         {
-            return View();
-        }
-        [HttpGet]
-        public IActionResult AccessDenied()
-        {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
@@ -50,46 +46,57 @@ namespace PCOMS.Controllers
         // =========================
         [HttpPost]
         [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
             {
-                var result = await _signInManager.PasswordSignInAsync(
-                    model.Email,
-                    model.Password,
-                    model.RememberMe,
-                    lockoutOnFailure: false);
-
-                if (result.Succeeded)
-                {
-                    // ✅ ADD THIS SECTION
-                    var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (user != null)
-                    {
-                        var roles = await _userManager.GetRolesAsync(user);
-
-                        if (roles.Contains("Client"))
-                        {
-                            return RedirectToAction("Dashboard", "ClientPortal");
-                        }
-                        else if (roles.Contains("Admin") || roles.Contains("ProjectManager"))
-                        {
-                            return RedirectToAction("Index", "Clients");
-                        }
-                        else if (roles.Contains("Developer"))
-                        {
-                            return RedirectToAction("MyProjects", "Projects");
-                        }
-                    }
-                    // ✅ END OF NEW SECTION
-
-                    return RedirectToLocal(returnUrl);
-                }
-
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                ModelState.AddModelError("", "Invalid login attempt.");
+                return View(model);
             }
 
-            return View(model);
+            var result = await _signInManager.PasswordSignInAsync(
+                user.UserName!,
+                model.Password,
+                false,
+                lockoutOnFailure: false);
+
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Invalid login attempt.");
+                return View(model);
+            }
+
+            // ✅ Role-based redirect
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (roles.Contains("Client"))
+                return RedirectToAction("Dashboard", "ClientPortal");
+
+            if (roles.Contains("Developer"))
+                return RedirectToAction("Dashboard", "Developer");
+
+            if (roles.Contains("Admin") || roles.Contains("ProjectManager"))
+                return RedirectToAction("Index", "Clients");
+
+            // Default fallback
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
+            return RedirectToAction("Index", "Clients");
+        }
+
+        // =========================
+        // ACCESS DENIED
+        // =========================
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
 
         // =========================
@@ -108,11 +115,8 @@ namespace PCOMS.Controllers
 
             if (role == "Developer")
             {
-                var projectIds =
-                    _assignmentService.GetProjectIdsForDeveloper(user.Id);
-
-                ViewBag.Projects =
-                    _projectService.GetByIds(projectIds);
+                var projectIds = _assignmentService.GetProjectIdsForDeveloper(user.Id);
+                ViewBag.Projects = _projectService.GetByIds(projectIds);
             }
 
             return View(user);
@@ -181,7 +185,7 @@ namespace PCOMS.Controllers
                 return View(dto);
             }
 
-            // 🧹 Remove forced password change flag
+            // Remove forced password change flag
             var claims = await _userManager.GetClaimsAsync(user);
             var mustChange = claims.FirstOrDefault(c => c.Type == "MustChangePassword");
             if (mustChange != null)
@@ -198,21 +202,8 @@ namespace PCOMS.Controllers
                 "Password changed successfully"
             );
 
-            return RedirectToAction("Index", "Clients");
-
-
-        }
-
-        private IActionResult RedirectToLocal(string? returnUrl)
-        {
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-            else
-            {
-                return RedirectToAction("Index", "Home");
-            }
+            TempData["Success"] = "Password changed successfully!";
+            return RedirectToAction("Profile");
         }
     }
 }
