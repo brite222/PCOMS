@@ -14,17 +14,23 @@ namespace PCOMS.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IProjectService _projectService;
         private readonly IProjectAssignmentService _assignmentService;
+        private readonly IEmailService _emailService; // ✅ ADDED
+        private readonly ILogger<AdminUsersController> _logger; // ✅ ADDED
 
         public AdminUsersController(
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IProjectService projectService,
-            IProjectAssignmentService assignmentService)
+            IProjectAssignmentService assignmentService,
+            IEmailService emailService, // ✅ ADDED
+            ILogger<AdminUsersController> logger) // ✅ ADDED
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _projectService = projectService;
             _assignmentService = assignmentService;
+            _emailService = emailService; // ✅ ADDED
+            _logger = logger; // ✅ ADDED
         }
 
         // =========================
@@ -103,7 +109,26 @@ namespace PCOMS.Controllers
                 new Claim("MustChangePassword", "true")
             );
 
-            TempData["Success"] = "User created successfully.";
+            // 📧 SEND WELCOME EMAIL TO NEW USER
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(
+                    dto.Email,
+                    dto.Email, // Using email as name since we don't have a separate name field
+                    dto.Role
+                );
+
+                _logger.LogInformation("Welcome email sent to new user {Email} with role {Role}",
+                    dto.Email, dto.Role);
+
+                TempData["Success"] = "User created successfully and welcome email sent!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email to {Email}", dto.Email);
+                TempData["Success"] = "User created successfully, but failed to send welcome email.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -163,9 +188,17 @@ namespace PCOMS.Controllers
             string userId,
             List<int> projectIds)
         {
+            var developer = await _userManager.FindByIdAsync(userId);
+            if (developer == null)
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var existingProjectIds =
                 _assignmentService.GetProjectIdsForDeveloper(userId);
 
+            // Remove old assignments
             foreach (var projectId in existingProjectIds)
             {
                 _assignmentService.Remove(projectId, userId);
@@ -174,15 +207,46 @@ namespace PCOMS.Controllers
             var adminUserId =
                 User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
+            // Add new assignments and send emails
+            int emailsSent = 0;
             foreach (var projectId in projectIds)
             {
                 await _assignmentService.AssignAsync(
                     projectId,
                     userId,
                     adminUserId);
+
+                // 📧 SEND PROJECT ASSIGNMENT EMAIL FOR EACH NEW PROJECT
+                try
+                {
+                    var project = _projectService.GetById(projectId);
+                    if (project != null && !string.IsNullOrEmpty(developer.Email))
+                    {
+                        await _emailService.SendProjectAssignedEmailAsync(
+                            developer.Email,
+                            developer.UserName ?? developer.Email,
+                            project.Name,
+                            project.Description ?? "No description provided"
+                        );
+
+                        emailsSent++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send project assignment email for project {ProjectId}", projectId);
+                }
             }
 
-            TempData["Success"] = "Projects updated successfully.";
+            if (emailsSent > 0)
+            {
+                TempData["Success"] = $"Projects updated successfully. {emailsSent} email notification(s) sent.";
+            }
+            else
+            {
+                TempData["Success"] = "Projects updated successfully.";
+            }
+
             return RedirectToAction(nameof(Details), new { id = userId });
         }
     }

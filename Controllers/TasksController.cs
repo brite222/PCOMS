@@ -15,15 +15,21 @@ namespace PCOMS.Controllers
         private readonly ITaskService _taskService;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly IEmailService _emailService; // ✅ ADDED
+        private readonly ILogger<TasksController> _logger; // ✅ ADDED
 
         public TasksController(
             ITaskService taskService,
             UserManager<IdentityUser> userManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IEmailService emailService, // ✅ ADDED
+            ILogger<TasksController> logger) // ✅ ADDED
         {
             _taskService = taskService;
             _userManager = userManager;
             _environment = environment;
+            _emailService = emailService; // ✅ ADDED
+            _logger = logger; // ✅ ADDED
         }
 
         // GET: Tasks
@@ -114,6 +120,33 @@ namespace PCOMS.Controllers
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 var task = await _taskService.CreateTaskAsync(dto, userId);
 
+                // 📧 SEND EMAIL IF TASK IS ASSIGNED TO SOMEONE
+                if (!string.IsNullOrEmpty(dto.AssignedToId))
+                {
+                    try
+                    {
+                        var assignedUser = await _userManager.FindByIdAsync(dto.AssignedToId);
+                        if (assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
+                        {
+                            await _emailService.SendTaskAssignedEmailAsync(
+                                assignedUser.Email,
+                                assignedUser.UserName ?? assignedUser.Email,
+                                dto.Title,
+                                dto.Description ?? "No description provided",
+                                dto.DueDate
+                            );
+
+                            _logger.LogInformation("Task assignment email sent to {Email} for task {TaskTitle}",
+                                assignedUser.Email, dto.Title);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send task assignment email");
+                        // Don't fail the task creation if email fails
+                    }
+                }
+
                 TempData["Success"] = "Task created successfully!";
 
                 if (dto.ParentTaskId.HasValue)
@@ -166,12 +199,41 @@ namespace PCOMS.Controllers
 
             if (ModelState.IsValid)
             {
+                // Get old task to check if assignee changed
+                var oldTask = await _taskService.GetTaskByIdAsync(id);
+                var oldAssigneeId = oldTask?.AssignedToId;
+
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 var result = await _taskService.UpdateTaskAsync(dto, userId);
 
                 if (result == null)
                 {
                     return NotFound();
+                }
+
+                // 📧 SEND EMAIL IF ASSIGNEE CHANGED
+                if (!string.IsNullOrEmpty(dto.AssignedToId) && dto.AssignedToId != oldAssigneeId)
+                {
+                    try
+                    {
+                        var assignedUser = await _userManager.FindByIdAsync(dto.AssignedToId);
+                        if (assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
+                        {
+                            await _emailService.SendTaskAssignedEmailAsync(
+                                assignedUser.Email,
+                                assignedUser.UserName ?? assignedUser.Email,
+                                dto.Title,
+                                dto.Description ?? "No description provided",
+                                dto.DueDate
+                            );
+
+                            _logger.LogInformation("Task reassignment email sent to {Email}", assignedUser.Email);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send task reassignment email");
+                    }
                 }
 
                 TempData["Success"] = "Task updated successfully!";
@@ -216,6 +278,33 @@ namespace PCOMS.Controllers
             if (!result)
             {
                 return NotFound();
+            }
+
+            // 📧 SEND EMAIL TO NEWLY ASSIGNED USER
+            if (!string.IsNullOrEmpty(assignedToId))
+            {
+                try
+                {
+                    var task = await _taskService.GetTaskByIdAsync(taskId);
+                    var assignedUser = await _userManager.FindByIdAsync(assignedToId);
+
+                    if (task != null && assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
+                    {
+                        await _emailService.SendTaskAssignedEmailAsync(
+                            assignedUser.Email,
+                            assignedUser.UserName ?? assignedUser.Email,
+                            task.Title,
+                            task.Description ?? "No description provided",
+                            task.DueDate
+                        );
+
+                        _logger.LogInformation("Task assignment email sent to {Email}", assignedUser.Email);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send task assignment email");
+                }
             }
 
             TempData["Success"] = "Task assigned successfully!";

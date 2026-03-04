@@ -12,15 +12,21 @@ namespace PCOMS.Controllers
         private readonly IInvoiceService _invoiceService;
         private readonly IProjectService _projectService;
         private readonly ILogger<InvoicesController> _logger;
+        private readonly IEmailService _emailService; // ✅ ADDED
+        private readonly IClientService _clientService; // ✅ ADDED
 
         public InvoicesController(
             IInvoiceService invoiceService,
             IProjectService projectService,
-            ILogger<InvoicesController> logger)
+            ILogger<InvoicesController> logger,
+            IEmailService emailService, // ✅ ADDED
+            IClientService clientService) // ✅ ADDED
         {
             _invoiceService = invoiceService;
             _projectService = projectService;
             _logger = logger;
+            _emailService = emailService; // ✅ ADDED
+            _clientService = clientService; // ✅ ADDED
         }
 
         // ==========================================
@@ -230,15 +236,61 @@ namespace PCOMS.Controllers
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+                // Get invoice details for email
+                var invoice = await _invoiceService.GetInvoiceByIdAsync(id);
+                if (invoice == null)
+                {
+                    TempData["Error"] = "Invoice not found";
+                    return RedirectToAction("Index");
+                }
+
+                // Send via service
                 var result = await _invoiceService.SendInvoiceAsync(id, userId);
 
-                if (result)
-                {
-                    TempData["Success"] = "Invoice sent to client successfully";
-                }
-                else
+                if (!result)
                 {
                     TempData["Error"] = "Failed to send invoice";
+                    return RedirectToAction("Details", new { id });
+                }
+
+                // 📧 SEND INVOICE EMAIL TO CLIENT
+                try
+                {
+                    var client = _clientService.GetById(invoice.ClientId);
+                    if (client != null && !string.IsNullOrEmpty(client.Email))
+                    {
+                        // Generate invoice URL
+                        var invoiceUrl = Url.Action(
+                            "Preview",
+                            "Invoices",
+                            new { id = invoice.Id },
+                            Request.Scheme
+                        );
+
+                        await _emailService.SendInvoiceEmailAsync(
+                            client.Email,
+                            client.Name,
+                            invoice.InvoiceNumber,
+                            invoice.TotalAmount,
+                            invoice.DueDate,
+                            invoiceUrl ?? $"{Request.Scheme}://{Request.Host}/Invoices/Preview/{invoice.Id}"
+                        );
+
+                        _logger.LogInformation("Invoice {InvoiceNumber} email sent to {Email}",
+                            invoice.InvoiceNumber, client.Email);
+
+                        TempData["Success"] = "Invoice sent to client successfully and email notification delivered!";
+                    }
+                    else
+                    {
+                        TempData["Success"] = "Invoice marked as sent, but client email not found.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send invoice email for invoice {InvoiceId}", id);
+                    TempData["Success"] = "Invoice sent successfully, but failed to deliver email notification.";
                 }
 
                 return RedirectToAction("Details", new { id });

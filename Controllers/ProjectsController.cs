@@ -17,19 +17,25 @@ namespace PCOMS.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IProjectAssignmentService _assignmentService;
         private readonly ApplicationDbContext _context;
-        public ProjectsController(
-     ApplicationDbContext context,
-     IProjectService projectService,
-     IAuditService auditService,
-     UserManager<IdentityUser> userManager,
-     IProjectAssignmentService assignmentService)
-        {
-            _context = context;  
+        private readonly IEmailService _emailService; // ✅ ADDED
+        private readonly ILogger<ProjectsController> _logger; // ✅ ADDED
 
+        public ProjectsController(
+            ApplicationDbContext context,
+            IProjectService projectService,
+            IAuditService auditService,
+            UserManager<IdentityUser> userManager,
+            IProjectAssignmentService assignmentService,
+            IEmailService emailService, // ✅ ADDED
+            ILogger<ProjectsController> logger) // ✅ ADDED
+        {
+            _context = context;
             _projectService = projectService;
             _auditService = auditService;
             _userManager = userManager;
             _assignmentService = assignmentService;
+            _emailService = emailService; // ✅ ADDED
+            _logger = logger; // ✅ ADDED
         }
 
 
@@ -83,8 +89,6 @@ namespace PCOMS.Controllers
 
             return RedirectToAction("Client", new { id = dto.ClientId });
         }
-
-        
 
         // =========================
         // EDIT PROJECT (GET)
@@ -212,9 +216,32 @@ namespace PCOMS.Controllers
                 // Call the service to assign the developer
                 await _assignmentService.AssignAsync(projectId, developerId, currentUserId);
 
-                // Get developer name for audit log
+                // Get developer and project details for email
                 var developer = await _userManager.FindByIdAsync(developerId);
+                var project = _projectService.GetById(projectId);
                 var developerName = developer?.Email ?? developer?.UserName ?? "Unknown";
+
+                // 📧 SEND PROJECT ASSIGNMENT EMAIL
+                if (developer != null && project != null && !string.IsNullOrEmpty(developer.Email))
+                {
+                    try
+                    {
+                        await _emailService.SendProjectAssignedEmailAsync(
+                            developer.Email,
+                            developer.UserName ?? developer.Email,
+                            project.Name,
+                            project.Description ?? "No description provided"
+                        );
+
+                        _logger.LogInformation("Project assignment email sent to {Email} for project {ProjectName}",
+                            developer.Email, project.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send project assignment email");
+                        // Don't fail the assignment if email fails
+                    }
+                }
 
                 _auditService.Log(
                     currentUserId,
@@ -224,7 +251,7 @@ namespace PCOMS.Controllers
                     newValue: $"Developer={developerName}"
                 );
 
-                TempData["Success"] = "Developer assigned successfully.";
+                TempData["Success"] = "Developer assigned successfully and notified by email.";
             }
             catch (UnauthorizedAccessException ex)
             {

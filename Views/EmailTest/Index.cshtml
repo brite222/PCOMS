@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Email Test";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-envelope-check"></i> Email Configuration Test</h4>
+                </div>
+                <div class="card-body">
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Email Address Input (shared) -->
+                    <div class="mb-4">
+                        <label for="testEmail" class="form-label"><i class="bi bi-envelope"></i> Your Email Address</label>
+                        <input type="email"
+                               class="form-control form-control-lg"
+                               id="testEmail"
+                               placeholder="your-email@example.com"
+                               required>
+                        <div class="form-text">Enter your email to receive test emails</div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Test Options -->
+                    <h5 class="mb-3">Choose Email Template to Test:</h5>
+
+                    <div class="row g-3">
+                        <!-- Basic Test -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-check-circle text-primary"></i> Basic Email Test</h6>
+                                    <p class="card-text small">Simple test to verify SMTP connection</p>
+                                    <form asp-action="Send" method="post">
+                                        <input type="hidden" name="toEmail" id="basicEmail">
+                                        <button type="submit" class="btn btn-primary btn-sm w-100" onclick="setEmail('basicEmail')">
+                                            <i class="bi bi-send"></i> Send Basic Test
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Welcome Email -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-person-plus text-success"></i> Welcome Email</h6>
+                                    <p class="card-text small">Sent when new user is created</p>
+                                    <form asp-action="TestWelcome" method="post">
+                                        <input type="hidden" name="toEmail" id="welcomeEmail">
+                                        <input type="hidden" name="userName" value="Test User">
+                                        <input type="hidden" name="role" value="Developer">
+                                        <button type="submit" class="btn btn-success btn-sm w-100" onclick="setEmail('welcomeEmail')">
+                                            <i class="bi bi-send"></i> Send Welcome Email
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Project Assignment -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-folder text-info"></i> Project Assignment</h6>
+                                    <p class="card-text small">Sent when user assigned to project</p>
+                                    <form asp-action="TestProjectAssignment" method="post">
+                                        <input type="hidden" name="toEmail" id="projectEmail">
+                                        <button type="submit" class="btn btn-info btn-sm w-100" onclick="setEmail('projectEmail')">
+                                            <i class="bi bi-send"></i> Send Project Email
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task Assignment -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-check2-square text-warning"></i> Task Assignment</h6>
+                                    <p class="card-text small">Sent when task assigned to user</p>
+                                    <form asp-action="TestTaskAssignment" method="post">
+                                        <input type="hidden" name="toEmail" id="taskEmail">
+                                        <button type="submit" class="btn btn-warning btn-sm w-100" onclick="setEmail('taskEmail')">
+                                            <i class="bi bi-send"></i> Send Task Email
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Portal -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-key text-danger"></i> Client Portal Access</h6>
+                                    <p class="card-text small">Sent when client account created</p>
+                                    <form asp-action="TestClientPortal" method="post">
+                                        <input type="hidden" name="toEmail" id="clientEmail">
+                                        <button type="submit" class="btn btn-danger btn-sm w-100" onclick="setEmail('clientEmail')">
+                                            <i class="bi bi-send"></i> Send Client Email
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Configuration Checklist -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-list-check"></i> Configuration Checklist</h6>
+                            <ul class="mb-0">
+                                <li><strong>Gmail App Password:</strong> Created in Google Account settings</li>
+                                <li><strong>appsettings.json:</strong> Updated with SMTP credentials</li>
+                                <li><strong>IEmailService:</strong> Enhanced interface with templates</li>
+                                <li><strong>EmailService:</strong> Complete implementation with all templates</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="card mt-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-tools"></i> Troubleshooting</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>If emails fail:</strong></p>
+                    <ol>
+                        <li><strong>Gmail App Password:</strong> 16 characters, no spaces</li>
+                        <li><strong>2-Step Verification:</strong> Must be enabled</li>
+                        <li><strong>SMTP Settings:</strong> smtp.gmail.com:587</li>
+                        <li><strong>Check Logs:</strong> Look for detailed error messages</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setEmail(inputId) {
+        const email = document.getElementById('testEmail').value;
+        if (!email) {
+            alert('Please enter an email address first!');
+            event.preventDefault();
+            return false;
+        }
+        document.getElementById(inputId).value = email;
+        return true;
+    }
+</script>

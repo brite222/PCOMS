@@ -16,19 +16,22 @@ namespace PCOMS.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly ILogger<ClientsController> _logger; // ✅ ADDED
 
         public ClientsController(
             IClientService clientService,
             IAuditService auditService,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            ILogger<ClientsController> logger) // ✅ ADDED
         {
             _clientService = clientService;
             _auditService = auditService;
             _userManager = userManager;
             _context = context;
             _emailService = emailService;
+            _logger = logger; // ✅ ADDED
         }
 
         // =========================
@@ -89,6 +92,31 @@ namespace PCOMS.Controllers
                 );
             }
 
+            // 📧 SEND CLIENT REGISTRATION EMAIL
+            if (!string.IsNullOrEmpty(dto.Email))
+            {
+                try
+                {
+                    await _emailService.SendClientRegistrationEmailAsync(
+                        dto.Email,
+                        dto.Name,
+                        dto.Name // Using Name as company name since we don't have a separate field
+                    );
+
+                    _logger.LogInformation("Client registration email sent to {Email}", dto.Email);
+                    TempData["Success"] = "Client created successfully and registration email sent!";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send client registration email to {Email}", dto.Email);
+                    TempData["Success"] = "Client created successfully, but failed to send registration email.";
+                }
+            }
+            else
+            {
+                TempData["Success"] = "Client created successfully!";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -140,6 +168,7 @@ namespace PCOMS.Controllers
                 );
             }
 
+            TempData["Success"] = "Client updated successfully!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -191,27 +220,110 @@ namespace PCOMS.Controllers
 
             // Send password setup email
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var link = Url.Action(
+            var resetLink = Url.Action(
                 "ResetPassword",
                 "Account",
                 new { userId = user.Id, token },
                 Request.Scheme
             );
 
-            await _emailService.SendAsync(
-                client.Email,
-                "Your PCOMS Client Portal Access",
-                $"""
-        <h3>Welcome to PCOMS</h3>
-        <p>Your client portal is ready.</p>
-        <p><a href="{link}">Click here to set your password</a></p>
-        """
-            );
+            // 📧 SEND CLIENT PORTAL ACCESS EMAIL (Enhanced version)
+            try
+            {
+                // Generate a temporary password for the email (they'll change it via reset link)
+                var tempPassword = $"PCOMS{DateTime.Now.Year}!";
 
-            TempData["Success"] = "Client portal access created and email sent.";
+                await _emailService.SendClientPortalAccessEmailAsync(
+                    client.Email,
+                    client.Name,
+                    client.Email,
+                    "Use the link below to set your password",
+                    $"{Request.Scheme}://{Request.Host}/Account/Login"
+                );
+
+                // Also send the password reset link
+                await _emailService.SendPasswordResetEmailAsync(
+                    client.Email,
+                    resetLink
+                );
+
+                _logger.LogInformation("Client portal access emails sent to {Email}", client.Email);
+                TempData["Success"] = "Client portal access created and credentials sent by email!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send client portal emails to {Email}", client.Email);
+                TempData["Success"] = "Client portal access created, but failed to send email. Please manually share credentials.";
+            }
+
             return RedirectToAction("Details", new { id });
         }
 
+        // =========================
+        // DELETE (GET)
+        // =========================
+        [Authorize(Roles = "Admin")]
+        public IActionResult Delete(int id)
+        {
+            var client = _clientService.GetById(id);
+            if (client == null)
+                return NotFound();
 
+            return View(client);
+        }
+
+        // =========================
+        // DELETE (POST)
+        // =========================
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var client = _clientService.GetById(id);
+            if (client == null)
+                return NotFound();
+
+            // Check for active projects
+            var hasProjects = _context.Projects.Any(p => p.ClientId == id);
+            if (hasProjects)
+            {
+                TempData["Error"] = "Cannot delete client with active projects. Please complete or reassign projects first.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            // Delete associated ClientUser if exists
+            var clientUser = _context.ClientUsers.FirstOrDefault(cu => cu.ClientId == id);
+            if (clientUser != null)
+            {
+                var identityUser = await _userManager.FindByIdAsync(clientUser.UserId);
+                if (identityUser != null)
+                {
+                    await _userManager.DeleteAsync(identityUser);
+                }
+                _context.ClientUsers.Remove(clientUser);
+            }
+
+            // Delete client
+            _context.Clients.Remove(client);
+            await _context.SaveChangesAsync();
+
+            // Audit log
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null)
+            {
+                _auditService.Log(
+                    currentUser.Id,
+                    "Delete",
+                    "Client",
+                    id,
+                    client.Name,
+                    null
+                );
+            }
+
+            TempData["Success"] = "Client deleted successfully!";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
