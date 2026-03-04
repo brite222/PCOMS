@@ -1,21 +1,29 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Settings;
-using System.Net;
-using System.Net.Mail;
+using Microsoft.Extensions.Options;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace PCOMS.Application.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly EmailSettings _settings;
+        private readonly string _apiKey;
+        private readonly string _senderEmail;
+        private readonly string _senderName;
         private readonly ILogger<EmailService> _logger;
 
         public EmailService(
+            IConfiguration configuration,
             IOptions<EmailSettings> options,
             ILogger<EmailService> logger)
         {
-            _settings = options.Value;
+            _apiKey = configuration["SENDGRID_API_KEY"]
+                ?? throw new InvalidOperationException("SENDGRID_API_KEY environment variable is not set.");
+            _senderEmail = options.Value.SenderEmail;
+            _senderName = options.Value.SenderName;
             _logger = logger;
         }
 
@@ -31,36 +39,36 @@ namespace PCOMS.Application.Services
         {
             try
             {
-                var message = new MailMessage
-                {
-                    From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = true
-                };
-                message.To.Add(to);
+                var client = new SendGridClient(_apiKey);
 
-                using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
-                {
-                    Credentials = new NetworkCredential(
-                        _settings.Username,
-                        _settings.Password
-                    ),
-                    EnableSsl = true,
-                    Timeout = 30000
-                };
+                var msg = MailHelper.CreateSingleEmail(
+                    from: new EmailAddress(_senderEmail, _senderName),
+                    to: new EmailAddress(to),
+                    subject: subject,
+                    plainTextContent: null,
+                    htmlContent: body
+                );
 
-                await client.SendMailAsync(message);
-                _logger.LogInformation("✅ Email sent to {Email} - Subject: {Subject}", to, subject);
+                var response = await client.SendEmailAsync(msg);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("✅ Email sent to {Email} - Subject: {Subject}", to, subject);
+                }
+                else
+                {
+                    var errorBody = await response.Body.ReadAsStringAsync();
+                    _logger.LogError("❌ SendGrid error sending to {Email}: {Status} - {Error}", to, response.StatusCode, errorBody);
+                    throw new Exception($"SendGrid error {response.StatusCode}: {errorBody}");
+                }
             }
-            catch (SmtpException ex)
+            catch (Exception ex) when (ex.Message.StartsWith("SendGrid error"))
             {
-                _logger.LogError(ex, "❌ SMTP error sending email to {Email}: {Message}", to, ex.Message);
-                throw new Exception($"Failed to send email: {ex.Message}", ex);
+                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error sending email to {Email}", to);
+                _logger.LogError(ex, "❌ Unexpected error sending email to {Email}", to);
                 throw;
             }
         }
@@ -404,8 +412,8 @@ namespace PCOMS.Application.Services
                 <p>You'll receive login credentials shortly with access to:</p>
                 <ul>
                     <li>Project dashboard</li>
-                    <li>Documents & deliverables</li>
-                    <li>Invoices & payments</li>
+                    <li>Documents &amp; deliverables</li>
+                    <li>Invoices &amp; payments</li>
                     <li>Team communication</li>
                 </ul>
             </div>
@@ -463,7 +471,7 @@ namespace PCOMS.Application.Services
 
             <div class='invoice-box'>
                 <p class='invoice-number'>📄 Invoice {invoiceNumber}</p>
-                
+
                 <div class='amount-box'>
                     <p style='margin: 0; color: #6b7280; font-size: 0.9em;'>Amount Due</p>
                     <p class='amount'>${amount:N2}</p>
