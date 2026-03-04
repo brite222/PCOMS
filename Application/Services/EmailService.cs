@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Settings;
-using Microsoft.Extensions.Options;
-using SendGrid;
-using SendGrid.Helpers.Mail;
 
 namespace PCOMS.Application.Services
 {
@@ -14,17 +14,20 @@ namespace PCOMS.Application.Services
         private readonly string _senderEmail;
         private readonly string _senderName;
         private readonly ILogger<EmailService> _logger;
+        private readonly HttpClient _httpClient;
 
         public EmailService(
             IConfiguration configuration,
             IOptions<EmailSettings> options,
-            ILogger<EmailService> logger)
+            ILogger<EmailService> logger,
+            IHttpClientFactory httpClientFactory)
         {
-            _apiKey = configuration["SENDGRID_API_KEY"]
-                ?? throw new InvalidOperationException("SENDGRID_API_KEY environment variable is not set.");
+            _apiKey = configuration["RESEND_API_KEY"]
+                ?? throw new InvalidOperationException("RESEND_API_KEY is not set.");
             _senderEmail = options.Value.SenderEmail;
             _senderName = options.Value.SenderName;
             _logger = logger;
+            _httpClient = httpClientFactory.CreateClient("Resend");
         }
 
         // ==========================================
@@ -39,17 +42,23 @@ namespace PCOMS.Application.Services
         {
             try
             {
-                var client = new SendGridClient(_apiKey);
+                var payload = new
+                {
+                    from = $"{_senderName} <onboarding@resend.dev>",
+                    to = new[] { to },
+                    subject = subject,
+                    html = body
+                };
 
-                var msg = MailHelper.CreateSingleEmail(
-                    from: new EmailAddress(_senderEmail, _senderName),
-                    to: new EmailAddress(to),
-                    subject: subject,
-                    plainTextContent: null,
-                    htmlContent: body
-                );
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await client.SendEmailAsync(msg);
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails");
+                request.Headers.Add("Authorization", $"Bearer {_apiKey}");
+                request.Content = content;
+
+                var response = await _httpClient.SendAsync(request);
+                var responseBody = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -57,12 +66,11 @@ namespace PCOMS.Application.Services
                 }
                 else
                 {
-                    var errorBody = await response.Body.ReadAsStringAsync();
-                    _logger.LogError("❌ SendGrid error sending to {Email}: {Status} - {Error}", to, response.StatusCode, errorBody);
-                    throw new Exception($"SendGrid error {response.StatusCode}: {errorBody}");
+                    _logger.LogError("❌ Resend error {Status}: {Body}", response.StatusCode, responseBody);
+                    throw new Exception($"Resend error {response.StatusCode}: {responseBody}");
                 }
             }
-            catch (Exception ex) when (ex.Message.StartsWith("SendGrid error"))
+            catch (Exception ex) when (ex.Message.StartsWith("Resend error"))
             {
                 throw;
             }
@@ -97,23 +105,18 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>🎉 Welcome to PCOMS!</h1>
-        </div>
+        <div class='header'><h1>🎉 Welcome to PCOMS!</h1></div>
         <div class='content'>
             <div class='welcome-box'>
                 <h2 style='margin-top: 0;'>Hello {userName}! 👋</h2>
                 <p>Your account has been successfully created.</p>
                 <p><strong>Your Role:</strong> <span class='role-badge'>{role}</span></p>
             </div>
-
             <h3>What you can do in PCOMS:</h3>
             {GetRoleFeatures(role)}
-
             <p style='text-align: center; margin-top: 30px;'>
                 <a href='https://pcoms-2.onrender.com' class='button'>Access PCOMS</a>
             </p>
-
             <div class='footer'>
                 <p>If you have any questions, please contact your project manager.</p>
                 <p>© {DateTime.Now.Year} PCOMS - Project & Client Operations Management System</p>
@@ -122,7 +125,6 @@ namespace PCOMS.Application.Services
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -150,19 +152,15 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>📁 New Project Assignment</h1>
-        </div>
+        <div class='header'><h1>📁 New Project Assignment</h1></div>
         <div class='content'>
             <p>Hi {userName},</p>
             <p>You have been assigned to a new project!</p>
-
             <div class='project-card'>
                 <h2 class='project-name'>📊 {projectName}</h2>
                 <p><strong>Description:</strong></p>
                 <p>{projectDescription}</p>
             </div>
-
             <div class='info-box'>
                 <strong>Next Steps:</strong>
                 <ul style='margin: 10px 0;'>
@@ -171,19 +169,14 @@ namespace PCOMS.Application.Services
                     <li>Contact your project manager if you have questions</li>
                 </ul>
             </div>
-
             <p style='text-align: center;'>
                 <a href='https://pcoms-2.onrender.com/Developer/MyProjects' class='button'>View Project</a>
             </p>
-
-            <div class='footer'>
-                <p>© {DateTime.Now.Year} PCOMS</p>
-            </div>
+            <div class='footer'><p>© {DateTime.Now.Year} PCOMS</p></div>
         </div>
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -212,32 +205,24 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>✅ New Task Assigned</h1>
-        </div>
+        <div class='header'><h1>✅ New Task Assigned</h1></div>
         <div class='content'>
             <p>Hi {userName},</p>
             <p>A new task has been assigned to you!</p>
-
             <div class='task-card'>
                 <h2 class='task-title'>📋 {taskTitle}</h2>
                 <p><strong>Description:</strong></p>
                 <p>{taskDescription}</p>
                 <p><strong>Due Date:</strong> <span class='due-date'>📅 {dueDateText}</span></p>
             </div>
-
             <p style='text-align: center;'>
                 <a href='https://pcoms-2.onrender.com/Developer/MyTasks' class='button'>View Task</a>
             </p>
-
-            <div class='footer'>
-                <p>© {DateTime.Now.Year} PCOMS</p>
-            </div>
+            <div class='footer'><p>© {DateTime.Now.Year} PCOMS</p></div>
         </div>
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -266,13 +251,10 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>🔐 Your Client Portal Access</h1>
-        </div>
+        <div class='header'><h1>🔐 Your Client Portal Access</h1></div>
         <div class='content'>
             <p>Dear {clientName},</p>
             <p>Welcome to PCOMS! Your client portal account is ready.</p>
-
             <div class='credentials-box'>
                 <h3 style='margin-top: 0; color: #7c3aed;'>Login Credentials</h3>
                 <p><strong>Portal URL:</strong></p>
@@ -282,7 +264,6 @@ namespace PCOMS.Application.Services
                 <p><strong>Temporary Password:</strong></p>
                 <div class='credential-item'>{temporaryPassword}</div>
             </div>
-
             <div class='warning-box'>
                 <strong>⚠️ Security Notice:</strong>
                 <ul style='margin: 10px 0;'>
@@ -291,18 +272,15 @@ namespace PCOMS.Application.Services
                     <li>This is a one-time temporary password</li>
                 </ul>
             </div>
-
             <h3>Portal Features:</h3>
             <div class='feature'>📊 View project progress</div>
             <div class='feature'>📁 Access documents</div>
             <div class='feature'>💰 View invoices</div>
             <div class='feature'>💬 Message your team</div>
             <div class='feature'>📝 Submit feedback</div>
-
             <p style='text-align: center;'>
                 <a href='{portalUrl}' class='button'>Access Portal</a>
             </p>
-
             <div class='footer'>
                 <p>Questions? Contact your project manager.</p>
                 <p>© {DateTime.Now.Year} PCOMS</p>
@@ -311,7 +289,6 @@ namespace PCOMS.Application.Services
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -339,19 +316,14 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>🔒 Password Reset Request</h1>
-        </div>
+        <div class='header'><h1>🔒 Password Reset Request</h1></div>
         <div class='content'>
             <p>We received a request to reset your password.</p>
-
             <div class='reset-box'>
                 <a href='{resetLink}' class='button'>Reset Password</a>
             </div>
-
             <p>Or copy this link:</p>
             <div class='link-box'>{resetLink}</div>
-
             <div class='warning-box'>
                 <strong>⚠️ Notice:</strong>
                 <ul style='margin: 10px 0;'>
@@ -360,15 +332,11 @@ namespace PCOMS.Application.Services
                     <li>Password won't change until you click the link</li>
                 </ul>
             </div>
-
-            <div class='footer'>
-                <p>© {DateTime.Now.Year} PCOMS</p>
-            </div>
+            <div class='footer'><p>© {DateTime.Now.Year} PCOMS</p></div>
         </div>
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -396,16 +364,13 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>🎉 Welcome to PCOMS!</h1>
-        </div>
+        <div class='header'><h1>🎉 Welcome to PCOMS!</h1></div>
         <div class='content'>
             <div class='welcome-box'>
                 <p class='company-name'>🏢 {companyName}</p>
                 <p>Dear {clientName},</p>
                 <p>Thank you for choosing PCOMS! Your company has been successfully registered.</p>
             </div>
-
             <h3>What Happens Next:</h3>
             <div class='next-steps'>
                 <p><strong>📧 Portal Access Coming Soon</strong></p>
@@ -417,12 +382,10 @@ namespace PCOMS.Application.Services
                     <li>Team communication</li>
                 </ul>
             </div>
-
             <h3>We're preparing:</h3>
             <div class='feature'>✅ Your projects</div>
             <div class='feature'>👥 Your team</div>
             <div class='feature'>📋 Project roadmap</div>
-
             <div class='footer'>
                 <p><strong>Thank you for your business!</strong></p>
                 <p>© {DateTime.Now.Year} PCOMS</p>
@@ -431,7 +394,6 @@ namespace PCOMS.Application.Services
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -462,30 +424,21 @@ namespace PCOMS.Application.Services
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
-            <h1>💼 New Invoice</h1>
-        </div>
+        <div class='header'><h1>💼 New Invoice</h1></div>
         <div class='content'>
             <p>Dear {clientName},</p>
             <p>A new invoice has been generated for your project services.</p>
-
             <div class='invoice-box'>
                 <p class='invoice-number'>📄 Invoice {invoiceNumber}</p>
-
                 <div class='amount-box'>
                     <p style='margin: 0; color: #6b7280; font-size: 0.9em;'>Amount Due</p>
                     <p class='amount'>${amount:N2}</p>
                 </div>
-
-                <div class='due-date'>
-                    📅 Payment Due: {dueDate:MMMM dd, yyyy}
-                </div>
+                <div class='due-date'>📅 Payment Due: {dueDate:MMMM dd, yyyy}</div>
             </div>
-
             <p style='text-align: center;'>
                 <a href='{invoiceUrl}' class='button'>View Invoice</a>
             </p>
-
             <div class='payment-info'>
                 <h3 style='color: #10b981; margin-top: 0;'>💳 Payment Methods</h3>
                 <ul style='margin: 10px 0;'>
@@ -495,7 +448,6 @@ namespace PCOMS.Application.Services
                 </ul>
                 <p><em>Reference: {invoiceNumber}</em></p>
             </div>
-
             <div class='footer'>
                 <p><strong>Thank you!</strong></p>
                 <p>© {DateTime.Now.Year} PCOMS</p>
@@ -504,7 +456,6 @@ namespace PCOMS.Application.Services
     </div>
 </body>
 </html>";
-
             await SendAsync(toEmail, subject, body);
         }
 
@@ -520,26 +471,22 @@ namespace PCOMS.Application.Services
                     <div class='feature'>📊 View all projects</div>
                     <div class='feature'>⚙️ System settings</div>
                     <div class='feature'>👥 Manage teams</div>",
-
                 "projectmanager" => @"
                     <div class='feature'>📁 Manage projects</div>
                     <div class='feature'>✅ Assign tasks</div>
                     <div class='feature'>👥 Team management</div>
                     <div class='feature'>📈 Track progress</div>",
-
                 "developer" => @"
                     <div class='feature'>✅ View your tasks</div>
                     <div class='feature'>⏱️ Log work hours</div>
                     <div class='feature'>📁 Access documents</div>
                     <div class='feature'>💬 Team collaboration</div>",
-
                 "client" => @"
                     <div class='feature'>📊 Track projects</div>
                     <div class='feature'>📁 View documents</div>
                     <div class='feature'>💰 View invoices</div>
                     <div class='feature'>💬 Message team</div>
                     <div class='feature'>📝 Submit feedback</div>",
-
                 _ => @"<div class='feature'>📊 Access dashboard</div>"
             };
         }

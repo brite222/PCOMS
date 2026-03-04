@@ -6,6 +6,7 @@ using PCOMS.Application.Interfaces;
 using PCOMS.Application.Services;
 using QuestPDF.Infrastructure;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================
@@ -85,8 +86,11 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<ResourceService>();
 
+
 builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
     builder.Configuration.GetSection("Email"));
+
+builder.Services.AddHttpClient();
 
 // =========================
 // Build app
