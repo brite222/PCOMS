@@ -22,12 +22,12 @@ namespace PCOMS.Application.Services
             ILogger<EmailService> logger,
             IHttpClientFactory httpClientFactory)
         {
-            _apiKey = configuration["RESEND_API_KEY"]
-                ?? throw new InvalidOperationException("RESEND_API_KEY is not set.");
+            _apiKey = configuration["BREVO_API_KEY"]
+                ?? throw new InvalidOperationException("BREVO_API_KEY is not set.");
             _senderEmail = options.Value.SenderEmail;
             _senderName = options.Value.SenderName;
             _logger = logger;
-            _httpClient = httpClientFactory.CreateClient("Resend");
+            _httpClient = httpClientFactory.CreateClient("Brevo");
         }
 
         // ==========================================
@@ -44,17 +44,17 @@ namespace PCOMS.Application.Services
             {
                 var payload = new
                 {
-                    from = $"{_senderName} <onboarding@resend.dev>",
-                    to = new[] { to },
+                    sender = new { name = _senderName, email = _senderEmail },
+                    to = new[] { new { email = to } },
                     subject = subject,
-                    html = body
+                    htmlContent = body
                 };
 
                 var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails");
-                request.Headers.Add("Authorization", $"Bearer {_apiKey}");
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+                request.Headers.Add("api-key", _apiKey);
                 request.Content = content;
 
                 var response = await _httpClient.SendAsync(request);
@@ -66,11 +66,11 @@ namespace PCOMS.Application.Services
                 }
                 else
                 {
-                    _logger.LogError("❌ Resend error {Status}: {Body}", response.StatusCode, responseBody);
-                    throw new Exception($"Resend error {response.StatusCode}: {responseBody}");
+                    _logger.LogError("❌ Brevo error {Status}: {Body}", response.StatusCode, responseBody);
+                    throw new Exception($"Brevo error {response.StatusCode}: {responseBody}");
                 }
             }
-            catch (Exception ex) when (ex.Message.StartsWith("Resend error"))
+            catch (Exception ex) when (ex.Message.StartsWith("Brevo error"))
             {
                 throw;
             }
