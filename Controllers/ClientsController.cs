@@ -304,9 +304,12 @@ namespace PCOMS.Controllers
                 _context.ClientUsers.Remove(clientUser);
             }
 
-            // Delete client
-            _context.Clients.Remove(client);
-            await _context.SaveChangesAsync();
+            // Delete client - Get the actual entity from database
+            var clientEntity = await _context.Clients.FindAsync(id);
+            if (clientEntity != null)
+            {
+                _context.Clients.Remove(clientEntity);
+            }
 
             // Audit log
             var currentUser = await _userManager.GetUserAsync(User);
