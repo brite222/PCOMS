@@ -187,10 +187,10 @@ namespace PCOMS.Controllers
 
             return RedirectToAction("Client", new { id = dto.ClientId });
         }
-
-        // =========================
-        // ASSIGN DEVELOPER (POST)
-        // =========================
+       
+        // ==========================================
+        // ASSIGN DEVELOPER (POST) - WITH NOTIFICATION
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,ProjectManager")]
@@ -198,11 +198,6 @@ namespace PCOMS.Controllers
         {
             try
             {
-                // DEBUG: Log what we received
-                System.Diagnostics.Debug.WriteLine($"ProjectId: {projectId}");
-                System.Diagnostics.Debug.WriteLine($"DeveloperId: '{developerId}'");
-                System.Diagnostics.Debug.WriteLine($"DeveloperId IsNullOrEmpty: {string.IsNullOrEmpty(developerId)}");
-
                 // Validate inputs
                 if (string.IsNullOrEmpty(developerId) || developerId == "")
                 {
@@ -210,46 +205,67 @@ namespace PCOMS.Controllers
                     return RedirectToAction("Edit", new { id = projectId });
                 }
 
-                // Check if developer exists in database
-                var developerExists = await _userManager.FindByIdAsync(developerId);
-                if (developerExists == null)
+                // Check if developer exists
+                var developer = await _userManager.FindByIdAsync(developerId);
+                if (developer == null)
                 {
-                    TempData["Error"] = $"Developer with ID '{developerId}' not found in the database.";
+                    TempData["Error"] = $"Developer not found in the database.";
                     return RedirectToAction("Edit", new { id = projectId });
                 }
 
                 var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-                // Call the service to assign the developer
+                // Assign developer
                 await _assignmentService.AssignAsync(projectId, developerId, currentUserId);
 
-                // Get developer and project details for email
-                var developer = await _userManager.FindByIdAsync(developerId);
+                // Get project details
                 var project = _projectService.GetById(projectId);
                 var developerName = developer?.Email ?? developer?.UserName ?? "Unknown";
 
-                // 📧 SEND PROJECT ASSIGNMENT EMAIL
-                if (developer != null && project != null && !string.IsNullOrEmpty(developer.Email))
+                if (project != null && developer != null)
                 {
+                    // 📧 SEND PROJECT ASSIGNMENT EMAIL
+                    if (!string.IsNullOrEmpty(developer.Email))
+                    {
+                        try
+                        {
+                            await _emailService.SendProjectAssignedEmailAsync(
+                                developer.Email,
+                                developer.UserName ?? developer.Email,
+                                project.Name,
+                                project.Description ?? "No description provided"
+                            );
+
+                            _logger.LogInformation("Project assignment email sent to {Email}", developer.Email);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to send project assignment email");
+                        }
+                    }
+
+                    // 🔔 CREATE IN-APP NOTIFICATION
                     try
                     {
-                        await _emailService.SendProjectAssignedEmailAsync(
-                            developer.Email,
-                            developer.UserName ?? developer.Email,
-                            project.Name,
-                            project.Description ?? "No description provided"
+                        await _notificationService.CreateNotificationAsync(
+                            developerId,
+                            "New Project Assignment",
+                            $"You have been assigned to project: {project.Name}",
+                            NotificationType.ProjectUpdate,
+                            $"/Projects/My",
+                            projectId,
+                            "Project"
                         );
 
-                        _logger.LogInformation("Project assignment email sent to {Email} for project {ProjectName}",
-                            developer.Email, project.Name);
+                        _logger.LogInformation("Project assignment notification created for {UserId}", developerId);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to send project assignment email");
-                        // Don't fail the assignment if email fails
+                        _logger.LogError(ex, "Failed to create project assignment notification");
                     }
                 }
 
+                // Audit log
                 _auditService.Log(
                     currentUserId,
                     "Assign",
@@ -258,19 +274,12 @@ namespace PCOMS.Controllers
                     newValue: $"Developer={developerName}"
                 );
 
-                TempData["Success"] = "Developer assigned successfully and notified by email.";
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                TempData["Error"] = $"Authorization error: {ex.Message}";
-            }
-            catch (InvalidOperationException ex)
-            {
-                TempData["Error"] = $"{ex.Message}";
+                TempData["Success"] = "Developer assigned successfully! Email and notification sent.";
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Failed to assign developer: {ex.InnerException?.Message ?? ex.Message}";
+                _logger.LogError(ex, "Failed to assign developer");
+                TempData["Error"] = $"Failed to assign developer: {ex.Message}";
             }
 
             return RedirectToAction("Edit", new { id = projectId });

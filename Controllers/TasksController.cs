@@ -119,7 +119,12 @@ namespace PCOMS.Controllers
             return View(new CreateTaskDto());
         }
 
-        // POST: Tasks/Create
+        // ✅ UPDATED METHODS FOR TASKSCONTROLLER
+        // Replace these methods in your TasksController.cs
+
+        // ==========================================
+        // POST: Tasks/Create - WITH NOTIFICATION
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateTaskDto dto)
@@ -129,7 +134,7 @@ namespace PCOMS.Controllers
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 var task = await _taskService.CreateTaskAsync(dto, userId);
 
-                // 📧 SEND EMAIL IF TASK IS ASSIGNED TO SOMEONE
+                // 📧 + 🔔 SEND EMAIL AND NOTIFICATION IF TASK IS ASSIGNED
                 if (!string.IsNullOrEmpty(dto.AssignedToId))
                 {
                     try
@@ -137,6 +142,7 @@ namespace PCOMS.Controllers
                         var assignedUser = await _userManager.FindByIdAsync(dto.AssignedToId);
                         if (assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
                         {
+                            // Send email
                             await _emailService.SendTaskAssignedEmailAsync(
                                 assignedUser.Email,
                                 assignedUser.UserName ?? assignedUser.Email,
@@ -145,24 +151,27 @@ namespace PCOMS.Controllers
                                 dto.DueDate
                             );
 
-                            _logger.LogInformation("Task assignment email sent to {Email} for task {TaskTitle}",
-                                assignedUser.Email, dto.Title);
+                            // 🔔 CREATE IN-APP NOTIFICATION
+                            await _notificationService.CreateNotificationAsync(
+                                dto.AssignedToId,
+                                "New Task Assigned",
+                                $"You have been assigned to: {dto.Title}",
+                                NotificationType.TaskAssigned,
+                                $"/Tasks/Details/{task.TaskId}",
+                                task.TaskId,
+                                "Task"
+                            );
+
+                            _logger.LogInformation("Task assignment email and notification sent to {Email}", assignedUser.Email);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to send task assignment email");
-                        // Don't fail the task creation if email fails
+                        _logger.LogError(ex, "Failed to send task assignment email/notification");
                     }
                 }
 
                 TempData["Success"] = "Task created successfully!";
-
-                if (dto.ParentTaskId.HasValue)
-                {
-                    return RedirectToAction(nameof(Details), new { id = dto.ParentTaskId.Value });
-                }
-
                 return RedirectToAction(nameof(Details), new { id = task.TaskId });
             }
 
@@ -170,31 +179,65 @@ namespace PCOMS.Controllers
             return View(dto);
         }
 
-        // GET: Tasks/Edit/5
-        public async Task<IActionResult> Edit(int id)
+        // ==========================================
+        // POST: Tasks/Assign - WITH NOTIFICATION  
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Assign(int taskId, string? assignedToId)
         {
-            var task = await _taskService.GetTaskByIdAsync(id);
-            if (task == null)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _taskService.AssignTaskAsync(taskId, assignedToId, userId);
+
+            if (!result)
             {
                 return NotFound();
             }
 
-            var dto = new UpdateTaskDto
+            // 📧 + 🔔 SEND EMAIL AND NOTIFICATION TO NEWLY ASSIGNED USER
+            if (!string.IsNullOrEmpty(assignedToId))
             {
-                TaskId = task.TaskId,
-                Title = task.Title,
-                Description = task.Description,
-                Status = task.Status,
-                Priority = task.Priority,
-                DueDate = task.DueDate,
-                AssignedToId = task.AssignedToId,
-                ProgressPercentage = task.ProgressPercentage,
-                Tags = task.Tags
-            };
+                try
+                {
+                    var task = await _taskService.GetTaskByIdAsync(taskId);
+                    var assignedUser = await _userManager.FindByIdAsync(assignedToId);
 
-            ViewBag.Users = new SelectList(await _userManager.Users.ToListAsync(), "Id", "UserName");
-            return View(dto);
+                    if (task != null && assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
+                    {
+                        // Send email
+                        await _emailService.SendTaskAssignedEmailAsync(
+                            assignedUser.Email,
+                            assignedUser.UserName ?? assignedUser.Email,
+                            task.Title,
+                            task.Description ?? "No description provided",
+                            task.DueDate
+                        );
+
+                        // 🔔 CREATE IN-APP NOTIFICATION
+                        await _notificationService.CreateNotificationAsync(
+                            assignedToId,
+                            "New Task Assigned",
+                            $"You have been assigned to: {task.Title}",
+                            NotificationType.TaskAssigned,
+                            $"/Tasks/Details/{taskId}",
+                            taskId,
+                            "Task"
+                        );
+
+                        _logger.LogInformation("Task assignment email and notification sent to {Email}", assignedUser.Email);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send task assignment email/notification");
+                }
+            }
+
+            TempData["Success"] = "Task assigned successfully!";
+            return RedirectToAction(nameof(Details), new { id = taskId });
         }
+
+       
 
         // POST: Tasks/Edit/5
         [HttpPost]
@@ -273,50 +316,6 @@ namespace PCOMS.Controllers
             }
 
             TempData["Success"] = "Task status updated successfully!";
-            return RedirectToAction(nameof(Details), new { id = taskId });
-        }
-
-        // POST: Tasks/Assign
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Assign(int taskId, string? assignedToId)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await _taskService.AssignTaskAsync(taskId, assignedToId, userId);
-
-            if (!result)
-            {
-                return NotFound();
-            }
-
-            // 📧 SEND EMAIL TO NEWLY ASSIGNED USER
-            if (!string.IsNullOrEmpty(assignedToId))
-            {
-                try
-                {
-                    var task = await _taskService.GetTaskByIdAsync(taskId);
-                    var assignedUser = await _userManager.FindByIdAsync(assignedToId);
-
-                    if (task != null && assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
-                    {
-                        await _emailService.SendTaskAssignedEmailAsync(
-                            assignedUser.Email,
-                            assignedUser.UserName ?? assignedUser.Email,
-                            task.Title,
-                            task.Description ?? "No description provided",
-                            task.DueDate
-                        );
-
-                        _logger.LogInformation("Task assignment email sent to {Email}", assignedUser.Email);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send task assignment email");
-                }
-            }
-
-            TempData["Success"] = "Task assigned successfully!";
             return RedirectToAction(nameof(Details), new { id = taskId });
         }
 
