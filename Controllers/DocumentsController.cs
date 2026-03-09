@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Interfaces.DTOs;
+using PCOMS.Application.Services;
 using System.Security.Claims;
-
+using PCOMS.Models; 
+using PCOMS.Data;
+using Microsoft.EntityFrameworkCore;
 namespace PCOMS.Controllers
 {
     [Authorize]
@@ -12,15 +15,22 @@ namespace PCOMS.Controllers
         private readonly IDocumentService _documentService;
         private readonly IProjectService _projectService;
         private readonly ILogger<DocumentsController> _logger;
+        private readonly INotificationService _notificationService;
+        private readonly ApplicationDbContext _context;
 
         public DocumentsController(
             IDocumentService documentService,
             IProjectService projectService,
-            ILogger<DocumentsController> logger)
+            ILogger<DocumentsController> logger,
+        INotificationService notificationService,
+            ApplicationDbContext context)
+
         {
             _documentService = documentService;
             _projectService = projectService;
             _logger = logger;
+            _notificationService = notificationService;
+            _context = context;
         }
 
         // ================= INDEX =================
@@ -214,5 +224,46 @@ namespace PCOMS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCategories(int projectId)
             => Json(await _documentService.GetDocumentCountByCategoryAsync(projectId));
+
+        [HttpPost]
+        public async Task<IActionResult> Upload(IFormFile file, int projectId)
+        {
+            if (file == null) return BadRequest();
+
+            var document = new Document
+            {
+                FileName = file.FileName,
+                ProjectId = projectId,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            // Save file logic here...
+
+            _context.Documents.Add(document);
+            await _context.SaveChangesAsync();
+
+            // ✅ ADD THIS - Notify client
+            var project = await _context.Projects
+                .Include(p => p.Client)
+                .FirstOrDefaultAsync(p => p.Id == projectId);
+
+            if (project?.Client != null)
+            {
+                var clientUser = await _context.ClientUsers
+                    .FirstOrDefaultAsync(cu => cu.ClientId == project.ClientId);
+
+                if (clientUser != null)
+                {
+                    await _notificationService.NotifyDocumentUploadedAsync(
+                        clientUser.UserId,
+                        document.FileName,
+                        document.Id
+                    );
+                }
+            }
+
+            TempData["Success"] = "Document uploaded successfully!";
+            return RedirectToAction("Index", new { projectId });
+        }
     }
 }

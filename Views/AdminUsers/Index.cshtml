@@ -1,94 +1,317 @@
 ﻿@model List<PCOMS.Application.DTOs.UserListDto>
-
 @{
     ViewData["Title"] = "Users";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">Users</h2>
+<style>
+    .avatar-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        color: white;
+        flex-shrink: 0;
+    }
 
-    <a asp-action="Create" class="btn btn-primary">
-        + Create User
+    .avatar-admin { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+    .avatar-projectmanager { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+    .avatar-developer { background: linear-gradient(135deg, #10b981, #059669); }
+    .avatar-client { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .avatar-default { background: linear-gradient(135deg, #94a3b8, #64748b); }
+
+    .role-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .role-admin { background: #ede9fe; color: #6d28d9; }
+    .role-projectmanager { background: #dbeafe; color: #1d4ed8; }
+    .role-developer { background: #d1fae5; color: #065f46; }
+    .role-client { background: #fef3c7; color: #92400e; }
+    .role-unknown { background: #f1f5f9; color: #64748b; }
+
+    .status-pill {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-locked { background: #fee2e2; color: #991b1b; }
+
+    .user-row:hover { background: #f8fafc; }
+
+    .search-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 16px 8px 40px;
+        font-size: 0.9rem;
+        background: white;
+        width: 280px;
+    }
+
+    .search-wrapper {
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .filter-btn {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        background: white;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: #6366f1;
+        color: white;
+        border-color: #6366f1;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+    }
+
+    .stats-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .stats-label {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+
+    .email-text {
+        font-size: 0.875rem;
+        color: #1e293b;
+        font-weight: 500;
+    }
+
+    .joined-text {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">User Management</h2>
+        <p class="text-muted mb-0" style="font-size:0.9rem;">Manage all system users and their roles</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary px-4" style="border-radius:8px;">
+        <i class="bi bi-person-plus me-2"></i> Add New User
     </a>
+</div>
+
+<!-- STATS ROW -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-primary">@Model.Count</div>
+            <div class="stats-label">Total Users</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-success">@Model.Count(u => !u.IsLocked)</div>
+            <div class="stats-label">Active Users</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-danger">@Model.Count(u => u.IsLocked)</div>
+            <div class="stats-label">Locked Users</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-warning">@Model.Count(u => u.Role == "Developer")</div>
+            <div class="stats-label">Developers</div>
+        </div>
+    </div>
 </div>
 
 @if (!Model.Any())
 {
-    <div class="card empty-state">
-        <div class="card-body text-center">
-            <h5 class="text-muted">No users found</h5>
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+        <div class="card-body text-center py-5">
+            <div style="font-size:3rem;">👤</div>
+            <h5 class="text-muted mt-3">No users found</h5>
+            <p class="text-muted">Start by creating your first user.</p>
+            <a asp-action="Create" class="btn btn-primary">+ Create User</a>
         </div>
     </div>
 }
 else
 {
-    <div class="card shadow-sm rounded-4">
+    <!-- SEARCH & FILTERS -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="search-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-box" placeholder="Search users...">
+        </div>
+        <button class="filter-btn active" onclick="filterRole('all', this)">All</button>
+        <button class="filter-btn" onclick="filterRole('admin', this)">Admin</button>
+        <button class="filter-btn" onclick="filterRole('projectmanager', this)">Project Manager</button>
+        <button class="filter-btn" onclick="filterRole('developer', this)">Developer</button>
+        <button class="filter-btn" onclick="filterRole('client', this)">Client</button>
+        <button class="filter-btn" onclick="filterRole('locked', this)">🔒 Locked</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card border-0 shadow-sm" style="border-radius:16px; overflow:hidden;">
         <div class="table-responsive">
-            <table class="table align-middle mb-0 user-table">
-                <thead class="table-light">
+            <table class="table align-middle mb-0" id="usersTable">
+                <thead style="background:#f8fafc; border-bottom: 2px solid #e2e8f0;">
                     <tr>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th style="padding:16px 20px; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:600;">User</th>
+                        <th style="padding:16px 20px; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:600;">Role</th>
+                        <th style="padding:16px 20px; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:600;">Status</th>
+                        <th style="padding:16px 20px; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; font-weight:600; text-align:right;">Actions</th>
                     </tr>
                 </thead>
-
-                <tbody>
+                <tbody id="usersBody">
                     @foreach (var user in Model)
                     {
-                        <tr>
-                            <!-- USER -->
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar">
-                                        @user.Email.Substring(0, 1).ToUpper()
-                                    </div>
+                        var roleClass = string.IsNullOrEmpty(user.Role) ? "default" : user.Role.ToLower().Replace(" ", "");
+                        var initial = user.Email.Substring(0, 1).ToUpper();
 
+                        <tr class="user-row"
+                            data-role="@(user.Role?.ToLower() ?? "unknown")"
+                            data-email="@user.Email.ToLower()"
+                            data-locked="@user.IsLocked.ToString().ToLower()"
+                            style="border-bottom: 1px solid #f1f5f9;">
+                            <!-- USER -->
+                            <td style="padding:16px 20px;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle avatar-@roleClass">
+                                        @initial
+                                    </div>
                                     <div>
-                                        <div class="fw-semibold">@user.Email</div>
+                                        <div class="email-text">@user.Email</div>
+                                        <div class="joined-text">ID: @user.Id.Substring(0, 8)...</div>
                                     </div>
                                 </div>
                             </td>
-
                             <!-- ROLE -->
-                            <td>
-                                <span class="badge role-badge @user.Role.ToLower()">
-                                    @user.Role
-                                </span>
-                            </td>
-
-                            <!-- STATUS -->
-                            <td>
-                                @if (user.IsLocked)
+                            <td style="padding:16px 20px;">
+                                @if (!string.IsNullOrEmpty(user.Role))
                                 {
-                                    <span class="status-pill locked">Locked</span>
+                                    <span class="role-badge role-@roleClass">@user.Role</span>
                                 }
                                 else
                                 {
-                                    <span class="status-pill active">Active</span>
+                                    <span class="role-badge role-unknown">No Role</span>
                                 }
                             </td>
-
+                            <!-- STATUS -->
+                            <td style="padding:16px 20px;">
+                                @if (user.IsLocked)
+                                {
+                                    <span class="status-pill status-locked">🔒 Locked</span>
+                                }
+                                else
+                                {
+                                    <span class="status-pill status-active">✅ Active</span>
+                                }
+                            </td>
                             <!-- ACTIONS -->
-                            <td class="text-end">
+                            <td style="padding:16px 20px; text-align:right;">
                                 <a asp-action="Details"
                                    asp-route-id="@user.Id"
-                                   class="btn btn-sm btn-outline-secondary me-1">
-                                    Details
+                                   class="btn btn-sm btn-outline-primary me-1"
+                                   style="border-radius:6px; font-size:0.8rem;">
+                                    <i class="bi bi-eye me-1"></i> View
                                 </a>
-
                                 <a asp-action="ToggleLock"
                                    asp-route-id="@user.Id"
-                                   class="btn btn-sm @(user.IsLocked ? "btn-outline-success" : "btn-outline-danger")">
-                                    @(user.IsLocked ? "Unlock" : "Lock")
+                                   class="btn btn-sm @(user.IsLocked ? "btn-outline-success" : "btn-outline-danger")"
+                                   style="border-radius:6px; font-size:0.8rem;"
+                                   onclick="return confirm('@(user.IsLocked ? "Unlock" : "Lock") this user?')">
+                                    @(user.IsLocked ? "🔓 Unlock" : "🔒 Lock")
                                 </a>
                             </td>
                         </tr>
                     }
                 </tbody>
-
             </table>
+        </div>
+
+        <!-- TABLE FOOTER -->
+        <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:0.85rem; color:#64748b;">
+            Showing <span id="visibleCount">@Model.Count</span> of @Model.Count users
         </div>
     </div>
 }
+
+<script>
+    // SEARCH
+    document.getElementById('searchInput')?.addEventListener('input', function () {
+        applyFilters();
+    });
+
+    // ROLE FILTER
+    let currentRole = 'all';
+
+    function filterRole(role, btn) {
+        currentRole = role;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#usersBody tr');
+        let visible = 0;
+
+        rows.forEach(row => {
+            const email = row.dataset.email || '';
+            const role = row.dataset.role || '';
+            const locked = row.dataset.locked === 'true';
+
+            const matchesSearch = email.includes(search);
+            const matchesRole = currentRole === 'all'
+                || (currentRole === 'locked' && locked)
+                || role.replace(' ', '') === currentRole;
+
+            if (matchesSearch && matchesRole) {
+                row.style.display = '';
+                visible++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const countEl = document.getElementById('visibleCount');
+        if (countEl) countEl.textContent = visible;
+    }
+</script>

@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PCOMS.Data;
-using PCOMS.Data.Seed;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Services;
+using PCOMS.Data;
+using PCOMS.Data.Seed;
+using PCOMS.Services;
 using QuestPDF.Infrastructure;
 
 
@@ -85,12 +86,17 @@ builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<ResourceService>();
-
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.Configure<PCOMS.Application.Settings.EmailSettings>(
     builder.Configuration.GetSection("Email"));
 
 builder.Services.AddHttpClient();
+
+
+// ✅ Background Services
+builder.Services.AddHostedService<DeadlineNotificationService>();
+builder.Services.AddHostedService<BudgetAlertService>();
 
 // =========================
 // Build app

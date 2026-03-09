@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Interfaces.DTOs;
+using PCOMS.Application.Services;
+using PCOMS.Data;
+using PCOMS.Models;
 using System.Security.Claims;
 
 namespace PCOMS.Controllers
@@ -11,13 +15,19 @@ namespace PCOMS.Controllers
     {
         private readonly ICommunicationService _communicationService;
         private readonly ILogger<CommunicationController> _logger;
+        private readonly INotificationService _notificationService;
+        private readonly ApplicationDbContext _context;
 
         public CommunicationController(
             ICommunicationService communicationService,
-            ILogger<CommunicationController> logger)
+            ILogger<CommunicationController> logger,
+            INotificationService notificationService,
+            ApplicationDbContext context)
         {
             _communicationService = communicationService;
             _logger = logger;
+            _notificationService = notificationService;
+            _context = context;
         }
 
         // ==========================================
@@ -253,6 +263,45 @@ namespace PCOMS.Controllers
             await _communicationService.SendNotificationToAllAsync(title, message, type);
             TempData["Success"] = "Notification sent to all users";
             return RedirectToAction("Dashboard");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddComment(int projectId, string message)
+        {
+            var comment = new TeamMessage
+            {
+                ProjectId = projectId,
+                Content = message,
+                SenderId = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                SentAt = DateTime.UtcNow
+            };
+
+            _context.TeamMessages.Add(comment);
+            await _context.SaveChangesAsync();
+
+            // ✅ Notify project team
+            var projectTeam = await _context.ProjectAssignments
+                .Where(pa => pa.ProjectId == projectId)
+                .Select(pa => pa.DeveloperId)
+                .ToListAsync();
+
+            foreach (var developerId in projectTeam)
+            {
+                if (developerId != comment.SenderId) // Don't notify yourself
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        developerId,
+                        "New Comment",
+                        $"New comment on project",
+                        NotificationType.Comment,
+                        $"/Communication/Chat?projectId={projectId}",
+                        projectId,
+                        "Project"
+                    );
+                }
+            }
+
+            return RedirectToAction("Chat", new { projectId });
         }
     }
 }

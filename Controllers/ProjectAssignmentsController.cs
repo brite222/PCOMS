@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PCOMS.Application.Interfaces;
+using PCOMS.Application.Services;
+using PCOMS.Models;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using PCOMS.Data;
 
 namespace PCOMS.Controllers
 {
@@ -9,10 +13,13 @@ namespace PCOMS.Controllers
     public class ProjectAssignmentsController : Controller
     {
         private readonly IProjectAssignmentService _assignmentService;
-
-        public ProjectAssignmentsController(IProjectAssignmentService assignmentService)
+        private readonly INotificationService _notificationService;
+        private readonly ApplicationDbContext _context;
+        public ProjectAssignmentsController(IProjectAssignmentService assignmentService, INotificationService notificationService, ApplicationDbContext context)
         {
             _assignmentService = assignmentService;
+            _notificationService = notificationService;
+            _context = context;
         }
 
         // =========================
@@ -73,6 +80,32 @@ namespace PCOMS.Controllers
             }
 
             return RedirectToAction("Edit", "Projects", new { id = projectId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignDeveloper(int projectId, string developerId)
+        {
+            var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+            if (project == null) return NotFound();
+
+            var assignment = new ProjectAssignment
+            {
+                ProjectId = projectId,
+                DeveloperId = developerId
+                // Model handles dates automatically
+            };
+            _context.ProjectAssignments.Add(assignment);
+            await _context.SaveChangesAsync();
+
+            // ✅ ADD THIS - Send notification
+            await _notificationService.NotifyProjectAssignedAsync(
+                developerId,
+                project.Name,
+                project.Id
+            );
+
+            TempData["Success"] = "Developer assigned successfully!";
+            return RedirectToAction("Details", new { id = projectId });
         }
     }
 }

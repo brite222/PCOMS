@@ -18,5 +18,6 @@ namespace PCOMS.Models
         [ForeignKey(nameof(Developer))]
         public string DeveloperId { get; set; } = null!;
         public IdentityUser Developer { get; set; } = null!;
+        public DateTime CreatedAt { get; internal set; }
     }
 }

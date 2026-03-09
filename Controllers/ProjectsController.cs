@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AspNetCoreGeneratedDocument;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
+using PCOMS.Application.Services;
 using PCOMS.Data;
 using PCOMS.Models;
 using System.Security.Claims;
@@ -19,6 +22,8 @@ namespace PCOMS.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService; // ✅ ADDED
         private readonly ILogger<ProjectsController> _logger; // ✅ ADDED
+        private readonly INotificationService _notificationService;
+        private readonly INotificationService notificationService;
 
         public ProjectsController(
             ApplicationDbContext context,
@@ -27,7 +32,8 @@ namespace PCOMS.Controllers
             UserManager<IdentityUser> userManager,
             IProjectAssignmentService assignmentService,
             IEmailService emailService, // ✅ ADDED
-            ILogger<ProjectsController> logger) // ✅ ADDED
+            ILogger<ProjectsController> logger, // ✅ ADDED
+            INotificationService notificationService )
         {
             _context = context;
             _projectService = projectService;
@@ -36,6 +42,7 @@ namespace PCOMS.Controllers
             _assignmentService = assignmentService;
             _emailService = emailService; // ✅ ADDED
             _logger = logger; // ✅ ADDED
+            _notificationService = notificationService;
         }
 
 
@@ -331,6 +338,39 @@ namespace PCOMS.Controllers
             var projects = _projectService.GetByIds(projectIds);
 
             return View(projects);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UpdateStatus(int id, ProjectStatus newStatus)
+        {
+            var project = await _context.Projects
+                .Include(p => p.Client)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null) return NotFound();
+
+            var oldStatus = project.Status;
+            project.Status = newStatus;
+            await _context.SaveChangesAsync();
+
+            // ✅ ADD THIS - Notify client
+            var clientUser = await _context.ClientUsers
+                .FirstOrDefaultAsync(cu => cu.ClientId == project.ClientId);
+
+            if (clientUser != null)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    clientUser.UserId,
+                    "Project Status Updated",
+                    $"{project.Name} status changed from {oldStatus} to {newStatus}",
+                    NotificationType.ProjectUpdate,
+                    $"/ClientPortal/ProjectDetails/{project.Id}",
+                    project.Id,
+                    "Project"
+                );
+            }
+
+            TempData["Success"] = "Status updated successfully!";
+            return RedirectToAction("Details", new { id });
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Interfaces.DTOs;
+using PCOMS.Application.Services;
 using System.Security.Claims;
 
 namespace PCOMS.Controllers
@@ -12,15 +13,17 @@ namespace PCOMS.Controllers
         private readonly IBudgetService _budgetService;
         private readonly IProjectService _projectService;
         private readonly ILogger<BudgetController> _logger;
-
+        private readonly INotificationService _notificationService;
         public BudgetController(
             IBudgetService budgetService,
             IProjectService projectService,
-            ILogger<BudgetController> logger)
+            ILogger<BudgetController> logger,
+            INotificationService notificationService)
         {
             _budgetService = budgetService;
             _projectService = projectService;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         // ==========================================
@@ -317,5 +320,7 @@ namespace PCOMS.Controllers
 
             return RedirectToAction("Expenses", new { projectId = expense.ProjectId });
         }
+      
+        
     }
 }

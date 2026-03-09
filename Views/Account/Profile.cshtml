@@ -3,318 +3,742 @@
     ViewData["Title"] = "My Profile";
 }
 
-<div class="container-fluid mt-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2><i class="bi bi-person-circle"></i> My Profile</h2>
-            <p class="text-muted">Manage your account information and settings</p>
-        </div>
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@@300;400;500;600;700&family=DM+Mono:wght@@400;500&display=swap');
+
+    .profile-page {
+        font-family: 'DM Sans', sans-serif;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 20px;
+    }
+
+    /* HEADER */
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+        .page-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .page-header p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin: 4px 0 0;
+        }
+
+    /* PROFILE CARD */
+    .profile-card {
+        background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+        border-radius: 20px;
+        padding: 36px 28px;
+        color: white;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .profile-card::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+    /* AVATAR UPLOAD */
+    .avatar-wrapper {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        margin: 0 auto 20px;
+        cursor: pointer;
+    }
+
+    .avatar-img {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255,255,255,0.2);
+        display: block;
+    }
+
+    .avatar-initials {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        border: 3px solid rgba(255,255,255,0.2);
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.55);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+        font-size: 0.7rem;
+        color: white;
+        gap: 4px;
+    }
+
+    .avatar-wrapper:hover .avatar-overlay {
+        opacity: 1;
+    }
+
+    .avatar-overlay i {
+        font-size: 1.2rem;
+    }
+
+    #avatarInput {
+        display: none;
+    }
+
+    /* PROFILE NAME */
+    .profile-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: white;
+    }
+
+    .role-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .role-admin {
+        background: rgba(239,68,68,0.25);
+        color: #fca5a5;
+        border: 1px solid rgba(239,68,68,0.3);
+    }
+
+    .role-projectmanager {
+        background: rgba(99,102,241,0.25);
+        color: #a5b4fc;
+        border: 1px solid rgba(99,102,241,0.3);
+    }
+
+    .role-developer {
+        background: rgba(16,185,129,0.25);
+        color: #6ee7b7;
+        border: 1px solid rgba(16,185,129,0.3);
+    }
+
+    .role-client {
+        background: rgba(245,158,11,0.25);
+        color: #fcd34d;
+        border: 1px solid rgba(245,158,11,0.3);
+    }
+
+    /* STATS */
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        padding: 16px 0;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin: 16px 0 24px;
+    }
+
+    .stat-item .num {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        line-height: 1;
+    }
+
+    .stat-item .lbl {
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.5);
+        margin-top: 3px;
+    }
+
+    /* BUTTONS */
+    .btn-profile-primary {
+        width: 100%;
+        padding: 11px;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-bottom: 10px;
+        background: rgba(99,102,241,0.9);
+        color: white;
+    }
+
+        .btn-profile-primary:hover {
+            background: #6366f1;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+    .btn-profile-danger {
+        width: 100%;
+        padding: 11px;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 1px solid rgba(239,68,68,0.4);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        background: transparent;
+        color: #fca5a5;
+    }
+
+        .btn-profile-danger:hover {
+            background: rgba(239,68,68,0.15);
+            color: #fca5a5;
+        }
+
+    /* INFO CARD */
+    .info-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .info-card-header {
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .info-card-header h5 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .info-card-header .icon-box {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: #f1f5f9;
+        }
+
+    .info-row {
+        display: flex;
+        align-items: center;
+        padding: 14px 24px;
+        border-bottom: 1px solid #f8fafc;
+        transition: background 0.15s;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row:hover {
+            background: #fafafa;
+        }
+
+    .info-label {
+        width: 200px;
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    .info-value {
+        font-size: 0.875rem;
+        color: #1e293b;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'DM Mono', monospace;
+    }
+
+    /* BADGES */
+    .badge-verified {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-unverified {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-active {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-locked {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-enabled {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .badge-disabled {
+        background: #f1f5f9;
+        color: #64748b;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    /* QUICK ACCESS */
+    .quick-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        background: white;
+        margin-bottom: 12px;
+    }
+
+        .quick-card:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+            transform: translateX(4px);
+            background: #fafafe;
+        }
+
+        .quick-card .qicon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+    /* PROJECT LIST */
+    .project-item {
+        padding: 14px 24px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .project-item:last-child {
+            border-bottom: none;
+        }
+
+        .project-item:hover {
+            background: #fafafa;
+        }
+
+    /* UPLOAD TOAST */
+    .upload-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #0f172a;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: none;
+        z-index: 9999;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="profile-page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h2>My Profile</h2>
+        <p>Manage your account information and settings</p>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show">
-            @TempData["Success"]
+        <div class="alert alert-success alert-dismissible fade show mb-4" style="border-radius:12px;">
+            <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="row">
-        <!-- Left Column - Profile Card -->
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <!-- Profile Avatar -->
-                    <div class="mb-4">
-                        <div class="avatar-circle mx-auto" style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: 700;">
-                            @if (!string.IsNullOrEmpty(Model.Email))
-                            {
-                                @Model.Email.Substring(0, 1).ToUpper()
-                            }
-                        </div>
+    <div class="row g-4">
+        <!-- LEFT — PROFILE CARD -->
+        <div class="col-lg-4">
+            <div class="profile-card">
+
+                <!-- AVATAR WITH UPLOAD -->
+                <div class="avatar-wrapper" onclick="document.getElementById('avatarInput').click()" title="Click to change photo">
+                    <div class="avatar-initials" id="avatarInitials">
+                        @(!string.IsNullOrEmpty(Model.Email) ? Model.Email.Substring(0, 1).ToUpper() : "U")
                     </div>
-
-                    <!-- User Info -->
-                    <h4 class="mb-1">@(Model.UserName ?? Model.Email)</h4>
-                    <p class="text-muted mb-3">
-                        @if (ViewBag.Role == "Admin")
-                        {
-                            <span class="badge bg-danger">
-                                <i class="bi bi-shield-check"></i> Administrator
-                            </span>
-                        }
-                        else if (ViewBag.Role == "ProjectManager")
-                        {
-                            <span class="badge bg-primary">
-                                <i class="bi bi-briefcase"></i> Project Manager
-                            </span>
-                        }
-                        else if (ViewBag.Role == "Developer")
-                        {
-                            <span class="badge bg-success">
-                                <i class="bi bi-code-slash"></i> Developer
-                            </span>
-                        }
-                        else if (ViewBag.Role == "Client")
-                        {
-                            <span class="badge bg-info">
-                                <i class="bi bi-people"></i> Client
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">@ViewBag.Role</span>
-                        }
-                    </p>
-
-                    <hr />
-
-                    <!-- Quick Stats for Developers -->
-                    @if (ViewBag.Role == "Developer")
-                    {
-                        var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
-                        var projectCount = projects?.Count() ?? 0;
-
-                        <div class="row text-center mb-3">
-                            <div class="col-6">
-                                <h3 class="mb-0">@projectCount</h3>
-                                <small class="text-muted">Projects</small>
-                            </div>
-                            <div class="col-6">
-                                <h3 class="mb-0">@(ViewBag.TotalHours ?? 0)</h3>
-                                <small class="text-muted">Hours Logged</small>
-                            </div>
-                        </div>
-                    }
-
-                    <!-- Actions -->
-                    <div class="d-grid gap-2">
-                        <a asp-action="ChangePassword" class="btn btn-warning">
-                            <i class="bi bi-key"></i> Change Password
-                        </a>
-                        <a asp-action="Logout" class="btn btn-outline-danger">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
+                    <img id="avatarPreview" class="avatar-img" src="" alt="" style="display:none;" />
+                    <div class="avatar-overlay">
+                        <i class="bi bi-camera"></i>
+                        <span>Change Photo</span>
                     </div>
                 </div>
+                <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(event)" />
+
+                <!-- NAME & ROLE -->
+                <div class="profile-name">@(Model.UserName ?? Model.Email)</div>
+
+                @{
+                    var roleClass = (ViewBag.Role as string ?? "").ToLower().Replace(" ", "");
+                    var roleIcon = roleClass switch
+                    {
+                        "admin" => "bi-shield-check",
+                        "projectmanager" => "bi-briefcase",
+                        "developer" => "bi-code-slash",
+                        "client" => "bi-people",
+                        _ => "bi-person"
+                    };
+                }
+
+                <div>
+                    <span class="role-pill role-@roleClass">
+                        <i class="bi @roleIcon"></i>
+                        @ViewBag.Role
+                    </span>
+                </div>
+
+                <!-- STATS (Developer only) -->
+                @if (ViewBag.Role == "Developer")
+                {
+                    var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+                    <div class="stats-row">
+                        <div class="stat-item text-center">
+                            <div class="num">@(projects?.Count() ?? 0)</div>
+                            <div class="lbl">Projects</div>
+                        </div>
+                        <div class="stat-item text-center">
+                            <div class="num">@(ViewBag.TotalHours ?? 0)</div>
+                            <div class="lbl">Hours</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div style="margin-bottom:20px;"></div>
+                }
+
+                <!-- ACTIONS -->
+                <a asp-action="ChangePassword" class="btn-profile-primary">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
+                <a asp-action="Logout" class="btn-profile-danger">
+                    <i class="bi bi-box-arrow-right"></i> Sign Out
+                </a>
+
             </div>
         </div>
 
-        <!-- Right Column - Details -->
+        <!-- RIGHT — DETAILS -->
         <div class="col-lg-8">
-            <!-- Account Information -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-info-circle"></i> Account Information
-                    </h5>
+
+            <!-- ACCOUNT INFO -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <div class="icon-box">ℹ️</div>
+                    <h5>Account Information</h5>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Email Address:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            @Model.Email
-                            @if (Model.EmailConfirmed)
-                            {
-                                <span class="badge bg-success ms-2">
-                                    <i class="bi bi-check-circle"></i> Verified
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning ms-2">
-                                    <i class="bi bi-exclamation-circle"></i> Not Verified
-                                </span>
-                            }
-                        </div>
-                    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Username:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            @(Model.UserName ?? "Not set")
-                        </div>
+                <div class="info-row">
+                    <div class="info-label">Email Address</div>
+                    <div class="info-value">
+                        @Model.Email
+                        @if (Model.EmailConfirmed)
+                        {
+                            <span class="badge-verified">✓ Verified</span>
+                        }
+                        else
+                        {
+                            <span class="badge-unverified">⚠ Not Verified</span>
+                        }
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Role:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            @ViewBag.Role
-                        </div>
+                <div class="info-row">
+                    <div class="info-label">Username</div>
+                    <div class="info-value">@(Model.UserName ?? "Not set")</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Role</div>
+                    <div class="info-value">
+                        <span class="role-pill role-@roleClass" style="margin:0;">
+                            <i class="bi @roleIcon"></i> @ViewBag.Role
+                        </span>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Phone Number:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            @(Model.PhoneNumber ?? "Not provided")
-                            @if (Model.PhoneNumberConfirmed && !string.IsNullOrEmpty(Model.PhoneNumber))
-                            {
-                                <span class="badge bg-success ms-2">
-                                    <i class="bi bi-check-circle"></i> Verified
-                                </span>
-                            }
-                        </div>
+                <div class="info-row">
+                    <div class="info-label">Phone Number</div>
+                    <div class="info-value">
+                        @(Model.PhoneNumber ?? "Not provided")
+                        @if (Model.PhoneNumberConfirmed && !string.IsNullOrEmpty(Model.PhoneNumber))
+                        {
+                            <span class="badge-verified">✓ Verified</span>
+                        }
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Two-Factor Authentication:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            @if (Model.TwoFactorEnabled)
-                            {
-                                <span class="badge bg-success">
-                                    <i class="bi bi-shield-check"></i> Enabled
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">
-                                    <i class="bi bi-shield"></i> Disabled
-                                </span>
-                            }
-                        </div>
+                <div class="info-row">
+                    <div class="info-label">Two-Factor Auth</div>
+                    <div class="info-value">
+                        @if (Model.TwoFactorEnabled)
+                        {
+                            <span class="badge-enabled">🛡 Enabled</span>
+                        }
+                        else
+                        {
+                            <span class="badge-disabled">⊘ Disabled</span>
+                        }
                     </div>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>Account Status:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            @if (!Model.LockoutEnabled || Model.LockoutEnd == null || Model.LockoutEnd <= DateTimeOffset.Now)
-                            {
-                                <span class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i> Active
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">
-                                    <i class="bi bi-lock"></i> Locked
-                                </span>
-                            }
-                        </div>
+                <div class="info-row">
+                    <div class="info-label">Account Status</div>
+                    <div class="info-value">
+                        @if (!Model.LockoutEnabled || Model.LockoutEnd == null || Model.LockoutEnd <= DateTimeOffset.Now)
+                        {
+                            <span class="badge-active">✅ Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge-locked">🔒 Locked</span>
+                        }
                     </div>
                 </div>
             </div>
 
-            <!-- Assigned Projects (for Developers) -->
+            <!-- ASSIGNED PROJECTS (Developer) -->
             @if (ViewBag.Role == "Developer")
             {
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-kanban"></i> Assigned Projects
-                        </h5>
+                var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="icon-box">📁</div>
+                        <h5>Assigned Projects</h5>
                     </div>
-                    <div class="card-body">
-                        @{
-                            var projects = ViewBag.Projects as IEnumerable<PCOMS.Models.Project>;
-                        }
 
-                        @if (projects != null && projects.Any())
+                    @if (projects != null && projects.Any())
+                    {
+                        @foreach (var project in projects)
                         {
-                            <div class="list-group">
-                                @foreach (var project in projects)
-                                {
-                                    <div class="list-group-item">
-                                        <div class="d-flex w-100 justify-content-between align-items-center">
-                                            <div>
-                                                <h6 class="mb-1">
-                                                    <i class="bi bi-folder"></i> @project.Name
-                                                </h6>
-                                                <p class="mb-1 text-muted small">
-                                                    Client: @(project.Client?.Name ?? "N/A")
-                                                </p>
-                                            </div>
-                                            <div>
-                                                @switch (project.Status)
-                                                {
-                                                    case PCOMS.Models.ProjectStatus.Planned:
-                                                        <span class="badge bg-secondary">Planned</span>
-                                                        break;
-                                                    case PCOMS.Models.ProjectStatus.Active:
-                                                        <span class="badge bg-success">Active</span>
-                                                        break;
-                                                    case PCOMS.Models.ProjectStatus.Completed:
-                                                        <span class="badge bg-info">Completed</span>
-                                                        break;
-                                                    case PCOMS.Models.ProjectStatus.Archived:
-                                                        <span class="badge bg-dark">Archived</span>
-                                                        break;
-                                                }
-                                                <a asp-controller="Projects" asp-action="Edit" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary ms-2">
-                                                    <i class="bi bi-eye"></i> View
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
+                            <div class="project-item">
+                                <div>
+                                    <div style="font-weight:600; font-size:0.875rem; color:#1e293b;">@project.Name</div>
+                                    <div style="font-size:0.78rem; color:#94a3b8; margin-top:2px;">Client: @(project.Client?.Name ?? "N/A")</div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    @switch (project.Status)
+                                    {
+                                        case PCOMS.Models.ProjectStatus.Planned:
+                                            <span style="background:#f1f5f9; color:#64748b; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:600;">Planned</span>
+                                            break;
+                                        case PCOMS.Models.ProjectStatus.Active:
+                                            <span style="background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:600;">Active</span>
+                                            break;
+                                        case PCOMS.Models.ProjectStatus.Completed:
+                                            <span style="background:#dbeafe; color:#1e40af; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:600;">Completed</span>
+                                            break;
+                                        case PCOMS.Models.ProjectStatus.Archived:
+                                            <span style="background:#f1f5f9; color:#334155; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:600;">Archived</span>
+                                            break;
+                                    }
+                                    <a asp-controller="Projects" asp-action="Edit" asp-route-id="@project.Id"
+                                       style="padding:5px 12px; border-radius:8px; border:1px solid #e2e8f0; font-size:0.78rem; font-weight:600; color:#6366f1; text-decoration:none; background:white;">
+                                        View →
+                                    </a>
+                                </div>
                             </div>
                         }
-                        else
-                        {
-                            <div class="alert alert-info mb-0">
-                                <i class="bi bi-info-circle"></i> You are not currently assigned to any projects.
-                            </div>
-                        }
-                    </div>
+                    }
+                    else
+                    {
+                        <div style="padding:24px; text-align:center; color:#94a3b8; font-size:0.875rem;">
+                            No projects assigned yet.
+                        </div>
+                    }
                 </div>
             }
 
-            <!-- Recent Activity (Optional - if you want to add this) -->
+            <!-- QUICK ACCESS (Admin / PM) -->
             @if (ViewBag.Role == "Admin" || ViewBag.Role == "ProjectManager")
             {
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-activity"></i> Quick Access
-                        </h5>
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="icon-box">⚡</div>
+                        <h5>Quick Access</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <div style="padding:16px 20px;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a asp-controller="Dashboard" asp-action="Index" class="quick-card">
+                                    <div class="qicon" style="background:#ede9fe; color:#6d28d9;">📊</div>
+                                    Dashboard
                                 </a>
                             </div>
-                            <div class="col-md-6 mb-2">
-                                <a asp-controller="Projects" asp-action="Index" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-kanban"></i> All Projects
+                            <div class="col-md-6">
+                                <a asp-controller="Projects" asp-action="Index" class="quick-card">
+                                    <div class="qicon" style="background:#dbeafe; color:#1d4ed8;">📁</div>
+                                    All Projects
                                 </a>
                             </div>
-                            <div class="col-md-6 mb-2">
-                                <a asp-controller="TimeTracking" asp-action="PendingApprovals" class="btn btn-outline-warning w-100">
-                                    <i class="bi bi-check2-square"></i> Approvals
+                            <div class="col-md-6">
+                                <a asp-controller="TimeTracking" asp-action="PendingApprovals" class="quick-card">
+                                    <div class="qicon" style="background:#fef3c7; color:#92400e;">✅</div>
+                                    Approvals
                                 </a>
                             </div>
-                            <div class="col-md-6 mb-2">
-                                <a asp-controller="Reports" asp-action="Dashboard" class="btn btn-outline-info w-100">
-                                    <i class="bi bi-graph-up"></i> Reports
+                            <div class="col-md-6">
+                                <a asp-controller="Reports" asp-action="Dashboard" class="quick-card">
+                                    <div class="qicon" style="background:#d1fae5; color:#065f46;">📈</div>
+                                    Reports
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
             }
+
         </div>
     </div>
 </div>
 
+<!-- TOAST -->
+<div class="upload-toast" id="uploadToast">📸 Profile photo updated!</div>
+
 @section Scripts {
     <script>
-        // Auto-dismiss alerts after 5 seconds
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatarPreview');
+                const initials = document.getElementById('avatarInitials');
+
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                initials.style.display = 'none';
+
+                // Save to localStorage so it persists on reload
+                localStorage.setItem('profileAvatar', e.target.result);
+
+                // Show toast
+                const toast = document.getElementById('uploadToast');
+                toast.style.display = 'block';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Load saved avatar on page load
+        window.addEventListener('load', function() {
+            const saved = localStorage.getItem('profileAvatar');
+            if (saved) {
+                const preview = document.getElementById('avatarPreview');
+                const initials = document.getElementById('avatarInitials');
+                preview.src = saved;
+                preview.style.display = 'block';
+                initials.style.display = 'none';
+            }
+        });
+
+        // Auto-dismiss alerts
         setTimeout(function() {
-            $('.alert').fadeOut('slow');
+            document.querySelectorAll('.alert').forEach(a => a.style.display = 'none');
         }, 5000);
     </script>
 }

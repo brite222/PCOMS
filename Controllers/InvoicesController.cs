@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
+using PCOMS.Application.Services;
+using PCOMS.Models;
+using PCOMS.Data;
 using System.Security.Claims;
-
+using Microsoft.EntityFrameworkCore;
 namespace PCOMS.Controllers
 {
     [Authorize(Roles = "Admin,ProjectManager")]
@@ -14,19 +17,26 @@ namespace PCOMS.Controllers
         private readonly ILogger<InvoicesController> _logger;
         private readonly IEmailService _emailService; // ✅ ADDED
         private readonly IClientService _clientService; // ✅ ADDED
+        private readonly INotificationService _notificationService;
+        private readonly ApplicationDbContext _context;
 
         public InvoicesController(
             IInvoiceService invoiceService,
             IProjectService projectService,
             ILogger<InvoicesController> logger,
             IEmailService emailService, // ✅ ADDED
-            IClientService clientService) // ✅ ADDED
+            IClientService clientService, // ✅ ADDED
+            INotificationService notificationService,
+            ApplicationDbContext context)
+
         {
             _invoiceService = invoiceService;
             _projectService = projectService;
             _logger = logger;
             _emailService = emailService; // ✅ ADDED
             _clientService = clientService; // ✅ ADDED
+            _notificationService = notificationService;
+            _context = context;
         }
 
         // ==========================================
@@ -408,6 +418,30 @@ namespace PCOMS.Controllers
         {
             var report = await _invoiceService.GetClientInvoiceReportAsync(clientId);
             return View(report);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Create(Invoice invoice)
+        {
+            if (!ModelState.IsValid) return View(invoice);
+
+            _context.Invoices.Add(invoice);
+            await _context.SaveChangesAsync();
+
+            // ✅ ADD THIS - Find client user and notify
+            var clientUser = await _context.ClientUsers
+     .FirstOrDefaultAsync(cu => cu.ClientId == invoice.ClientId);
+
+            if (clientUser != null)
+            {
+                await _notificationService.NotifyInvoiceCreatedAsync(
+                    clientUser.UserId,
+                    invoice.InvoiceNumber,
+                    invoice.Id
+                );
+            }
+
+            TempData["Success"] = "Invoice created successfully!";
+            return RedirectToAction("Details", new { id = invoice.Id });
         }
     }
 }

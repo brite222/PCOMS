@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
+using PCOMS.Application.Services;
+using PCOMS.Models;
 using System.Security.Claims;
+using PCOMS.Data;
 
 namespace PCOMS.Controllers
 {
@@ -17,19 +20,25 @@ namespace PCOMS.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly IEmailService _emailService; // ✅ ADDED
         private readonly ILogger<TasksController> _logger; // ✅ ADDED
+        private readonly INotificationService _notificationService;
+            private readonly ApplicationDbContext _context;
 
         public TasksController(
             ITaskService taskService,
             UserManager<IdentityUser> userManager,
             IWebHostEnvironment environment,
             IEmailService emailService, // ✅ ADDED
-            ILogger<TasksController> logger) // ✅ ADDED
+            ILogger<TasksController> logger, // ✅ ADDED
+             INotificationService notificationService,
+                ApplicationDbContext context)
         {
             _taskService = taskService;
             _userManager = userManager;
             _environment = environment;
             _emailService = emailService; // ✅ ADDED
             _logger = logger; // ✅ ADDED
+             _notificationService = notificationService;
+            _context = context;
         }
 
         // GET: Tasks
@@ -437,6 +446,62 @@ namespace PCOMS.Controllers
 
             TempData["Success"] = "Task deleted successfully!";
             return RedirectToAction(nameof(Index));
+        }
+        
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignTask(int taskId, string developerId)
+        {
+            var task = await _context.Tasks.FindAsync(taskId);
+            if (task == null)
+                return NotFound();
+
+            task.AssignedToId = developerId;
+            await _context.SaveChangesAsync();
+
+            // Send notification to developer
+            await _notificationService.NotifyTaskAssignedAsync(
+                developerId,
+                task.Title,
+                task.TaskId
+            );
+
+            TempData["Success"] = "Task assigned successfully!";
+            return RedirectToAction("Details", new { id = taskId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkComplete(int id)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.TaskId == id);
+
+            if (task == null)
+                return NotFound();
+
+            task.Status = Models.TaskStatus.Completed;
+            task.CompletedDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            // Notify project manager
+            if (!string.IsNullOrEmpty(task.Project?.ManagerId))
+            {
+                await _notificationService.CreateNotificationAsync(
+                         task.Project.ManagerId,
+                         "Task Completed",
+                         $"Task '{task.Title}' has been completed",
+                         NotificationType.TaskCompleted,
+                         $"/Tasks/Details/{task.TaskId}",
+                         task.TaskId,
+                         "Task"
+                 );
+            }
+
+            TempData["Success"] = "Task marked as complete!";
+            return RedirectToAction("Details", new { id });
         }
     }
 }

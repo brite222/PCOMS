@@ -49,6 +49,8 @@ namespace PCOMS.Models
 
         // Access control
         public bool IsClientVisible { get; set; } = false; // Can clients see this document?
+
+
     }
 
     // Enum for common document categories
