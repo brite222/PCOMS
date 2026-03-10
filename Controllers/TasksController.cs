@@ -263,7 +263,7 @@ namespace PCOMS.Controllers
                     return NotFound();
                 }
 
-                // 📧 SEND EMAIL IF ASSIGNEE CHANGED
+                // 📧 + 🔔 SEND EMAIL AND NOTIFICATION IF ASSIGNEE CHANGED
                 if (!string.IsNullOrEmpty(dto.AssignedToId) && dto.AssignedToId != oldAssigneeId)
                 {
                     try
@@ -271,6 +271,7 @@ namespace PCOMS.Controllers
                         var assignedUser = await _userManager.FindByIdAsync(dto.AssignedToId);
                         if (assignedUser != null && !string.IsNullOrEmpty(assignedUser.Email))
                         {
+                            // Send email
                             await _emailService.SendTaskAssignedEmailAsync(
                                 assignedUser.Email,
                                 assignedUser.UserName ?? assignedUser.Email,
@@ -279,12 +280,23 @@ namespace PCOMS.Controllers
                                 dto.DueDate
                             );
 
-                            _logger.LogInformation("Task reassignment email sent to {Email}", assignedUser.Email);
+                            // 🔔 CREATE IN-APP NOTIFICATION
+                            await _notificationService.CreateNotificationAsync(
+                                dto.AssignedToId,
+                                "Task Reassigned",
+                                $"You have been reassigned to: {dto.Title}",
+                                NotificationType.TaskAssigned,
+                                $"/Tasks/Details/{dto.TaskId}",
+                                dto.TaskId,
+                                "Task"
+                            );
+
+                            _logger.LogInformation("Task reassignment email and notification sent to {Email}", assignedUser.Email);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to send task reassignment email");
+                        _logger.LogError(ex, "Failed to send task reassignment email/notification");
                     }
                 }
 
@@ -336,7 +348,55 @@ namespace PCOMS.Controllers
             return RedirectToAction(nameof(Details), new { id = taskId });
         }
 
-        // POST: Tasks/AddComment
+        /// <summary>
+        /// Extracts @mentions from comment text and sends notifications
+        /// Example: "@john please review this" -> notifies john
+        /// </summary>
+        private async Task NotifyMentionedUsersAsync(string commentText, int taskId, string taskTitle, string commenterId)
+        {
+            try
+            {
+                // Find all @mentions in the text (e.g., @username)
+                var mentionPattern = @"@(\w+)";
+                var matches = System.Text.RegularExpressions.Regex.Matches(commentText, mentionPattern);
+
+                foreach (System.Text.RegularExpressions.Match match in matches)
+                {
+                    var username = match.Groups[1].Value;
+
+                    // Find user by username
+                    var mentionedUser = await _userManager.Users
+                        .FirstOrDefaultAsync(u => u.UserName == username);
+
+                    if (mentionedUser != null && mentionedUser.Id != commenterId) // Don't notify yourself
+                    {
+                        var commenter = await _userManager.FindByIdAsync(commenterId);
+                        var commenterName = commenter?.UserName ?? "Someone";
+
+                        await _notificationService.CreateNotificationAsync(
+                            mentionedUser.Id,
+                            "👤 You Were Mentioned",
+                            $"{commenterName} mentioned you in a comment on: {taskTitle}",
+                            NotificationType.Mention,
+                            $"/Tasks/Details/{taskId}",
+                            taskId,
+                            "Task"
+                        );
+
+                        _logger.LogInformation("Mention notification sent to {Username}", username);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process mentions in comment");
+            }
+        }
+
+        // ==========================================
+        // UPDATED AddComment method WITH MENTIONS
+        // ==========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddComment(CreateTaskCommentDto dto)
@@ -345,6 +405,41 @@ namespace PCOMS.Controllers
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
                 await _taskService.AddCommentAsync(dto, userId);
+
+                var task = await _taskService.GetTaskByIdAsync(dto.TaskId);
+
+                if (task != null)
+                {
+                    // 🔔 NOTIFY TASK ASSIGNEE (if not commenting on own task)
+                    if (!string.IsNullOrEmpty(task.AssignedToId) && task.AssignedToId != userId)
+                    {
+                        try
+                        {
+                            var currentUser = await _userManager.FindByIdAsync(userId);
+                            var commenterName = currentUser?.UserName ?? currentUser?.Email ?? "Someone";
+
+                            await _notificationService.CreateNotificationAsync(
+                                task.AssignedToId,
+                                "💬 New Comment on Your Task",
+                                $"{commenterName} commented on: {task.Title}",
+                                NotificationType.Comment,
+                                $"/Tasks/Details/{dto.TaskId}",
+                                dto.TaskId,
+                                "Task"
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to send comment notification");
+                        }
+                    }
+                    // 🔔 NOTIFY @MENTIONED USERS
+                    if (!string.IsNullOrEmpty(dto.CommentText))
+                    {
+                        await NotifyMentionedUsersAsync(dto.CommentText, dto.TaskId, task.Title, userId);
+                    }
+                }
+
                 TempData["Success"] = "Comment added successfully!";
             }
 
@@ -502,5 +597,8 @@ namespace PCOMS.Controllers
             TempData["Success"] = "Task marked as complete!";
             return RedirectToAction("Details", new { id });
         }
+
+
+
     }
 }

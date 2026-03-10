@@ -201,9 +201,8 @@ namespace PCOMS.Controllers
             }
         }
 
-        // ==========================================
-        // RECORD PAYMENT
-        // ==========================================
+      
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RecordPayment(RecordPaymentDto dto)
@@ -223,6 +222,36 @@ namespace PCOMS.Controllers
                 {
                     TempData["Error"] = "Failed to record payment";
                     return RedirectToAction("Details", new { id = dto.InvoiceId });
+                }
+
+                // 🔔 NOTIFY CLIENT OF PAYMENT RECEIVED
+                try
+                {
+                    var invoice = await _invoiceService.GetInvoiceByIdAsync(dto.InvoiceId);
+                    if (invoice != null)
+                    {
+                        var clientUser = await _context.ClientUsers
+                            .FirstOrDefaultAsync(cu => cu.ClientId == invoice.ClientId);
+
+                        if (clientUser != null)
+                        {
+                            await _notificationService.CreateNotificationAsync(
+                                clientUser.UserId,
+                                "💰 Payment Received",
+                                $"Payment of ₦{dto.Amount:N2} received for invoice {invoice.InvoiceNumber}. Thank you!",
+                                NotificationType.Info,
+                                "/ClientPortal/MyInvoices",
+                                invoice.Id,
+                                "Invoice"
+                            );
+
+                            _logger.LogInformation("Payment received notification sent for invoice {InvoiceId}", dto.InvoiceId);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send payment notification for invoice {InvoiceId}", dto.InvoiceId);
                 }
 
                 TempData["Success"] = $"Payment of ₦{dto.Amount:N2} recorded successfully";
@@ -419,6 +448,11 @@ namespace PCOMS.Controllers
             var report = await _invoiceService.GetClientInvoiceReportAsync(clientId);
             return View(report);
         }
+
+
+
+
+
         [HttpPost]
         public async Task<IActionResult> Create(Invoice invoice)
         {

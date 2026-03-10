@@ -5,6 +5,7 @@ using PCOMS.Application.DTOs;
 using PCOMS.Application.Interfaces;
 using PCOMS.Data;
 using PCOMS.Models;
+using PCOMS.Application.Services;
 
 namespace PCOMS.Controllers
 {
@@ -16,7 +17,8 @@ namespace PCOMS.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
-        private readonly ILogger<ClientsController> _logger; // ✅ ADDED
+        private readonly ILogger<ClientsController> _logger;
+        private readonly INotificationService _notificationService; // ✅ ADDED
 
         public ClientsController(
             IClientService clientService,
@@ -24,14 +26,16 @@ namespace PCOMS.Controllers
             UserManager<IdentityUser> userManager,
             ApplicationDbContext context,
             IEmailService emailService,
-            ILogger<ClientsController> logger) // ✅ ADDED
+            ILogger<ClientsController> logger,
+            INotificationService notificationService) // ✅ ADDED
         {
             _clientService = clientService;
             _auditService = auditService;
             _userManager = userManager;
             _context = context;
             _emailService = emailService;
-            _logger = logger; // ✅ ADDED
+            _logger = logger;
+            _notificationService = notificationService; // ✅ ADDED
         }
 
         // =========================
@@ -100,7 +104,7 @@ namespace PCOMS.Controllers
                     await _emailService.SendClientRegistrationEmailAsync(
                         dto.Email,
                         dto.Name,
-                        dto.Name // Using Name as company name since we don't have a separate field
+                        dto.Name
                     );
 
                     _logger.LogInformation("Client registration email sent to {Email}", dto.Email);
@@ -173,7 +177,7 @@ namespace PCOMS.Controllers
         }
 
         // =========================
-        // CREATE CLIENT PORTAL LOGIN
+        // CREATE CLIENT PORTAL LOGIN - ✅ WITH NOTIFICATION
         // =========================
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -227,12 +231,10 @@ namespace PCOMS.Controllers
                 Request.Scheme
             );
 
-            // 📧 SEND CLIENT PORTAL ACCESS EMAIL (Enhanced version)
+            // 📧 + 🔔 SEND EMAILS AND CREATE NOTIFICATION
             try
             {
-                // Generate a temporary password for the email (they'll change it via reset link)
-                var tempPassword = $"PCOMS{DateTime.Now.Year}!";
-
+                // Send portal access email
                 await _emailService.SendClientPortalAccessEmailAsync(
                     client.Email,
                     client.Name,
@@ -241,19 +243,30 @@ namespace PCOMS.Controllers
                     $"{Request.Scheme}://{Request.Host}/Account/Login"
                 );
 
-                // Also send the password reset link
+                // Send password reset link
                 await _emailService.SendPasswordResetEmailAsync(
                     client.Email,
                     resetLink
                 );
 
-                _logger.LogInformation("Client portal access emails sent to {Email}", client.Email);
-                TempData["Success"] = "Client portal access created and credentials sent by email!";
+                // 🔔 CREATE WELCOME NOTIFICATION
+                await _notificationService.CreateNotificationAsync(
+                    user.Id,
+                    "Welcome to PCOMS!",
+                    "Your client portal has been activated. You can now view your projects, invoices, and documents.",
+                    NotificationType.Info,
+                    "/ClientPortal/Dashboard",
+                    client.Id,
+                    "Client"
+                );
+
+                _logger.LogInformation("Client portal emails and notification sent to {Email}", client.Email);
+                TempData["Success"] = "Client portal access created, credentials sent by email, and welcome notification created!";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send client portal emails to {Email}", client.Email);
-                TempData["Success"] = "Client portal access created, but failed to send email. Please manually share credentials.";
+                _logger.LogError(ex, "Failed to send client portal emails/notification to {Email}", client.Email);
+                TempData["Success"] = "Client portal access created, but failed to send email/notification.";
             }
 
             return RedirectToAction("Details", new { id });
@@ -309,6 +322,7 @@ namespace PCOMS.Controllers
             if (clientEntity != null)
             {
                 _context.Clients.Remove(clientEntity);
+                await _context.SaveChangesAsync();
             }
 
             // Audit log

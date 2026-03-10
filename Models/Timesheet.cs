@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
 using PCOMS.Models.Enums;
-
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace PCOMS.Models
 {
     public class Timesheet
@@ -10,6 +11,8 @@ namespace PCOMS.Models
         [Required]
         public string UserId { get; set; } = null!;
 
+        [ForeignKey(nameof(UserId))]
+        public IdentityUser? User { get; set; }
         public DateTime WeekStartDate { get; set; }
         public DateTime WeekEndDate { get; set; }
 
@@ -24,7 +27,9 @@ namespace PCOMS.Models
         public string? ApprovedBy { get; set; }
         public DateTime? ApprovedAt { get; set; }
         public string? ApprovalNotes { get; set; }
-
+        public string? RejectedBy { get; set; }
+        public DateTime? RejectedAt { get; set; }
+        public string? RejectionReason { get; set; }
         public string? Notes { get; set; }
 
         public bool IsDeleted { get; set; }

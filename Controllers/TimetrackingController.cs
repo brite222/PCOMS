@@ -3,7 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PCOMS.Application.Interfaces;
 using PCOMS.Application.Interfaces.DTOs;
+using PCOMS.Models;
+using PCOMS.Models.Enums;
 using System.Security.Claims;
+using PCOMS.Data;
+using Microsoft.EntityFrameworkCore;
+using PCOMS.Application.Services;
 
 namespace PCOMS.Controllers
 {
@@ -13,15 +18,24 @@ namespace PCOMS.Controllers
         private readonly ITimeTrackingService _timeTrackingService;
         private readonly ILogger<TimeTrackingController> _logger;
         private readonly IProjectService _projectService;
+        private readonly ApplicationDbContext _context; 
+        private readonly INotificationService _notificationService;
 
         public TimeTrackingController(
             ITimeTrackingService timeTrackingService,
             ILogger<TimeTrackingController> logger,
-            IProjectService projectService)
+            IProjectService projectService,
+            ApplicationDbContext context,
+            INotificationService notificationService)   
+
+
         {
             _timeTrackingService = timeTrackingService;
             _logger = logger;
             _projectService = projectService;
+            _context = context;
+            _notificationService = notificationService;
+
         }
 
         // ==========================================
@@ -391,65 +405,101 @@ namespace PCOMS.Controllers
         }
 
         // ==========================================
-        // APPROVE TIMESHEET
+        // ADD TO TimeTrackingController.cs
+        // (If you have this controller - otherwise skip)
         // ==========================================
+
+        // APPROVE TIMESHEET
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,ProjectManager")]
-        public async Task<IActionResult> ApproveTimesheet(int id, string? notes)
+        public async Task<IActionResult> ApproveTimesheet(int timesheetId)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                var timesheet = await _context.Timesheets
+                    .Include(t => t.User)
+                    .FirstOrDefaultAsync(t => t.Id == timesheetId);
 
-                var dto = new ApproveTimesheetDto
+                if (timesheet == null)
                 {
-                    TimesheetId = id,
-                    IsApproved = true,
-                    Notes = notes
-                };
+                    TempData["Error"] = "Timesheet not found";
+                    return RedirectToAction("PendingApprovals");
+                }
 
-                var result = await _timeTrackingService.ApproveTimesheetAsync(dto, userId);
+                // Update status
+                timesheet.Status = TimesheetStatus.Approved;
+                timesheet.ApprovedAt = DateTime.UtcNow;
+                timesheet.ApprovedBy = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                await _context.SaveChangesAsync();
 
-                if (result)
-                    TempData["Success"] = "Timesheet approved";
-                else
-                    TempData["Error"] = "Failed to approve timesheet";
+                // 🔔 NOTIFY DEVELOPER OF APPROVAL
+                await _notificationService.CreateNotificationAsync(
+                    timesheet.UserId,
+                    "✅ Timesheet Approved",
+                    $"Your timesheet for {timesheet.WeekEndDate:MMM dd, yyyy} has been approved",
+                    NotificationType.Success,
+                    "/TimeTracking/Timesheets",
+                    timesheetId,
+                    "Timesheet"
+                );
 
+                _logger.LogInformation("Timesheet {TimesheetId} approved and notification sent", timesheetId);
+                TempData["Success"] = "Timesheet approved successfully";
                 return RedirectToAction("PendingApprovals");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error approving timesheet");
-                TempData["Error"] = $"Failed to approve: {ex.Message}";
+                TempData["Error"] = "Failed to approve timesheet";
                 return RedirectToAction("PendingApprovals");
             }
         }
 
-        // ==========================================
         // REJECT TIMESHEET
-        // ==========================================
         [HttpPost]
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,ProjectManager")]
-        public async Task<IActionResult> RejectTimesheet(int id, string notes)
+        public async Task<IActionResult> RejectTimesheet(int timesheetId, string reason)
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                var result = await _timeTrackingService.RejectTimesheetAsync(id, userId, notes);
+                var timesheet = await _context.Timesheets
+                    .FirstOrDefaultAsync(t => t.Id == timesheetId);
 
-                if (result)
-                    TempData["Success"] = "Timesheet rejected";
-                else
-                    TempData["Error"] = "Failed to reject timesheet";
+                if (timesheet == null)
+                {
+                    TempData["Error"] = "Timesheet not found";
+                    return RedirectToAction("PendingApprovals");
+                }
 
+                // Update status
+                timesheet.Status = TimesheetStatus.Rejected;
+                timesheet.RejectedAt = DateTime.UtcNow;
+                timesheet.RejectedBy = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                timesheet.RejectionReason = reason;
+
+                await _context.SaveChangesAsync();
+
+                // 🔔 Notify developer
+                await _notificationService.CreateNotificationAsync(
+                    timesheet.UserId,
+                    "❌ Timesheet Rejected",
+                    $"Your timesheet for week ending {timesheet.WeekEndDate:MMM dd, yyyy} was rejected. Reason: {reason}",
+                    NotificationType.Warning,
+                    "/TimeTracking/Timesheets",
+                    timesheetId,
+                    "Timesheet"
+                );
+
+                _logger.LogInformation("Timesheet {TimesheetId} rejected and notification sent", timesheetId);
+
+                TempData["Success"] = "Timesheet rejected successfully";
                 return RedirectToAction("PendingApprovals");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error rejecting timesheet");
-                TempData["Error"] = $"Failed to reject: {ex.Message}";
+                _logger.LogError(ex, "Error rejecting timesheet {TimesheetId}", timesheetId);
+
+                TempData["Error"] = "Failed to reject timesheet";
                 return RedirectToAction("PendingApprovals");
             }
         }
