@@ -83,42 +83,61 @@ namespace PCOMS.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-            // ✅ FIX: If no projectId provided, handle based on role
+            // If no projectId provided, auto-select first available project
             if (!projectId.HasValue || projectId <= 0)
             {
-                // For Developers - auto-select their first assigned project
+                int firstProjectId = 0;
+
                 if (User.IsInRole("Developer"))
                 {
-                    var firstProject = await _context.ProjectAssignments
+                    // Get developer's first assigned project
+                    firstProjectId = await _context.ProjectAssignments
                         .Where(pa => pa.DeveloperId == userId)
                         .Select(pa => pa.ProjectId)
                         .FirstOrDefaultAsync();
-
-                    if (firstProject > 0)
-                    {
-                        return RedirectToAction("Chat", new { projectId = firstProject });
-                    }
-
-                    TempData["Error"] = "You are not assigned to any projects yet. Contact your manager.";
-                    return RedirectToAction("Dashboard", "Developer");
                 }
-
-                // For Admins/Managers - show project selection
-                var availableProjects = await _context.Projects
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
-
-                if (!availableProjects.Any())
+                else if (User.IsInRole("ProjectManager"))
                 {
-                    TempData["Error"] = "No projects available.";
-                    return RedirectToAction("Index", "Home");
+                    // Get first project managed by this user
+                    firstProjectId = await _context.Projects
+                        .Where(p => p.ManagerId == userId)
+                        .Select(p => p.Id)
+                        .FirstOrDefaultAsync();
+
+                    // If no projects they manage, show any project
+                    if (firstProjectId == 0)
+                    {
+                        firstProjectId = await _context.Projects
+                            .Select(p => p.Id)
+                            .FirstOrDefaultAsync();
+                    }
+                }
+                else
+                {
+                    // Admin - get any project
+                    firstProjectId = await _context.Projects
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Select(p => p.Id)
+                        .FirstOrDefaultAsync();
                 }
 
-                ViewBag.Projects = availableProjects;
-                return View("SelectProject");
+                if (firstProjectId > 0)
+                {
+                    return RedirectToAction("Chat", new { projectId = firstProjectId });
+                }
+
+                // No projects available
+                TempData["Error"] = User.IsInRole("Developer")
+                    ? "You are not assigned to any projects yet. Contact your manager."
+                    : "No projects available in the system.";
+
+                if (User.IsInRole("Developer"))
+                    return RedirectToAction("Dashboard", "Developer");
+
+                return RedirectToAction("Index", "Home");
             }
 
-            // ✅ Verify developer has access to this project
+            // Verify access for developers
             if (User.IsInRole("Developer"))
             {
                 var hasAccess = await _context.ProjectAssignments
@@ -139,7 +158,7 @@ namespace PCOMS.Controllers
 
                 // Get project info
                 var project = await _context.Projects
-                 .FirstOrDefaultAsync(p => p.Id == projectId.Value);
+                    .FirstOrDefaultAsync(p => p.Id == projectId.Value);
                 ViewBag.ProjectName = project?.Name ?? "Project Chat";
 
                 return View(messages);
@@ -147,7 +166,7 @@ namespace PCOMS.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading chat for project {ProjectId}", projectId);
-                TempData["Error"] = $"Error loading chat. Please try again.";
+                TempData["Error"] = "Error loading chat. Please try again.";
 
                 if (User.IsInRole("Developer"))
                     return RedirectToAction("Dashboard", "Developer");
