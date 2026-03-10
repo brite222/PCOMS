@@ -79,27 +79,80 @@ namespace PCOMS.Controllers
         // ==========================================
 
         [HttpGet]
-        public async Task<IActionResult> Chat(int projectId, int pageNumber = 1)
+        public async Task<IActionResult> Chat(int? projectId, int pageNumber = 1)
         {
-            if (projectId <= 0)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            // ✅ FIX: If no projectId provided, handle based on role
+            if (!projectId.HasValue || projectId <= 0)
             {
-                _logger.LogWarning("Invalid projectId: {ProjectId}", projectId);
-                TempData["Error"] = "Please select a project to view its chat.";
-                return RedirectToAction("Index", "Projects");
+                // For Developers - auto-select their first assigned project
+                if (User.IsInRole("Developer"))
+                {
+                    var firstProject = await _context.ProjectAssignments
+                        .Where(pa => pa.DeveloperId == userId)
+                        .Select(pa => pa.ProjectId)
+                        .FirstOrDefaultAsync();
+
+                    if (firstProject > 0)
+                    {
+                        return RedirectToAction("Chat", new { projectId = firstProject });
+                    }
+
+                    TempData["Error"] = "You are not assigned to any projects yet. Contact your manager.";
+                    return RedirectToAction("Dashboard", "Developer");
+                }
+
+                // For Admins/Managers - show project selection
+                var availableProjects = await _context.Projects
+                        .OrderByDescending(p => p.CreatedAt)
+                        .ToListAsync();
+
+                if (!availableProjects.Any())
+                {
+                    TempData["Error"] = "No projects available.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                ViewBag.Projects = availableProjects;
+                return View("SelectProject");
+            }
+
+            // ✅ Verify developer has access to this project
+            if (User.IsInRole("Developer"))
+            {
+                var hasAccess = await _context.ProjectAssignments
+                    .AnyAsync(pa => pa.DeveloperId == userId && pa.ProjectId == projectId.Value);
+
+                if (!hasAccess)
+                {
+                    TempData["Error"] = "You don't have access to this project.";
+                    return RedirectToAction("Dashboard", "Developer");
+                }
             }
 
             try
             {
-                var messages = await _communicationService.GetProjectMessagesAsync(projectId, pageNumber);
-                ViewBag.ProjectId = projectId;
+                var messages = await _communicationService.GetProjectMessagesAsync(projectId.Value, pageNumber);
+                ViewBag.ProjectId = projectId.Value;
                 ViewBag.PageNumber = pageNumber;
+
+                // Get project info
+                var project = await _context.Projects
+                 .FirstOrDefaultAsync(p => p.Id == projectId.Value);
+                ViewBag.ProjectName = project?.Name ?? "Project Chat";
+
                 return View(messages);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading chat for project {ProjectId}", projectId);
-                TempData["Error"] = $"Project with ID {projectId} not found";
-                return RedirectToAction("Index", "Projects");
+                TempData["Error"] = $"Error loading chat. Please try again.";
+
+                if (User.IsInRole("Developer"))
+                    return RedirectToAction("Dashboard", "Developer");
+
+                return RedirectToAction("Index", "Home");
             }
         }
 
@@ -279,7 +332,7 @@ namespace PCOMS.Controllers
             _context.TeamMessages.Add(comment);
             await _context.SaveChangesAsync();
 
-            // ✅ Notify project team
+            // Notify project team
             var projectTeam = await _context.ProjectAssignments
                 .Where(pa => pa.ProjectId == projectId)
                 .Select(pa => pa.DeveloperId)
@@ -287,7 +340,7 @@ namespace PCOMS.Controllers
 
             foreach (var developerId in projectTeam)
             {
-                if (developerId != comment.SenderId) // Don't notify yourself
+                if (developerId != comment.SenderId)
                 {
                     await _notificationService.CreateNotificationAsync(
                         developerId,
